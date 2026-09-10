@@ -10,7 +10,9 @@ app_license = "mit"
 
 # This app builds on standard ERPNext Selling/Accounts, Frappe HR and India
 # Compliance (GST). See the workspace spec: docs/specs/tnc-v2/ in the bench root.
-required_apps = ["frappe/erpnext", "frappe/hrms", "resilient-tech/india-compliance"]
+# Entries must resolve to the installed Python module name (the part after "/"),
+# so india_compliance is listed by module, not by its GitHub org/repo.
+required_apps = ["frappe/erpnext", "frappe/hrms", "india_compliance"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
