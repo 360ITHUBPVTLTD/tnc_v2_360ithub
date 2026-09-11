@@ -68,4 +68,7 @@ def process_recurring_task(docname, today):
 			doc.next_run_date = None
 
 		doc.save()
-		frappe.db.commit()
+		# Commit per template so one failure does not roll back the others.
+		# Skipped under tests so the verification scripts can roll back cleanly.
+		if not frappe.flags.in_test:
+			frappe.db.commit()

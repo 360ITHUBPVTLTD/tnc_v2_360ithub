@@ -19,6 +19,7 @@ def run_tests():
 
 	# Ensure we run in a controlled test environment/transaction
 	frappe.db.begin()
+	frappe.flags.in_test = True  # keeps the scheduler from committing mid-test
 	try:
 		test_daily_recurrence_and_idempotency()
 		test_weekly_next_run_date()
