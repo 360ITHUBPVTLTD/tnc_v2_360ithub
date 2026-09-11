@@ -147,13 +147,17 @@ required_apps = ["frappe/erpnext", "frappe/hrms", "india_compliance"]
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	# Task notifications and the creator-only completion rule, ported from v1.
+	"Task": {
+		"before_save": "tnc_v2_360ithub.tasks.task_hooks.before_save",
+		"after_insert": "tnc_v2_360ithub.tasks.task_hooks.after_insert",
+		"on_update": "tnc_v2_360ithub.tasks.task_hooks.on_update",
+	},
+	"Comment": {
+		"after_insert": "tnc_v2_360ithub.tasks.task_hooks.on_comment",
+	},
+}
 
 # Scheduled Tasks
 # ---------------
@@ -163,6 +167,10 @@ scheduler_events = {
 		# Recurring Task engine, ported from v1 (ran 07:30 there too).
 		"30 7 * * *": [
 			"tnc_v2_360ithub.tasks.recurring_task.scheduler.run_scheduler",
+		],
+		# 08:00 WhatsApp task digest, gated by TNC Settings.task_reminders_enabled.
+		"0 8 * * *": [
+			"tnc_v2_360ithub.tasks.jobs.enqueue_task_reminders",
 		],
 	},
 }
