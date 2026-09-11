@@ -1,0 +1,19 @@
+{
+ "content": null,
+ "creation": "2026-04-30 11:28:14.369607",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-04-30 11:28:31.916855",
+ "modified_by": "Administrator",
+ "module": "Tasks",
+ "name": "task-dashboard",
+ "owner": "Administrator",
+ "page_name": "task-dashboard",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Task Dashboard"
+}

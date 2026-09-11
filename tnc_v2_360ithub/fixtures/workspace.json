@@ -1,0 +1,119 @@
+[
+ {
+  "charts": [],
+  "content": "[{\"id\": \"gj7NP_T_w4\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">TNC Task</span>\", \"col\": 12}}, {\"id\": \"gON-aQRr3D\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Overdue Tasks\", \"col\": 3}}, {\"id\": \"5dmxK7HFOY\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending Tasks\", \"col\": 3}}, {\"id\": \"V8_SIPA1ID\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending for Review Tasks\", \"col\": 3}}, {\"id\": \"pRD98zirnc\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Completed Tasks\", \"col\": 3}}, {\"id\": \"Bo4icX0Q_N\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Task Dashboard\", \"col\": 3}}, {\"id\": \"brMqX-2kDG\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"User\", \"col\": 3}}, {\"id\": \"NhSy28KhUj\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Employee\", \"col\": 3}}, {\"id\": \"EFGxDQYqEi\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Recurring Task\", \"col\": 3}}]",
+  "custom_blocks": [],
+  "doctype": "Workspace",
+  "icon": "task",
+  "indicator_color": "orange",
+  "is_hidden": 0,
+  "label": "TNC Task",
+  "links": [],
+  "module": "Tasks",
+  "name": "TNC Task",
+  "number_cards": [
+   {
+    "doctype": "Workspace Number Card",
+    "label": "Completed Tasks",
+    "number_card_name": "Completed Tasks",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "doctype": "Workspace Number Card",
+    "label": "Pending for Review Tasks",
+    "number_card_name": "Pending for Review Tasks",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "doctype": "Workspace Number Card",
+    "label": "Overdue Tasks",
+    "number_card_name": "Overdue Tasks",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "doctype": "Workspace Number Card",
+    "label": "Pending Tasks",
+    "number_card_name": "Pending Tasks",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   }
+  ],
+  "public": 1,
+  "quick_lists": [],
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "TNC Employees"
+   },
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "TNC Super Admin"
+   },
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "TNC Manager"
+   }
+  ],
+  "sequence_id": 1.0,
+  "shortcuts": [
+   {
+    "color": "Red",
+    "doc_view": "Report Builder",
+    "doctype": "Workspace Shortcut",
+    "format": null,
+    "label": "Task Dashboard",
+    "link_to": "task-dashboard",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "stats_filter": "[]",
+    "type": "Page"
+   },
+   {
+    "color": "Grey",
+    "doc_view": "Report Builder",
+    "doctype": "Workspace Shortcut",
+    "format": null,
+    "label": "Recurring Task",
+    "link_to": "Recurring Task",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "stats_filter": "[]",
+    "type": "DocType"
+   },
+   {
+    "color": "Grey",
+    "doc_view": "Report Builder",
+    "doctype": "Workspace Shortcut",
+    "format": null,
+    "label": "User",
+    "link_to": "User",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "stats_filter": "[[\"User\",\"enabled\",\"=\",1,false]]",
+    "type": "DocType"
+   },
+   {
+    "color": "Grey",
+    "doc_view": "Report Builder",
+    "doctype": "Workspace Shortcut",
+    "format": null,
+    "label": "Employee",
+    "link_to": "Employee",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "stats_filter": "[]",
+    "type": "DocType"
+   }
+  ],
+  "title": "TNC Task"
+ }
+]

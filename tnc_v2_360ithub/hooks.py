@@ -286,4 +286,6 @@ fixtures = [
 	{"dt": "Role", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
 	{"dt": "Role Profile", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teacher"]]]},
 	{"dt": "Custom DocPerm", "filters": [["parent", "=", "Task"], ["role", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin"]]]},
+	{"dt": "Number Card", "filters": [["module", "=", "Tasks"]]},
+	{"dt": "Workspace", "filters": [["module", "=", "Tasks"]]},
 ]
