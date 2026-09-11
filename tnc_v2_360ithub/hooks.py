@@ -157,6 +157,23 @@ doc_events = {
 	"Comment": {
 		"after_insert": "tnc_v2_360ithub.tasks.task_hooks.on_comment",
 	},
+	# Teacher payables: keep Teachers Timesheet payment_status in step with
+	# Purchase Invoice / Payment Entry, ported from institute_management_360ithub.
+	"Purchase Invoice": {
+		"on_submit": "tnc_v2_360ithub.teachers.doctype.teacher.teacher.on_purchase_invoice_submit",
+		"on_cancel": "tnc_v2_360ithub.teachers.doctype.teacher.teacher.on_purchase_invoice_cancel",
+	},
+	"Payment Entry": {
+		"on_submit": "tnc_v2_360ithub.teachers.doctype.teacher.teacher.on_payment_entry_update",
+		"on_cancel": "tnc_v2_360ithub.teachers.doctype.teacher.teacher.on_payment_entry_update",
+	},
+	"Activity": {
+		"on_update": "tnc_v2_360ithub.teachers.doctype.teachers_timesheet.teachers_timesheet.update_uom_in_related_docs",
+	},
+	# Mobile app posts Expense Claims without an approver; copy it from the Employee.
+	"Expense Claim": {
+		"validate": "tnc_v2_360ithub.hr.expense_claim.set_defaults",
+	},
 }
 
 # Scheduled Tasks
@@ -171,6 +188,10 @@ scheduler_events = {
 		# 08:00 WhatsApp task digest, gated by TNC Settings.task_reminders_enabled.
 		"0 8 * * *": [
 			"tnc_v2_360ithub.tasks.jobs.enqueue_task_reminders",
+		],
+		# Monthly Teacher Task Summary emails, 07:00 on the 1st (as in v1).
+		"0 7 1 * *": [
+			"tnc_v2_360ithub.teachers.monthly_summary.send_monthly_teacher_task_summary_reports",
 		],
 	},
 }
@@ -201,9 +222,10 @@ scheduler_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "tnc_v2_360ithub.event.get_events"
-# }
+override_whitelisted_methods = {
+	# Mobile app saves its push token with frappe.client.set_value on Employee; see hr/mobile.py.
+	"frappe.client.set_value": "tnc_v2_360ithub.hr.mobile.set_value",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
@@ -281,11 +303,12 @@ scheduler_events = {
 # v1_schema_export/ and filtered to what this app owns (module = "Tasks").
 
 fixtures = [
-	{"dt": "Custom Field", "filters": [["module", "=", "Tasks"]]},
-	{"dt": "Property Setter", "filters": [["module", "=", "Tasks"]]},
+	{"dt": "Custom Field", "filters": [["module", "in", ["Tasks", "Teachers", "TNC v2"]]]},
+	{"dt": "Property Setter", "filters": [["module", "in", ["Tasks", "Teachers", "TNC v2"]]]},
 	{"dt": "Role", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
 	{"dt": "Role Profile", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teacher"]]]},
-	{"dt": "Custom DocPerm", "filters": [["parent", "=", "Task"], ["role", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin"]]]},
+	{"dt": "Custom DocPerm", "filters": [["parent", "in", ["Task", "Comment", "Employee", "User", "Payment Entry", "Purchase Invoice", "Supplier"]], ["role", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
 	{"dt": "Number Card", "filters": [["module", "=", "Tasks"]]},
+	{"dt": "Report", "filters": [["module", "=", "Tasks"], ["is_standard", "=", "No"]]},
 	{"dt": "Workspace", "filters": [["module", "=", "Tasks"]]},
 ]

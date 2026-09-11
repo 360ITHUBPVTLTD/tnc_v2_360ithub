@@ -151,6 +151,30 @@ def send_whatsapp(user, message, ref_doctype=None, ref_name=None):
 		return "Failed"
 
 
+def send_whatsapp_to_mobile(mobile, message, instance_name=None, ref_doctype=None, ref_name=None):
+	"""Send to a raw mobile number (no User). Used by teacher reminders where the
+	number lives on the Teacher record. Same logging and provider rules as
+	send_whatsapp. Returns a dict shaped like the Webtoolex response so v1
+	callers that inspect .get("status") keep working."""
+	mobile = (mobile or "").strip()
+	if not mobile:
+		_log("WhatsApp", "Skipped", message=message, ref_doctype=ref_doctype, ref_name=ref_name, error="Empty mobile number")
+		return {"status": False, "msg": "Empty mobile number"}
+	ok, reason = whatsapp_available()
+	if not ok:
+		_log("WhatsApp", "Skipped", mobile=mobile, message=message, ref_doctype=ref_doctype, ref_name=ref_name, error=reason)
+		return {"status": False, "msg": reason}
+	s = settings()
+	try:
+		resp = frappe.get_attr(WEBTOOLEX_SEND)(mobile, message, instance_name or s.whatsapp_instance or None)
+		sent = bool(resp and (resp.get("status") if isinstance(resp, dict) else True))
+		_log("WhatsApp", "Sent" if sent else "Failed", mobile=mobile, message=message, ref_doctype=ref_doctype, ref_name=ref_name, provider="Webtoolex", response=resp, error=None if sent else "Provider reported failure")
+		return resp if isinstance(resp, dict) else {"status": sent}
+	except Exception as e:
+		_log("WhatsApp", "Failed", mobile=mobile, message=message, ref_doctype=ref_doctype, ref_name=ref_name, provider="Webtoolex", error=e)
+		return {"status": False, "msg": str(e)}
+
+
 def queue_whatsapp(user, message, ref_doctype=None, ref_name=None):
 	"""Enqueue send_whatsapp after the current transaction commits."""
 	frappe.enqueue(

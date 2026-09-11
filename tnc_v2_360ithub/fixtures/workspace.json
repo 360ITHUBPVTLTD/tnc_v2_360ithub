@@ -1,63 +1,69 @@
 [
  {
   "charts": [],
-  "content": "[{\"id\": \"gj7NP_T_w4\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">TNC Task</span>\", \"col\": 12}}, {\"id\": \"gON-aQRr3D\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Overdue Tasks\", \"col\": 3}}, {\"id\": \"5dmxK7HFOY\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending Tasks\", \"col\": 3}}, {\"id\": \"V8_SIPA1ID\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending for Review Tasks\", \"col\": 3}}, {\"id\": \"pRD98zirnc\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Completed Tasks\", \"col\": 3}}, {\"id\": \"Bo4icX0Q_N\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Task Dashboard\", \"col\": 3}}, {\"id\": \"brMqX-2kDG\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"User\", \"col\": 3}}, {\"id\": \"NhSy28KhUj\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Employee\", \"col\": 3}}, {\"id\": \"EFGxDQYqEi\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Recurring Task\", \"col\": 3}}]",
+  "content": "[{\"id\":\"gj7NP_T_w4\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">TNC Task</span>\",\"col\":12}},{\"id\":\"gON-aQRr3D\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Overdue Tasks\",\"col\":3}},{\"id\":\"5dmxK7HFOY\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Tasks\",\"col\":3}},{\"id\":\"V8_SIPA1ID\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending for Review Tasks\",\"col\":3}},{\"id\":\"pRD98zirnc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Completed Tasks\",\"col\":3}},{\"id\":\"Bo4icX0Q_N\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Task Dashboard\",\"col\":3}},{\"id\":\"brMqX-2kDG\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"User\",\"col\":3}},{\"id\":\"NhSy28KhUj\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee\",\"col\":3}},{\"id\":\"SAfYsCNy9C\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Teachers Timesheet\",\"col\":3}},{\"id\":\"ww2ZbAVM0b\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Teacher\",\"col\":3}},{\"id\":\"EFGxDQYqEi\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Recurring Task\",\"col\":3}},{\"id\":\"qRU80OI86Q\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WhatsApp Instance\",\"col\":3}}]",
   "custom_blocks": [],
+  "docstatus": 0,
   "doctype": "Workspace",
+  "for_user": null,
+  "hide_custom": 0,
   "icon": "task",
   "indicator_color": "orange",
   "is_hidden": 0,
   "label": "TNC Task",
   "links": [],
+  "modified": "2026-09-11 12:00:52.851961",
   "module": "Tasks",
   "name": "TNC Task",
   "number_cards": [
    {
-    "doctype": "Workspace Number Card",
     "label": "Completed Tasks",
     "number_card_name": "Completed Tasks",
+    "parent": "TNC Task",
     "parentfield": "number_cards",
     "parenttype": "Workspace"
    },
    {
-    "doctype": "Workspace Number Card",
     "label": "Pending for Review Tasks",
     "number_card_name": "Pending for Review Tasks",
+    "parent": "TNC Task",
     "parentfield": "number_cards",
     "parenttype": "Workspace"
    },
    {
-    "doctype": "Workspace Number Card",
     "label": "Overdue Tasks",
     "number_card_name": "Overdue Tasks",
+    "parent": "TNC Task",
     "parentfield": "number_cards",
     "parenttype": "Workspace"
    },
    {
-    "doctype": "Workspace Number Card",
     "label": "Pending Tasks",
     "number_card_name": "Pending Tasks",
+    "parent": "TNC Task",
     "parentfield": "number_cards",
     "parenttype": "Workspace"
    }
   ],
+  "parent_page": null,
   "public": 1,
   "quick_lists": [],
+  "restrict_to_domain": null,
   "roles": [
    {
-    "doctype": "Has Role",
+    "parent": "TNC Task",
     "parentfield": "roles",
     "parenttype": "Workspace",
     "role": "TNC Employees"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Task",
     "parentfield": "roles",
     "parenttype": "Workspace",
     "role": "TNC Super Admin"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Task",
     "parentfield": "roles",
     "parenttype": "Workspace",
     "role": "TNC Manager"
@@ -66,52 +72,123 @@
   "sequence_id": 1.0,
   "shortcuts": [
    {
+    "color": "Grey",
+    "doc_view": "List",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Teachers Timesheet",
+    "link_to": "Teachers Timesheet",
+    "parent": "TNC Task",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": "[]",
+    "type": "DocType",
+    "url": null
+   },
+   {
+    "color": "Grey",
+    "doc_view": "List",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "WhatsApp Instance",
+    "link_to": "WhatsApp Instance",
+    "parent": "TNC Task",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": "[]",
+    "type": "DocType",
+    "url": null
+   },
+   {
     "color": "Red",
     "doc_view": "Report Builder",
-    "doctype": "Workspace Shortcut",
     "format": null,
+    "icon": null,
+    "kanban_board": null,
     "label": "Task Dashboard",
     "link_to": "task-dashboard",
+    "parent": "TNC Task",
     "parentfield": "shortcuts",
     "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
     "stats_filter": "[]",
-    "type": "Page"
+    "type": "Page",
+    "url": null
    },
    {
     "color": "Grey",
     "doc_view": "Report Builder",
-    "doctype": "Workspace Shortcut",
     "format": null,
+    "icon": null,
+    "kanban_board": null,
     "label": "Recurring Task",
     "link_to": "Recurring Task",
+    "parent": "TNC Task",
     "parentfield": "shortcuts",
     "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
     "stats_filter": "[]",
-    "type": "DocType"
+    "type": "DocType",
+    "url": null
    },
    {
     "color": "Grey",
     "doc_view": "Report Builder",
-    "doctype": "Workspace Shortcut",
     "format": null,
+    "icon": null,
+    "kanban_board": null,
     "label": "User",
     "link_to": "User",
+    "parent": "TNC Task",
     "parentfield": "shortcuts",
     "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
     "stats_filter": "[[\"User\",\"enabled\",\"=\",1,false]]",
-    "type": "DocType"
+    "type": "DocType",
+    "url": null
+   },
+   {
+    "color": "Grey",
+    "doc_view": "List",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Teacher",
+    "link_to": "Teacher",
+    "parent": "TNC Task",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": "[]",
+    "type": "DocType",
+    "url": null
    },
    {
     "color": "Grey",
     "doc_view": "Report Builder",
-    "doctype": "Workspace Shortcut",
     "format": null,
+    "icon": null,
+    "kanban_board": null,
     "label": "Employee",
     "link_to": "Employee",
+    "parent": "TNC Task",
     "parentfield": "shortcuts",
     "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
     "stats_filter": "[]",
-    "type": "DocType"
+    "type": "DocType",
+    "url": null
    }
   ],
   "title": "TNC Task"

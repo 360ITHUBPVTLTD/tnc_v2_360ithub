@@ -1,0 +1,53 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #b8f3fb;
+        }
+        h2 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>Teachers Timesheet Report</h2>
+    <p><strong>Teacher ID:</strong> {{ teacher_id }}</p>
+    <p><strong>Teacher Name:</strong> {{ teacher_name }}</p>
+    <p><strong>Date Range:</strong> {{ formatted_date_range}}</p>
+
+    {% if data %}
+    <table>
+        <thead>
+            <tr>
+                {% for column in columns %}
+                    <th>{{ column.label }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+                <tr>
+                    {% for column in columns %}
+                        <td>{{ row[column.fieldname] or '' }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; font-weight: bold; margin-top: 30px;">{{ _("No Data Found") }}</p>
+    {% endif %}
+</body>
+</html>

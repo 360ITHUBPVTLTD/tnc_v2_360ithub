@@ -1,0 +1,224 @@
+{
+ "actions": [],
+ "autoname": "format:TCH-{YYYY}-{####}",
+ "creation": "2024-12-16 16:09:37.783581",
+ "default_view": "Report",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "full_name",
+  "email",
+  "mobile_no",
+  "column_break_ckat",
+  "status",
+  "hourly_fee",
+  "supplier_id",
+  "section_break_grvn",
+  "teachers_activity_type",
+  "section_break_qnkk",
+  "notes",
+  "teacher_timesheet_tab",
+  "timesheet_filter_section",
+  "timesheet_portal",
+  "teacher_payment_details_tab",
+  "teacher_payment_details"
+ ],
+ "fields": [
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Full Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Email",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "mobile_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mobile No",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_ckat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "\nActive\nInactive",
+   "reqd": 1
+  },
+  {
+   "fieldname": "hourly_fee",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Hourly Fee"
+  },
+  {
+   "fieldname": "section_break_qnkk",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "teacher_timesheet_tab",
+   "fieldtype": "Tab Break",
+   "label": "Teacher Timesheet"
+  },
+  {
+   "fieldname": "timesheet_filter_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "timesheet_portal",
+   "fieldtype": "HTML"
+  },
+  {
+   "fieldname": "section_break_grvn",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "teachers_activity_type",
+   "fieldtype": "Table",
+   "label": "Teachers Activity Type",
+   "options": "Teachers Activity Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "teacher_payment_details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Teacher Payment Details"
+  },
+  {
+   "fieldname": "teacher_payment_details",
+   "fieldtype": "HTML",
+   "label": "Teacher Payment Details"
+  },
+  {
+   "fieldname": "supplier_id",
+   "fieldtype": "Link",
+   "label": "Supplier ID",
+   "options": "Supplier"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-04-14 17:44:29.394893",
+ "modified_by": "Administrator",
+ "module": "Teachers",
+ "name": "Teacher",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 0,
+   "cancel": 0,
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "if_owner": 0,
+   "permlevel": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "TNC Employees",
+   "select": 1,
+   "share": 0,
+   "submit": 0,
+   "write": 0
+  },
+  {
+   "amend": 0,
+   "cancel": 0,
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 0,
+   "if_owner": 0,
+   "permlevel": 0,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "select": 1,
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "amend": 0,
+   "cancel": 0,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "if_owner": 0,
+   "permlevel": 0,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 0,
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "amend": 0,
+   "cancel": 0,
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 0,
+   "if_owner": 0,
+   "permlevel": 0,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "select": 1,
+   "share": 0,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "amend": 0,
+   "cancel": 0,
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "if_owner": 0,
+   "permlevel": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "TNC Teachers",
+   "select": 0,
+   "share": 0,
+   "submit": 0,
+   "write": 0
+  }
+ ],
+ "row_format": "Dynamic",
+ "show_title_field_in_link": 1,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "full_name"
+}

@@ -53,6 +53,9 @@ def run_tests():
 	frappe.flags.in_test = True
 	try:
 		print("Starting Task hooks verification...")
+		# providers off for the duration of this transaction (rolled back below), whatever the site has set
+		frappe.db.set_single_value("TNC Settings", {"whatsapp_provider": "Disabled", "fcm_enabled": 0, "in_app_notifications_enabled": 1})
+		frappe.clear_document_cache("TNC Settings", "TNC Settings")
 		_user(OWNER, phone="9999900001")
 		_user(HELPER, phone=None)
 		_user(REPORTER)

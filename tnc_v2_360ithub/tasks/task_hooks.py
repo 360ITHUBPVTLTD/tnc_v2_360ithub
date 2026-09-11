@@ -41,7 +41,13 @@ def _assignees(doc):
 # ---------------------------------------------------------------------------
 
 
+def _migrating():
+	return bool(frappe.flags.in_v1_migration)
+
+
 def before_save(doc, method=None):
+	if _migrating():
+		return
 	if doc.is_new() and not doc.get("task_reporter"):
 		doc.task_reporter = frappe.session.user if frappe.session.user != "Guest" else None
 
@@ -63,6 +69,8 @@ def before_save(doc, method=None):
 
 
 def after_insert(doc, method=None):
+	if _migrating():
+		return
 	recipients = _assignees(doc)
 	if not recipients:
 		return
@@ -72,6 +80,8 @@ def after_insert(doc, method=None):
 
 
 def on_update(doc, method=None):
+	if _migrating():
+		return
 	old = doc.get_doc_before_save()
 	if not old:
 		return
@@ -101,6 +111,8 @@ def on_update(doc, method=None):
 
 
 def on_comment(doc, method=None):
+	if _migrating():
+		return
 	if doc.reference_doctype != "Task" or not doc.reference_name or doc.comment_type != "Comment":
 		return
 	task = frappe.get_doc("Task", doc.reference_name)

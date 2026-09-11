@@ -1,23 +1,25 @@
 [
  {
+  "docstatus": 0,
   "doctype": "Role Profile",
+  "modified": "2026-09-11 11:58:26.455426",
   "name": "TNC Employees",
   "role_profile": "TNC Employees",
   "roles": [
    {
-    "doctype": "Has Role",
+    "parent": "TNC Employees",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "TNC Employees"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Employees",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Employee"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Employees",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Employee Self Service"
@@ -25,30 +27,32 @@
   ]
  },
  {
+  "docstatus": 0,
   "doctype": "Role Profile",
+  "modified": "2026-09-11 11:58:26.480729",
   "name": "TNC Manager",
   "role_profile": "TNC Manager",
   "roles": [
    {
-    "doctype": "Has Role",
+    "parent": "TNC Manager",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "TNC Employees"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Manager",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "TNC Manager"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Manager",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Employee Self Service"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Manager",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Employee"
@@ -56,48 +60,50 @@
   ]
  },
  {
+  "docstatus": 0,
   "doctype": "Role Profile",
+  "modified": "2026-09-11 11:58:26.510584",
   "name": "TNC Super Admin",
   "role_profile": "TNC Super Admin",
   "roles": [
    {
-    "doctype": "Has Role",
+    "parent": "TNC Super Admin",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "TNC Super Admin"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Super Admin",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "TNC Employees"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Super Admin",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Employee Self Service"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Super Admin",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Employee"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Super Admin",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Leave Approver"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Super Admin",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Expense Approver"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Super Admin",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "TNC Manager"
@@ -105,36 +111,38 @@
   ]
  },
  {
+  "docstatus": 0,
   "doctype": "Role Profile",
+  "modified": "2026-09-11 11:58:26.536096",
   "name": "TNC Teacher",
   "role_profile": "TNC Teacher",
   "roles": [
    {
-    "doctype": "Has Role",
+    "parent": "TNC Teacher",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Employee"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Teacher",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Employee Self Service"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Teacher",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Supplier"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Teacher",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "TNC Employees"
    },
    {
-    "doctype": "Has Role",
+    "parent": "TNC Teacher",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "TNC Manager"
