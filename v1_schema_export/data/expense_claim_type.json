@@ -1,0 +1,53 @@
+[
+ {
+  "accounts": [],
+  "deferred_expense_account": 0,
+  "doctype": "Expense Claim Type",
+  "expense_type": "Office & Administration Expenses",
+  "idx": 0,
+  "name": "Office & Administration Expenses"
+ },
+ {
+  "accounts": [],
+  "deferred_expense_account": 0,
+  "doctype": "Expense Claim Type",
+  "expense_type": "Staff Welfare Expenses",
+  "idx": 0,
+  "name": "Staff Welfare Expenses"
+ },
+ {
+  "accounts": [],
+  "deferred_expense_account": 0,
+  "doctype": "Expense Claim Type",
+  "expense_type": "Repairs & Maintenance",
+  "idx": 0,
+  "name": "Repairs & Maintenance"
+ },
+ {
+  "accounts": [
+   {
+    "company": "TNC Nursing",
+    "default_account": "TNC Other -EXP - IND",
+    "doctype": "Expense Claim Account",
+    "idx": 1,
+    "name": "0q60f6glb6",
+    "parent": "Travel & Accommodation",
+    "parentfield": "accounts",
+    "parenttype": "Expense Claim Type"
+   }
+  ],
+  "deferred_expense_account": 0,
+  "doctype": "Expense Claim Type",
+  "expense_type": "Travel & Accommodation",
+  "idx": 0,
+  "name": "Travel & Accommodation"
+ },
+ {
+  "accounts": [],
+  "deferred_expense_account": 0,
+  "doctype": "Expense Claim Type",
+  "expense_type": "Marketing & Program Expenses",
+  "idx": 0,
+  "name": "Marketing & Program Expenses"
+ }
+]

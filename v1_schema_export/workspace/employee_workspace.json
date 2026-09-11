@@ -1,0 +1,134 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"AOYPYraOez\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"HTML for checkin\",\"col\":12}},{\"id\":\"kyQVD38Y0H\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>ESS</b></span>\",\"col\":12}},{\"id\":\"EqBodb-W-V\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Holiday List\",\"col\":3}},{\"id\":\"8PCOMo01-U\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Leave Application\",\"col\":3}},{\"id\":\"VZb6LTsJVT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Monthly Attendance Report\",\"col\":3}},{\"id\":\"svU9IJNhuo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Compensatory Leave Request\",\"col\":3}},{\"id\":\"njUcnuuJ5x\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense Claim\",\"col\":3}},{\"id\":\"GEbwAKVnVY\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"z29omKqdgR\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports</b></span>\",\"col\":12}},{\"id\":\"mGiQ0yPtkX\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Today Team Presence\",\"col\":12}},{\"id\":\"N-2wU52QFD\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Month Brithday\",\"col\":12}}]",
+ "custom_blocks": [
+  {
+   "custom_block_name": "HTML for checkin",
+   "doctype": "Workspace Custom Block",
+   "idx": 1,
+   "label": "HTML for checkin",
+   "name": "25uk1emuuc",
+   "parent": "Employee Workspace",
+   "parentfield": "custom_blocks",
+   "parenttype": "Workspace"
+  },
+  {
+   "custom_block_name": "Today Team Presence",
+   "doctype": "Workspace Custom Block",
+   "idx": 2,
+   "label": "Today Team Presence",
+   "name": "25u13c16md",
+   "parent": "Employee Workspace",
+   "parentfield": "custom_blocks",
+   "parenttype": "Workspace"
+  },
+  {
+   "custom_block_name": "Month Brithday",
+   "doctype": "Workspace Custom Block",
+   "idx": 3,
+   "label": "Month Brithday",
+   "name": "25uqb847og",
+   "parent": "Employee Workspace",
+   "parentfield": "custom_blocks",
+   "parenttype": "Workspace"
+  }
+ ],
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "idx": 0,
+ "indicator_color": "yellow",
+ "is_hidden": 1,
+ "label": "Employee Workspace",
+ "links": [],
+ "name": "Employee Workspace",
+ "number_cards": [],
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "idx": 1,
+   "name": "25uo1i6r9k",
+   "parent": "Employee Workspace",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "Employee"
+  }
+ ],
+ "sequence_id": 40.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "Report Builder",
+   "doctype": "Workspace Shortcut",
+   "idx": 1,
+   "label": "Leave Application",
+   "link_to": "Leave Application",
+   "name": "25uvoi1f1s",
+   "parent": "Employee Workspace",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "Report Builder",
+   "doctype": "Workspace Shortcut",
+   "idx": 2,
+   "label": "Holiday List",
+   "link_to": "Holiday List",
+   "name": "25ug3vjq2r",
+   "parent": "Employee Workspace",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "idx": 3,
+   "label": "Monthly Attendance Report",
+   "link_to": "Monthly Attendance Sheet",
+   "name": "25uv1fmcnp",
+   "parent": "Employee Workspace",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "report_ref_doctype": "Attendance",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "Report Builder",
+   "doctype": "Workspace Shortcut",
+   "idx": 4,
+   "label": "Expense Claim",
+   "link_to": "Expense Claim",
+   "name": "25usodg12p",
+   "parent": "Employee Workspace",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "idx": 5,
+   "label": "Compensatory Leave Request",
+   "link_to": "Compensatory Leave Request",
+   "name": "25ud9kqshb",
+   "parent": "Employee Workspace",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Employee Workspace"
+}

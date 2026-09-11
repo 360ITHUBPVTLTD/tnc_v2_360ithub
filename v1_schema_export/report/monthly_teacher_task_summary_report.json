@@ -1,0 +1,37 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "disabled": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "module": "institute_management_360ithub",
+ "name": "Monthly Teacher Task Summary Report",
+ "prepared_report": 0,
+ "ref_doctype": "Task",
+ "report_name": "Monthly Teacher Task Summary Report",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "idx": 1,
+   "name": "shid89h5mu",
+   "parent": "Monthly Teacher Task Summary Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 2,
+   "name": "shivegb7os",
+   "parent": "Monthly Teacher Task Summary Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "TNC Teachers"
+  }
+ ],
+ "timeout": 0
+}

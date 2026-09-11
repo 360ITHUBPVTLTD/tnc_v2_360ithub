@@ -1,0 +1,56 @@
+{
+ "add_total_row": 1,
+ "add_translate_data": 0,
+ "columns": [],
+ "disabled": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "",
+ "module": "Clarity 360Ithub",
+ "name": "Employee Attendance Report",
+ "prepared_report": 0,
+ "ref_doctype": "Attendance",
+ "report_name": "Employee Attendance Report",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "idx": 1,
+   "name": "a6fvuqahr5",
+   "parent": "Employee Attendance Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 2,
+   "name": "a6flu7q41s",
+   "parent": "Employee Attendance Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "HR User"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 3,
+   "name": "a6fh1i8ssc",
+   "parent": "Employee Attendance Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "HR Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 4,
+   "name": "a6fn2up4m4",
+   "parent": "Employee Attendance Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "Employee"
+  }
+ ],
+ "timeout": 0
+}

@@ -1,0 +1,74 @@
+[
+ {
+  "activity_name": "Offline Class",
+  "doctype": "Activity",
+  "enable": 1,
+  "idx": 42,
+  "name": "Offline Class",
+  "uom": "Minute"
+ },
+ {
+  "activity_name": "Online Class",
+  "doctype": "Activity",
+  "enable": 1,
+  "idx": 10,
+  "name": "Online Class",
+  "uom": "Minute"
+ },
+ {
+  "activity_name": "Youtube Class",
+  "doctype": "Activity",
+  "enable": 1,
+  "idx": 16,
+  "name": "Youtube Class",
+  "uom": "Minute"
+ },
+ {
+  "activity_name": "Preparing QP",
+  "doctype": "Activity",
+  "enable": 1,
+  "idx": 0,
+  "name": "Preparing QP",
+  "uom": "Nos"
+ },
+ {
+  "activity_name": "Advance Live 11.0 Batch",
+  "doctype": "Activity",
+  "enable": 1,
+  "idx": 74,
+  "name": "Advance Live 11.0 Batch",
+  "uom": "Minute"
+ },
+ {
+  "activity_name": "Error Free Questions",
+  "doctype": "Activity",
+  "enable": 1,
+  "idx": 1,
+  "name": "Error Free Questions",
+  "uom": "Nos"
+ },
+ {
+  "activity_name": "New Questions",
+  "doctype": "Activity",
+  "enable": 1,
+  "idx": 2,
+  "name": "New Questions",
+  "uom": "Nos"
+ },
+ {
+  "activity_name": "Copy Checking",
+  "doctype": "Activity",
+  "enable": 1,
+  "idx": 1,
+  "name": "Copy Checking",
+  "uom": "Nos"
+ },
+ {
+  "activity_name": "High yield MCQs Batch 11.0",
+  "doctype": "Activity",
+  "enable": 1,
+  "idx": 26,
+  "name": "High yield MCQs Batch 11.0",
+  "uom": "Minute"
+ }
+]

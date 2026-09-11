@@ -1,0 +1,65 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "disabled": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Arodhana Letter Head",
+ "module": "Clarity 360Ithub",
+ "name": "Monthly Attendance Report",
+ "prepared_report": 0,
+ "ref_doctype": "Attendance",
+ "report_name": "Monthly Attendance Report",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "idx": 1,
+   "name": "25s69d4u21",
+   "parent": "Monthly Attendance Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "HR User"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 2,
+   "name": "25shd9ulhm",
+   "parent": "Monthly Attendance Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 3,
+   "name": "25slu1pidk",
+   "parent": "Monthly Attendance Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "HR Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 4,
+   "name": "25s8adlgr2",
+   "parent": "Monthly Attendance Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "Employee"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 5,
+   "name": "25sv8cl75q",
+   "parent": "Monthly Attendance Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "Employee Self Service"
+  }
+ ],
+ "timeout": 0
+}

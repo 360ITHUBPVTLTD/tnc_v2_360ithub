@@ -1,0 +1,37 @@
+{
+ "add_total_row": 1,
+ "add_translate_data": 0,
+ "columns": [],
+ "disabled": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 1,
+ "is_standard": "Yes",
+ "module": "institute_management_360ithub",
+ "name": "Teachers Payable Report",
+ "prepared_report": 0,
+ "ref_doctype": "Teachers Timesheet",
+ "report_name": "Teachers Payable Report",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "idx": 1,
+   "name": "38n526qlqb",
+   "parent": "Teachers Payable Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 2,
+   "name": "qo2cpa9i2q",
+   "parent": "Teachers Payable Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "TNC Teachers"
+  }
+ ],
+ "timeout": 0
+}
