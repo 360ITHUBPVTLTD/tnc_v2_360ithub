@@ -1,0 +1,209 @@
+[
+ {
+  "doc_type": "Recurring Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "naming_series",
+  "module": "Tasks",
+  "name": "Recurring Task-naming_series-in_list_view",
+  "property": "in_list_view",
+  "property_type": "Check",
+  "value": "0"
+ },
+ {
+  "doc_type": "Recurring Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "naming_series",
+  "module": "Tasks",
+  "name": "Recurring Task-naming_series-options",
+  "property": "options",
+  "property_type": "Text",
+  "value": "REC-TSK-.#####"
+ },
+ {
+  "doc_type": "Recurring Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "priority",
+  "module": "Tasks",
+  "name": "Recurring Task-priority-in_list_view",
+  "property": "in_list_view",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Recurring Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "subject",
+  "module": "Tasks",
+  "name": "Recurring Task-subject-in_list_view",
+  "property": "in_list_view",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocType",
+  "module": "Tasks",
+  "name": "Task-main-field_order",
+  "property": "field_order",
+  "property_type": "Data",
+  "value": "[\"subject\", \"task_owner\", \"task_owner_name\", \"project\", \"recurring_task\", \"generated_automatically\", \"occurrence_number\", \"issue\", \"type\", \"color\", \"is_group\", \"is_template\", \"column_break0\", \"status\", \"other_assignees\", \"priority\", \"exp_end_date\", \"exp_start_date\", \"task_weight\", \"parent_task\", \"completed_by\", \"completed_on\", \"sb_timeline\", \"expected_time\", \"start\", \"column_break_11\", \"progress\", \"duration\", \"is_milestone\", \"sb_details\", \"description\", \"sb_depends_on\", \"depends_on\", \"depends_on_tasks\", \"sb_actual\", \"act_start_date\", \"actual_time\", \"column_break_15\", \"act_end_date\", \"sb_costing\", \"total_costing_amount\", \"total_expense_claim\", \"column_break_20\", \"total_billing_amount\", \"sb_more_info\", \"review_date\", \"closing_date\", \"column_break_22\", \"department\", \"company\", \"lft\", \"rgt\", \"old_parent\", \"template_task\"]"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocType",
+  "module": "Tasks",
+  "name": "Task-main-quick_entry",
+  "property": "quick_entry",
+  "property_type": "Check",
+  "value": "0"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "color",
+  "module": "Tasks",
+  "name": "Task-color-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "exp_end_date",
+  "module": "Tasks",
+  "name": "Task-exp_end_date-reqd",
+  "property": "reqd",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "exp_start_date",
+  "module": "Tasks",
+  "name": "Task-exp_start_date-default",
+  "property": "default",
+  "property_type": "Text",
+  "value": "Today"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "is_milestone",
+  "module": "Tasks",
+  "name": "Task-is_milestone-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "issue",
+  "module": "Tasks",
+  "name": "Task-issue-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "parent_task",
+  "module": "Tasks",
+  "name": "Task-parent_task-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "project",
+  "module": "Tasks",
+  "name": "Task-project-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "sb_actual",
+  "module": "Tasks",
+  "name": "Task-sb_actual-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "sb_costing",
+  "module": "Tasks",
+  "name": "Task-sb_costing-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "sb_depends_on",
+  "module": "Tasks",
+  "name": "Task-sb_depends_on-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "sb_more_info",
+  "module": "Tasks",
+  "name": "Task-sb_more_info-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "task_weight",
+  "module": "Tasks",
+  "name": "Task-task_weight-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ },
+ {
+  "doc_type": "Task",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "type",
+  "module": "Tasks",
+  "name": "Task-type-hidden",
+  "property": "hidden",
+  "property_type": "Check",
+  "value": "1"
+ }
+]

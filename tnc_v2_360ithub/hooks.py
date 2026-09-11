@@ -158,6 +158,15 @@ required_apps = ["frappe/erpnext", "frappe/hrms", "india_compliance"]
 # Scheduled Tasks
 # ---------------
 
+scheduler_events = {
+	"cron": {
+		# Recurring Task engine, ported from v1 (ran 07:30 there too).
+		"30 7 * * *": [
+			"tnc_v2_360ithub.tasks.recurring_task.scheduler.run_scheduler",
+		],
+	},
+}
+
 # scheduler_events = {
 # 	"all": [
 # 		"tnc_v2_360ithub.tasks.all"
@@ -257,3 +266,16 @@ required_apps = ["frappe/erpnext", "frappe/hrms", "india_compliance"]
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+
+# Fixtures
+# --------
+# Site-level configuration that v1 carried as bare database rows. Sourced from
+# v1_schema_export/ and filtered to what this app owns (module = "Tasks").
+
+fixtures = [
+	{"dt": "Custom Field", "filters": [["module", "=", "Tasks"]]},
+	{"dt": "Property Setter", "filters": [["module", "=", "Tasks"]]},
+	{"dt": "Role", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
+	{"dt": "Role Profile", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teacher"]]]},
+	{"dt": "Custom DocPerm", "filters": [["parent", "=", "Task"], ["role", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin"]]]},
+]

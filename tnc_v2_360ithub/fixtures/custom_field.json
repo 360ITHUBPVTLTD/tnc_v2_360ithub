@@ -1,0 +1,77 @@
+[
+ {
+  "default": "0",
+  "doctype": "Custom Field",
+  "dt": "Task",
+  "fieldname": "generated_automatically",
+  "fieldtype": "Check",
+  "insert_after": "recurring_task",
+  "label": "Generated Automatically",
+  "module": "Tasks",
+  "name": "Task-generated_automatically",
+  "no_copy": 1,
+  "read_only": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Task",
+  "fieldname": "occurrence_number",
+  "fieldtype": "Int",
+  "insert_after": "generated_automatically",
+  "label": "Occurrence Number",
+  "module": "Tasks",
+  "name": "Task-occurrence_number",
+  "no_copy": 1,
+  "read_only": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Task",
+  "fieldname": "recurring_task",
+  "fieldtype": "Link",
+  "insert_after": "project",
+  "label": "Recurring Task",
+  "module": "Tasks",
+  "name": "Task-recurring_task",
+  "no_copy": 1,
+  "options": "Recurring Task",
+  "read_only": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Task",
+  "fieldname": "task_owner",
+  "fieldtype": "Link",
+  "in_standard_filter": 1,
+  "insert_after": "subject",
+  "label": "Task Owner",
+  "module": "Tasks",
+  "name": "Task-task_owner",
+  "options": "User",
+  "reqd": 1
+ },
+ {
+  "default": "__user",
+  "doctype": "Custom Field",
+  "dt": "Task",
+  "fieldname": "task_reporter",
+  "fieldtype": "Link",
+  "in_standard_filter": 1,
+  "insert_after": "task_owner_name",
+  "label": "Task Reporter",
+  "module": "Tasks",
+  "name": "Task-task_reporter",
+  "options": "User"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Task",
+  "fetch_from": "task_reporter.full_name",
+  "fieldname": "task_reporter_name",
+  "fieldtype": "Data",
+  "insert_after": "task_reporter",
+  "label": "Task Reporter Name",
+  "module": "Tasks",
+  "name": "Task-task_reporter_name"
+ }
+]

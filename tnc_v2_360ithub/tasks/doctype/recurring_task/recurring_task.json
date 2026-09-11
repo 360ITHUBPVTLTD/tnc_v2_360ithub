@@ -1,0 +1,301 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-23 10:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "task_info_section",
+  "naming_series",
+  "subject",
+  "task_owner",
+  "cb1",
+  "priority",
+  "allocated_days",
+  "description_section",
+  "description",
+  "recurrence_config_section",
+  "frequency",
+  "day_of_week",
+  "repeat_by",
+  "day_of_month",
+  "repeat_every",
+  "unit",
+  "cb2",
+  "start_date",
+  "ends",
+  "end_date",
+  "number_of_occurrences",
+  "enabled",
+  "section_break_wilh",
+  "recurrence_summary",
+  "scheduler_fields_section",
+  "status",
+  "generated_occurrence_count",
+  "cb3",
+  "next_run_date",
+  "last_run_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "task_info_section",
+   "fieldtype": "Section Break",
+   "label": "Task Information"
+  },
+  {
+   "default": "REC-TSK-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "in_list_view": 1,
+   "label": "Naming Series",
+   "options": "REC-TSK-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Subject",
+   "reqd": 1
+  },
+  {
+   "fieldname": "task_owner",
+   "fieldtype": "Table MultiSelect",
+   "label": "Task Owner",
+   "options": "Recurring Task Owner",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Medium",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Priority",
+   "options": "Low\nMedium\nHigh\nUrgent",
+   "reqd": 1
+  },
+  {
+   "description": "Note: Enter the number of working or calendar days assigned to complete each task. The system uses this value to calculate the due date for every automatically generated task.\n\nExample:\n\nStart Date: 01-Aug-2026\nAllocated Days: 5\nDue Date: 06-Aug-2026",
+   "fieldname": "allocated_days",
+   "fieldtype": "Int",
+   "label": "Allocated Days"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "description_section",
+   "fieldtype": "Section Break",
+   "label": "Task Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description"
+  },
+  {
+   "fieldname": "recurrence_config_section",
+   "fieldtype": "Section Break",
+   "label": "Recurrence Configuration"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enable Recurring Task",
+   "read_only": 1
+  },
+  {
+   "fieldname": "frequency",
+   "fieldtype": "Select",
+   "label": "Frequency",
+   "options": "Daily\nWeekly\nMonthly\nCustom",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.frequency=='Weekly'",
+   "fieldname": "day_of_week",
+   "fieldtype": "Select",
+   "label": "Day of Week",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday"
+  },
+  {
+   "depends_on": "eval:doc.frequency=='Monthly'",
+   "fieldname": "repeat_by",
+   "fieldtype": "Select",
+   "label": "Repeat By",
+   "options": "Day of Month\nLast Day of Month"
+  },
+  {
+   "depends_on": "eval:doc.frequency=='Monthly' && doc.repeat_by=='Day of Month'",
+   "fieldname": "day_of_month",
+   "fieldtype": "Select",
+   "label": "Day of Month",
+   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31"
+  },
+  {
+   "default": "1",
+   "depends_on": "eval:doc.frequency=='Custom'",
+   "fieldname": "repeat_every",
+   "fieldtype": "Int",
+   "label": "Repeat Every"
+  },
+  {
+   "depends_on": "eval:doc.frequency=='Custom'",
+   "fieldname": "unit",
+   "fieldtype": "Select",
+   "label": "Unit",
+   "options": "Days\nWeeks\nMonths\nYears"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date",
+   "reqd": 1
+  },
+  {
+   "default": "Never",
+   "fieldname": "ends",
+   "fieldtype": "Select",
+   "label": "Ends",
+   "options": "Never\nOn Date\nAfter Occurrences",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.ends=='On Date'",
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date"
+  },
+  {
+   "depends_on": "eval:doc.ends=='After Occurrences'",
+   "fieldname": "number_of_occurrences",
+   "fieldtype": "Int",
+   "label": "Number of Occurrences"
+  },
+  {
+   "fieldname": "scheduler_fields_section",
+   "fieldtype": "Section Break",
+   "label": "Scheduler Fields"
+  },
+  {
+   "fieldname": "next_run_date",
+   "fieldtype": "Date",
+   "label": "Next Run Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_run_date",
+   "fieldtype": "Date",
+   "label": "Last Run Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "generated_occurrence_count",
+   "fieldtype": "Int",
+   "label": "Generated Occurrence Count",
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nActive\nPaused\nCompleted\nStopped",
+   "read_only": 1
+  },
+  {
+   "fieldname": "recurrence_summary",
+   "fieldtype": "Small Text",
+   "label": "Recurrence Summary",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_wilh",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-24 14:55:45.668599",
+ "modified_by": "Administrator",
+ "module": "Tasks",
+ "name": "Recurring Task",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "permlevel": 0,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "permlevel": 0,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "permlevel": 0,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 0,
+   "permlevel": 0,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Employees",
+   "select": 1,
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
