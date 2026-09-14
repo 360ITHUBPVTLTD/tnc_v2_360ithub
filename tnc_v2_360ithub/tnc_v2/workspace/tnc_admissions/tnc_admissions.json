@@ -1,0 +1,146 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"hdr\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Admissions</b></span>\",\"col\":12}},{\"id\":\"nc0\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Enquiries this month\",\"col\":3}},{\"id\":\"nc1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Demos this week\",\"col\":3}},{\"id\":\"nc2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Admissions this month\",\"col\":3}},{\"id\":\"nc3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Enrolments active\",\"col\":3}},{\"id\":\"nc4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Follow-ups overdue\",\"col\":3}},{\"id\":\"nc5\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Follow-ups due today\",\"col\":3}},{\"id\":\"nc6\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Fee follow-ups open\",\"col\":3}},{\"id\":\"sh\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Quick actions</b></span>\",\"col\":12}},{\"id\":\"sc0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Follow-ups\",\"col\":3}},{\"id\":\"sc1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Share Forms\",\"col\":3}},{\"id\":\"sc2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Student Enquiry\",\"col\":3}},{\"id\":\"sc3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Demo Class\",\"col\":3}},{\"id\":\"sc4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Student\",\"col\":3}},{\"id\":\"sc5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Enrol in Batch\",\"col\":3}},{\"id\":\"sc6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Student Batch\",\"col\":3}},{\"id\":\"sc7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Course\",\"col\":3}},{\"id\":\"sc8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Orders\",\"col\":3}},{\"id\":\"sc9\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Enquiry Funnel\",\"col\":3}},{\"id\":\"XSfSLNvm9M\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Admission Form\",\"col\":3}}]",
+ "creation": "2026-09-11 17:20:55.378564",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "icon": "education",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "TNC Admissions",
+ "links": [],
+ "modified": "2026-09-14 12:10:26.852227",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "TNC Admissions",
+ "number_cards": [
+  {
+   "label": "Enquiries this month",
+   "number_card_name": "Enquiries this month"
+  },
+  {
+   "label": "Demos this week",
+   "number_card_name": "Demos this week"
+  },
+  {
+   "label": "Admissions this month",
+   "number_card_name": "Admissions this month"
+  },
+  {
+   "label": "Enrolments active",
+   "number_card_name": "Enrolments active"
+  },
+  {
+   "label": "Follow-ups overdue",
+   "number_card_name": "Follow-ups overdue"
+  },
+  {
+   "label": "Follow-ups due today",
+   "number_card_name": "Follow-ups due today"
+  },
+  {
+   "label": "Fee follow-ups open",
+   "number_card_name": "Fee follow-ups open"
+  }
+ ],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "TNC Employees"
+  },
+  {
+   "role": "TNC Manager"
+  },
+  {
+   "role": "TNC Super Admin"
+  }
+ ],
+ "sequence_id": 2.0,
+ "shortcuts": [
+  {
+   "color": "Red",
+   "doc_view": "",
+   "label": "Follow-ups",
+   "link_to": "follow-ups",
+   "type": "Page"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Admission Form",
+   "link_to": "Admission Form",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Share Forms",
+   "link_to": "share-forms",
+   "type": "Page"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "Student Enquiry",
+   "link_to": "Student Enquiry",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "",
+   "label": "Demo Class",
+   "link_to": "Demo Class",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "",
+   "label": "Student",
+   "link_to": "Student",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "",
+   "label": "Enrol in Batch",
+   "link_to": "Student Batch Enrollment",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Student Batch",
+   "link_to": "Student Batch",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Course",
+   "link_to": "Course",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Sales Orders",
+   "link_to": "Sales Order",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "Enquiry Funnel",
+   "link_to": "Enquiry Funnel",
+   "report_ref_doctype": "Student Enquiry",
+   "type": "Report"
+  }
+ ],
+ "title": "TNC Admissions"
+}

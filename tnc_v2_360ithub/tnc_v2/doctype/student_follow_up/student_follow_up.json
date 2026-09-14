@@ -1,0 +1,258 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2026-09-11 18:00:00.000000",
+ "custom": 0,
+ "docstatus": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "reference_type",
+  "reference_name",
+  "purpose",
+  "student_name",
+  "mobile",
+  "cb1",
+  "follow_up_date",
+  "followup_type",
+  "done_by",
+  "assigned_to",
+  "sb2",
+  "notes",
+  "cb2",
+  "next_follow_up_date",
+  "status",
+  "sb_fee",
+  "sales_order",
+  "payment_term",
+  "cb_fee",
+  "instalment_due_date",
+  "amount_pending",
+  "fee_kind"
+ ],
+ "fields": [
+  {
+   "default": "FUP-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "FUP-.#####"
+  },
+  {
+   "fieldname": "reference_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Reference Type",
+   "options": "Student Enquiry\nStudent",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Reference Name",
+   "options": "reference_type",
+   "reqd": 1
+  },
+  {
+   "default": "Enquiry",
+   "fieldname": "purpose",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Purpose",
+   "options": "Enquiry\nFee\nGeneral",
+   "reqd": 1
+  },
+  {
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Student Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "follow_up_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Follow Up Date",
+   "reqd": 1
+  },
+  {
+   "default": "Call",
+   "fieldname": "followup_type",
+   "fieldtype": "Select",
+   "label": "Followup Type",
+   "options": "Call\nWhatsApp\nMessage\nEmail\nMeeting"
+  },
+  {
+   "default": "__user",
+   "fieldname": "done_by",
+   "fieldtype": "Link",
+   "label": "Done By",
+   "options": "User"
+  },
+  {
+   "description": "Counsellor who must make this call",
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Assigned To",
+   "options": "User"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "next_follow_up_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Next Follow Up Date"
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Open\nClosed"
+  },
+  {
+   "collapsible": 0,
+   "depends_on": "eval:doc.purpose=='Fee'",
+   "fieldname": "sb_fee",
+   "fieldtype": "Section Break",
+   "label": "Instalment"
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_term",
+   "fieldtype": "Data",
+   "label": "Instalment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_fee",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "instalment_due_date",
+   "fieldtype": "Date",
+   "label": "Instalment Due Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amount_pending",
+   "fieldtype": "Currency",
+   "label": "Amount Pending",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fee_kind",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Kind",
+   "options": "\nUpcoming\nOverdue",
+   "read_only": 1
+  }
+ ],
+ "idx": 0,
+ "is_calendar_and_gantt": 1,
+ "is_submittable": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-09-11 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "Student Follow-Up",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Employees",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "student_name",
+ "track_changes": 1
+}

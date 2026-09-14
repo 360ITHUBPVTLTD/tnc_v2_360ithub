@@ -1,0 +1,387 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2026-09-11 18:00:00.000000",
+ "custom": 0,
+ "docstatus": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "student",
+  "student_name",
+  "mobile",
+  "cb1",
+  "batch",
+  "course",
+  "course_name",
+  "batch_start",
+  "batch_end",
+  "enrollment_date",
+  "enrollment_type",
+  "previous_enrollment",
+  "sb_fee",
+  "standard_fee",
+  "discount_type",
+  "discount_value",
+  "discount_amount",
+  "cb_fee",
+  "net_payable",
+  "gst_applicable",
+  "taxes_and_charges",
+  "discount_reason",
+  "sb_inst",
+  "number_of_installments",
+  "first_due_date",
+  "cb_inst",
+  "installment_gap_days",
+  "regenerate",
+  "batch_window_note",
+  "sb_inst2",
+  "installments",
+  "instalment_check_html",
+  "sb_status",
+  "status",
+  "hold_reason",
+  "cb_s",
+  "sales_order",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "ENR-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "ENR-.#####"
+  },
+  {
+   "fieldname": "student",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Student",
+   "options": "Student",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "student.student_name",
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Student Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.mobile",
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Batch",
+   "options": "Student Batch",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "batch.course",
+   "fieldname": "course",
+   "fieldtype": "Link",
+   "label": "Course",
+   "options": "Course",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "batch.course_name",
+   "fieldname": "course_name",
+   "fieldtype": "Data",
+   "label": "Course Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "batch_start",
+   "fieldtype": "Date",
+   "label": "Batch Start Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "batch_end",
+   "fieldtype": "Date",
+   "label": "Batch End Date",
+   "read_only": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "enrollment_date",
+   "fieldtype": "Date",
+   "label": "Enrollment Date",
+   "reqd": 1
+  },
+  {
+   "default": "New Admission",
+   "fieldname": "enrollment_type",
+   "fieldtype": "Select",
+   "label": "Admission Type",
+   "options": "New Admission\nRejoining\nBatch Change"
+  },
+  {
+   "depends_on": "eval:doc.enrollment_type!='New Admission'",
+   "fieldname": "previous_enrollment",
+   "fieldtype": "Link",
+   "label": "Previous Enrolment",
+   "options": "Student Batch Enrollment"
+  },
+  {
+   "fieldname": "sb_fee",
+   "fieldtype": "Section Break",
+   "label": "Fee"
+  },
+  {
+   "fetch_from": "batch.standard_fee",
+   "fetch_if_empty": 1,
+   "fieldname": "standard_fee",
+   "fieldtype": "Currency",
+   "label": "Standard Fee",
+   "options": "Company:company:default_currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "discount_type",
+   "fieldtype": "Select",
+   "label": "Discount Type",
+   "options": "\nAmount\nPercentage"
+  },
+  {
+   "depends_on": "eval:doc.discount_type",
+   "fieldname": "discount_value",
+   "fieldtype": "Float",
+   "label": "Discount Value"
+  },
+  {
+   "fieldname": "discount_amount",
+   "fieldtype": "Currency",
+   "label": "Discount Amount",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_fee",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "net_payable",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Net Payable (before GST)",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gst_applicable",
+   "fieldtype": "Check",
+   "label": "GST Applicable"
+  },
+  {
+   "depends_on": "eval:doc.gst_applicable",
+   "fieldname": "taxes_and_charges",
+   "fieldtype": "Link",
+   "label": "Taxes And Charges",
+   "options": "Sales Taxes and Charges Template"
+  },
+  {
+   "depends_on": "eval:doc.discount_type",
+   "fieldname": "discount_reason",
+   "fieldtype": "Small Text",
+   "label": "Discount Reason",
+   "mandatory_depends_on": "eval:doc.discount_type"
+  },
+  {
+   "fieldname": "sb_inst",
+   "fieldtype": "Section Break",
+   "label": "Instalments"
+  },
+  {
+   "default": 1,
+   "fieldname": "number_of_installments",
+   "fieldtype": "Int",
+   "label": "Number Of Installments",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "first_due_date",
+   "fieldtype": "Date",
+   "label": "First Due Date"
+  },
+  {
+   "fieldname": "cb_inst",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 30,
+   "fieldname": "installment_gap_days",
+   "fieldtype": "Int",
+   "label": "Gap between instalments (days)"
+  },
+  {
+   "fieldname": "regenerate",
+   "fieldtype": "Button",
+   "label": "Generate Instalments"
+  },
+  {
+   "fieldname": "batch_window_note",
+   "fieldtype": "HTML",
+   "label": "Batch window"
+  },
+  {
+   "fieldname": "sb_inst2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "Edit any amount or date; the total must equal Net Payable.",
+   "fieldname": "installments",
+   "fieldtype": "Table",
+   "label": "Installments",
+   "options": "Enrollment Installment"
+  },
+  {
+   "fieldname": "instalment_check_html",
+   "fieldtype": "HTML",
+   "label": "Instalment check"
+  },
+  {
+   "fieldname": "sb_status",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enrolment Status",
+   "options": "Active\nCompleted\nLeft\nOn Hold"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.status=='On Hold'",
+   "fieldname": "hold_reason",
+   "fieldtype": "Small Text",
+   "label": "On Hold Reason"
+  },
+  {
+   "fieldname": "cb_s",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Student Batch Enrollment",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "idx": 0,
+ "is_submittable": 1,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-09-11 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "Student Batch Enrollment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Employees",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "student_name",
+ "track_changes": 1
+}

@@ -1,0 +1,493 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2026-09-11 18:00:00.000000",
+ "custom": 0,
+ "docstatus": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "tab_overview",
+  "overview",
+  "tab_payments",
+  "payments_html",
+  "tab_followups",
+  "followups_html",
+  "tab_personal",
+  "naming_series",
+  "student_name",
+  "gender",
+  "date_of_birth",
+  "category",
+  "cb_p1",
+  "student_photo",
+  "course_interested",
+  "status",
+  "status_reason",
+  "counsellor",
+  "sb_contact",
+  "mobile",
+  "alt_mobile",
+  "email",
+  "cb_c1",
+  "address",
+  "permanent_address",
+  "city",
+  "district",
+  "state",
+  "sb_edu",
+  "college",
+  "passout_year",
+  "cb_e1",
+  "aadhar_number",
+  "nationality",
+  "place_of_birth",
+  "religion",
+  "tab_family",
+  "fathers_name",
+  "father_mobile_no",
+  "father_occupation",
+  "mother_occupation",
+  "cb_f1",
+  "mothers_name",
+  "mother_mobile_no",
+  "guardian_name",
+  "guardian_mobile",
+  "emergency_contact",
+  "blood_group",
+  "tab_docs",
+  "documents",
+  "tab_links",
+  "enquiry",
+  "customer",
+  "cb_l1",
+  "merged_into",
+  "notes",
+  "sb_consent",
+  "terms_accepted",
+  "terms_accepted_on",
+  "cb_consent",
+  "terms_version",
+  "admission_form"
+ ],
+ "fields": [
+  {
+   "fieldname": "tab_overview",
+   "fieldtype": "Tab Break",
+   "label": "Overview"
+  },
+  {
+   "fieldname": "overview",
+   "fieldtype": "HTML",
+   "label": "Overview"
+  },
+  {
+   "fieldname": "tab_payments",
+   "fieldtype": "Tab Break",
+   "label": "Payments"
+  },
+  {
+   "fieldname": "payments_html",
+   "fieldtype": "HTML",
+   "label": "Payments"
+  },
+  {
+   "fieldname": "tab_followups",
+   "fieldtype": "Tab Break",
+   "label": "Follow-ups"
+  },
+  {
+   "fieldname": "followups_html",
+   "fieldtype": "HTML",
+   "label": "Follow-ups"
+  },
+  {
+   "fieldname": "tab_personal",
+   "fieldtype": "Tab Break",
+   "label": "Personal"
+  },
+  {
+   "default": "TNC-ADM-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "TNC-ADM-.#####"
+  },
+  {
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Student Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "label": "Gender",
+   "options": "\nMale\nFemale\nOther"
+  },
+  {
+   "fieldname": "date_of_birth",
+   "fieldtype": "Date",
+   "label": "Date Of Birth"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "label": "Category",
+   "options": "\nGeneral\nEWS\nOBC\nSC\nST"
+  },
+  {
+   "fieldname": "cb_p1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "student_photo",
+   "fieldtype": "Attach Image",
+   "label": "Student Photo"
+  },
+  {
+   "description": "From the enquiry; used to narrow the batch list when enrolling.",
+   "fieldname": "course_interested",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Course Interested",
+   "options": "Course"
+  },
+  {
+   "default": "Trial",
+   "description": "Trial until the first enrolment is submitted, then Active. Attendance Hold is set by attendance rules. Completed / Discontinued close the student.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Trial\nActive\nAttendance Hold\nCompleted\nDiscontinued"
+  },
+  {
+   "depends_on": "eval:['Attendance Hold','Discontinued'].includes(doc.status)",
+   "fieldname": "status_reason",
+   "fieldtype": "Small Text",
+   "label": "Status Reason",
+   "mandatory_depends_on": "eval:['Attendance Hold','Discontinued'].includes(doc.status)"
+  },
+  {
+   "fieldname": "counsellor",
+   "fieldtype": "Link",
+   "label": "Counsellor",
+   "options": "User"
+  },
+  {
+   "fieldname": "sb_contact",
+   "fieldtype": "Section Break",
+   "label": "Contact"
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Mobile",
+   "options": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "alt_mobile",
+   "fieldtype": "Data",
+   "label": "Alternate Mobile",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "cb_c1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "permanent_address",
+   "fieldtype": "Small Text",
+   "label": "Permanent Address"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "district",
+   "fieldtype": "Data",
+   "label": "District"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "sb_edu",
+   "fieldtype": "Section Break",
+   "label": "Education"
+  },
+  {
+   "fieldname": "college",
+   "fieldtype": "Data",
+   "label": "College"
+  },
+  {
+   "fieldname": "passout_year",
+   "fieldtype": "Data",
+   "label": "Pass-out Year"
+  },
+  {
+   "fieldname": "cb_e1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "aadhar_number",
+   "fieldtype": "Data",
+   "label": "Aadhaar Number"
+  },
+  {
+   "default": "India",
+   "fieldname": "nationality",
+   "fieldtype": "Data",
+   "label": "Nationality"
+  },
+  {
+   "fieldname": "place_of_birth",
+   "fieldtype": "Data",
+   "label": "Place of Birth"
+  },
+  {
+   "fieldname": "religion",
+   "fieldtype": "Data",
+   "label": "Religion"
+  },
+  {
+   "fieldname": "tab_family",
+   "fieldtype": "Tab Break",
+   "label": "Family"
+  },
+  {
+   "fieldname": "fathers_name",
+   "fieldtype": "Data",
+   "label": "Father's Name"
+  },
+  {
+   "fieldname": "father_mobile_no",
+   "fieldtype": "Data",
+   "label": "Father's Mobile",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "father_occupation",
+   "fieldtype": "Data",
+   "label": "Father Occupation"
+  },
+  {
+   "fieldname": "mother_occupation",
+   "fieldtype": "Data",
+   "label": "Mother's Occupation"
+  },
+  {
+   "fieldname": "cb_f1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mothers_name",
+   "fieldtype": "Data",
+   "label": "Mother's Name"
+  },
+  {
+   "fieldname": "mother_mobile_no",
+   "fieldtype": "Data",
+   "label": "Mother's Mobile",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "guardian_name",
+   "fieldtype": "Data",
+   "label": "Guardian Name"
+  },
+  {
+   "fieldname": "guardian_mobile",
+   "fieldtype": "Data",
+   "label": "Guardian Mobile",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "emergency_contact",
+   "fieldtype": "Data",
+   "label": "Emergency Contact",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Select",
+   "label": "Blood Group",
+   "options": "\nA+\nA-\nB+\nB-\nAB+\nAB-\nO+\nO-"
+  },
+  {
+   "fieldname": "tab_docs",
+   "fieldtype": "Tab Break",
+   "label": "Documents"
+  },
+  {
+   "fieldname": "documents",
+   "fieldtype": "Table",
+   "label": "Documents",
+   "options": "Student Document"
+  },
+  {
+   "fieldname": "tab_links",
+   "fieldtype": "Tab Break",
+   "label": "Links"
+  },
+  {
+   "fieldname": "enquiry",
+   "fieldtype": "Link",
+   "label": "Enquiry",
+   "options": "Student Enquiry",
+   "read_only": 1
+  },
+  {
+   "description": "Billing identity, created automatically. Customer = Student, always.",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_l1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.status=='Discontinued'",
+   "fieldname": "merged_into",
+   "fieldtype": "Link",
+   "label": "Merged Into",
+   "options": "Student"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_consent",
+   "fieldtype": "Section Break",
+   "label": "Admission consent"
+  },
+  {
+   "fieldname": "terms_accepted",
+   "fieldtype": "Check",
+   "label": "Rules & Consent Accepted",
+   "read_only": 1
+  },
+  {
+   "fieldname": "terms_accepted_on",
+   "fieldtype": "Datetime",
+   "label": "Accepted On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_consent",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "terms_version",
+   "fieldtype": "Data",
+   "label": "Terms Version",
+   "read_only": 1
+  },
+  {
+   "fieldname": "admission_form",
+   "fieldtype": "Link",
+   "label": "Admission Form",
+   "options": "Admission Form",
+   "read_only": 1
+  }
+ ],
+ "idx": 0,
+ "image_field": "student_photo",
+ "is_submittable": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-09-11 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "Student",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Employees",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "student_name,mobile,email",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "student_name",
+ "track_changes": 1
+}

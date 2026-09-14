@@ -14,7 +14,7 @@ import traceback
 import frappe
 from frappe.utils import flt, today
 
-from tnc_v2_360ithub.teachers.doctype.teacher.teacher import create_invoice_from_timesheets
+from tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher import create_invoice_from_timesheets
 
 
 def _ts(names):

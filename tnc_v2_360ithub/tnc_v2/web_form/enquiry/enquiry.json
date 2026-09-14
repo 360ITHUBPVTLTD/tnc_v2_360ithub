@@ -1,0 +1,96 @@
+{
+ "allow_comments": 0,
+ "allow_delete": 0,
+ "allow_edit": 0,
+ "allow_incomplete": 0,
+ "allow_multiple": 1,
+ "allow_print": 0,
+ "anonymous": 1,
+ "apply_document_permissions": 0,
+ "button_label": "Submit",
+ "client_script": "frappe.web_form.validate = () => {\n\tconst m = (frappe.web_form.get_value(\"mobile\") || \"\").replace(/\\D/g, \"\");\n\tif (m.length < 10) { frappe.msgprint(__(\"Please enter a valid 10-digit mobile number.\")); return false; }\n\tfrappe.web_form.set_value(\"source\", \"Website\");\n\treturn true;\n};",
+ "condition_json": "[]",
+ "creation": "2026-09-14 10:00:00.000000",
+ "custom_css": "",
+ "doc_type": "Student Enquiry",
+ "docstatus": 0,
+ "doctype": "Web Form",
+ "idx": 0,
+ "introduction_text": "<p>Tell us a little about yourself and our counsellor will call you within one working day.</p>",
+ "is_standard": 1,
+ "login_required": 0,
+ "max_attachment_size": 5,
+ "modified": "2026-09-14 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "enquiry",
+ "owner": "Administrator",
+ "published": 1,
+ "route": "enquiry",
+ "show_attachments": 0,
+ "show_list": 0,
+ "show_sidebar": 0,
+ "success_message": "Thank you for your interest in Team Nursing Classes. Our counsellor will call you within one working day.",
+ "success_title": "Thank you",
+ "title": "Enquire Now",
+ "web_form_fields": [
+  {
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "label": "Your Name",
+   "placeholder": "Full name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile Number",
+   "options": "Phone",
+   "placeholder": "10-digit mobile",
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "label": "Gender",
+   "options": "\nMale\nFemale\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "course_interested",
+   "fieldtype": "Link",
+   "label": "Course you are interested in",
+   "options": "Course"
+  },
+  {
+   "fieldname": "preferred_mode",
+   "fieldtype": "Select",
+   "label": "Preferred Mode",
+   "options": "\nOffline\nOnline"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Your message (optional)"
+  },
+  {
+   "default": "Website",
+   "fieldname": "source",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Source",
+   "read_only": 1
+  }
+ ]
+}

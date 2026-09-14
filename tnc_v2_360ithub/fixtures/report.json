@@ -14,7 +14,7 @@
   "json": "{\n \"add_totals_row\": 0,\n \"column_widths\": {\n  \"frequency\": 388,\n  \"name\": 120,\n  \"priority\": 294,\n  \"subject\": 286\n },\n \"fields\": [\n  [\n   \"name\",\n   \"Recurring Task\"\n  ],\n  [\n   \"subject\",\n   \"Recurring Task\"\n  ],\n  [\n   \"priority\",\n   \"Recurring Task\"\n  ],\n  [\n   \"frequency\",\n   \"Recurring Task\"\n  ]\n ],\n \"filters\": [],\n \"group_by\": null,\n \"order_by\": \"`tabRecurring Task`.`creation` desc\",\n \"page_length\": 20\n}",
   "letter_head": "TNC Logo",
   "modified": "2026-09-11 12:25:11.390747",
-  "module": "Tasks",
+  "module": "TNC v2",
   "name": "Recurring task report",
   "prepared_report": 0,
   "query": null,

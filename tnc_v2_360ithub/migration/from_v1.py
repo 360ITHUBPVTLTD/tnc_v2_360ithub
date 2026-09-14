@@ -377,7 +377,7 @@ def step_masters():
 	s = "masters"
 	# Items (activity items auto-created on v1 plus anything else). India Compliance
 	# on v2 needs an HSN/SAC on every Item; keep v1's when set, else the coaching SAC.
-	from tnc_v2_360ithub.teachers.doctype.teacher.teacher import TEACHER_SERVICE_SAC, ensure_teacher_service_sac
+	from tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher import TEACHER_SERVICE_SAC, ensure_teacher_service_sac
 	ensure_teacher_service_sac()
 	for r in v1_list("Item Group"):
 		if r.get("name") in ("All Item Groups",):

@@ -13,7 +13,7 @@
   "label": "TNC Task",
   "links": [],
   "modified": "2026-09-11 12:00:52.851961",
-  "module": "Tasks",
+  "module": "TNC v2",
   "name": "TNC Task",
   "number_cards": [
    {
@@ -192,5 +192,271 @@
    }
   ],
   "title": "TNC Task"
+ },
+ {
+  "charts": [],
+  "content": "[\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Admissions</b></span>\"\n  },\n  \"id\": \"hdr\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Enquiries this month\"\n  },\n  \"id\": \"nc0\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Demos this week\"\n  },\n  \"id\": \"nc1\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Admissions this month\"\n  },\n  \"id\": \"nc2\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Enrolments active\"\n  },\n  \"id\": \"nc3\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Follow-ups overdue\"\n  },\n  \"id\": \"nc4\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Follow-ups due today\"\n  },\n  \"id\": \"nc5\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Fee follow-ups open\"\n  },\n  \"id\": \"nc6\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Quick actions</b></span>\"\n  },\n  \"id\": \"sh\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Follow-ups\"\n  },\n  \"id\": \"sc0\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Share Forms\"\n  },\n  \"id\": \"sc1\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student Enquiry\"\n  },\n  \"id\": \"sc2\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Demo Class\"\n  },\n  \"id\": \"sc3\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student\"\n  },\n  \"id\": \"sc4\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Enrol in Batch\"\n  },\n  \"id\": \"sc5\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student Batch\"\n  },\n  \"id\": \"sc6\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Course\"\n  },\n  \"id\": \"sc7\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Sales Orders\"\n  },\n  \"id\": \"sc8\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Enquiry Funnel\"\n  },\n  \"id\": \"sc9\",\n  \"type\": \"shortcut\"\n }\n]",
+  "custom_blocks": [],
+  "docstatus": 0,
+  "doctype": "Workspace",
+  "for_user": null,
+  "hide_custom": 0,
+  "icon": "education",
+  "indicator_color": "green",
+  "is_hidden": 0,
+  "label": "TNC Admissions",
+  "links": [],
+  "modified": "2026-09-14 10:18:15.666117",
+  "module": "TNC v2",
+  "name": "TNC Admissions",
+  "number_cards": [
+   {
+    "label": "Enquiries this month",
+    "number_card_name": "Enquiries this month",
+    "parent": "TNC Admissions",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "label": "Demos this week",
+    "number_card_name": "Demos this week",
+    "parent": "TNC Admissions",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "label": "Admissions this month",
+    "number_card_name": "Admissions this month",
+    "parent": "TNC Admissions",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "label": "Enrolments active",
+    "number_card_name": "Enrolments active",
+    "parent": "TNC Admissions",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "label": "Follow-ups overdue",
+    "number_card_name": "Follow-ups overdue",
+    "parent": "TNC Admissions",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "label": "Follow-ups due today",
+    "number_card_name": "Follow-ups due today",
+    "parent": "TNC Admissions",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "label": "Fee follow-ups open",
+    "number_card_name": "Fee follow-ups open",
+    "parent": "TNC Admissions",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   }
+  ],
+  "parent_page": null,
+  "public": 1,
+  "quick_lists": [],
+  "restrict_to_domain": null,
+  "roles": [
+   {
+    "parent": "TNC Admissions",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "TNC Employees"
+   },
+   {
+    "parent": "TNC Admissions",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "TNC Manager"
+   },
+   {
+    "parent": "TNC Admissions",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "TNC Super Admin"
+   }
+  ],
+  "sequence_id": 2.0,
+  "shortcuts": [
+   {
+    "color": "Red",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Follow-ups",
+    "link_to": "follow-ups",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "Page",
+    "url": null
+   },
+   {
+    "color": "Grey",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Share Forms",
+    "link_to": "share-forms",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "Page",
+    "url": null
+   },
+   {
+    "color": "Blue",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Student Enquiry",
+    "link_to": "Student Enquiry",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "DocType",
+    "url": null
+   },
+   {
+    "color": "Orange",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Demo Class",
+    "link_to": "Demo Class",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "DocType",
+    "url": null
+   },
+   {
+    "color": "Green",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Student",
+    "link_to": "Student",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "DocType",
+    "url": null
+   },
+   {
+    "color": "Green",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Enrol in Batch",
+    "link_to": "Student Batch Enrollment",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "DocType",
+    "url": null
+   },
+   {
+    "color": "Grey",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Student Batch",
+    "link_to": "Student Batch",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "DocType",
+    "url": null
+   },
+   {
+    "color": "Grey",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Course",
+    "link_to": "Course",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "DocType",
+    "url": null
+   },
+   {
+    "color": "Grey",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Sales Orders",
+    "link_to": "Sales Order",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": null,
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "DocType",
+    "url": null
+   },
+   {
+    "color": "Blue",
+    "doc_view": "",
+    "format": null,
+    "icon": null,
+    "kanban_board": null,
+    "label": "Enquiry Funnel",
+    "link_to": "Enquiry Funnel",
+    "parent": "TNC Admissions",
+    "parentfield": "shortcuts",
+    "parenttype": "Workspace",
+    "report_ref_doctype": "Student Enquiry",
+    "restrict_to_domain": null,
+    "stats_filter": null,
+    "type": "Report",
+    "url": null
+   }
+  ],
+  "title": "TNC Admissions"
  }
 ]

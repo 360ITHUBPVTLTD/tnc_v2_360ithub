@@ -140,7 +140,7 @@ def ensure_recurring_task_report(commit=True):
 		"ref_doctype": "Recurring Task",
 		"report_type": "Report Builder",
 		"is_standard": "No",
-		"module": "Tasks",
+		"module": "TNC v2",
 		"json": frappe.as_json({
 			"filters": [],
 			"fields": [["name", "Recurring Task"], ["subject", "Recurring Task"],
@@ -200,15 +200,15 @@ V1_CUSTOM_FIELDS = {
 		{"fieldname": "custom_fcm_token", "label": "FCM Token", "fieldtype": "Small Text",
 			"insert_after": "create_user_permission", "translatable": 1, "module": "TNC v2"},
 		{"fieldname": "custom_teacher", "label": "Teacher", "fieldtype": "Link", "options": "Teacher",
-			"insert_after": "status", "module": "Teachers"},
+			"insert_after": "status", "module": "TNC v2"},
 	],
 	"Payment Entry": [
 		{"fieldname": "custom_description", "label": "Description", "fieldtype": "JSON",
-			"insert_after": "mode_of_payment", "read_only": 1, "module": "Teachers"},
+			"insert_after": "mode_of_payment", "read_only": 1, "module": "TNC v2"},
 	],
 	"Purchase Invoice": [
 		{"fieldname": "custom_timesheet_ids", "label": "Timesheet Ids", "fieldtype": "Small Text",
-			"insert_after": "due_date", "translatable": 1, "module": "Teachers"},
+			"insert_after": "due_date", "translatable": 1, "module": "TNC v2"},
 	],
 }
 

@@ -12,7 +12,7 @@ def debug_info():
 			"ref_doctype": "Task",
 			"report_type": "Script Report",
 			"is_standard": "Yes",
-			"module": "Teachers",
+			"module": "TNC v2",
 			"roles": [
 				{"role": "System Manager"},
 				{"role": "TNC Teachers"}
@@ -41,7 +41,7 @@ def download_excel_report(**kwargs):
 		except Exception:
 			filters[k] = v
 
-	from tnc_v2_360ithub.teachers.report.monthly_teacher_task_summary_report.monthly_teacher_task_summary_report import get_data
+	from tnc_v2_360ithub.tnc_v2.report.monthly_teacher_task_summary_report.monthly_teacher_task_summary_report import get_data
 	tasks = get_data(filters)
 
 	date_range = filters.get("date_range")

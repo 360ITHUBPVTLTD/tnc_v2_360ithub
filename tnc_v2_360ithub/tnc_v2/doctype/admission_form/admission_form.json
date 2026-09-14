@@ -1,0 +1,400 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2026-09-14 10:00:00.000000",
+ "custom": 0,
+ "docstatus": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "sb_profile",
+  "student_name",
+  "date_of_birth",
+  "aadhar_number",
+  "place_of_birth",
+  "state",
+  "cb_p",
+  "nationality",
+  "religion",
+  "gender",
+  "category",
+  "mobile",
+  "email",
+  "sb_family",
+  "fathers_name",
+  "father_occupation",
+  "father_mobile_no",
+  "cb_f",
+  "mothers_name",
+  "mother_occupation",
+  "mother_mobile_no",
+  "sb_addr",
+  "residential_address",
+  "permanent_address",
+  "cb_a",
+  "passing_year",
+  "college_name",
+  "course_interested",
+  "student_photo",
+  "sb_emg",
+  "emergency_contact",
+  "cb_e",
+  "blood_group",
+  "sb_terms",
+  "terms_html",
+  "terms_accepted",
+  "guardian_consent",
+  "terms_version",
+  "accepted_on",
+  "ip_address",
+  "sb_office",
+  "enquiry",
+  "status",
+  "student",
+  "cb_o",
+  "reviewed_by",
+  "office_remarks"
+ ],
+ "fields": [
+  {
+   "default": "ADM-FORM-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "ADM-FORM-.YYYY.-.#####"
+  },
+  {
+   "fieldname": "sb_profile",
+   "fieldtype": "Section Break",
+   "label": "Student's Profile"
+  },
+  {
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name (in capital letters)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "date_of_birth",
+   "fieldtype": "Date",
+   "label": "Date of Birth",
+   "reqd": 1
+  },
+  {
+   "fieldname": "aadhar_number",
+   "fieldtype": "Data",
+   "label": "Aadhaar No."
+  },
+  {
+   "fieldname": "place_of_birth",
+   "fieldtype": "Data",
+   "label": "Place of Birth"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "cb_p",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "India",
+   "fieldname": "nationality",
+   "fieldtype": "Data",
+   "label": "Nationality"
+  },
+  {
+   "fieldname": "religion",
+   "fieldtype": "Data",
+   "label": "Religion"
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "label": "Gender",
+   "options": "\nMale\nFemale\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "label": "Category",
+   "options": "\nGeneral\nEWS\nOBC\nSC\nST"
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mobile No.",
+   "options": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "sb_family",
+   "fieldtype": "Section Break",
+   "label": "Parents"
+  },
+  {
+   "fieldname": "fathers_name",
+   "fieldtype": "Data",
+   "label": "Father's Name"
+  },
+  {
+   "fieldname": "father_occupation",
+   "fieldtype": "Data",
+   "label": "Father's Occupation"
+  },
+  {
+   "fieldname": "father_mobile_no",
+   "fieldtype": "Data",
+   "label": "Father's Mobile No.",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "cb_f",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mothers_name",
+   "fieldtype": "Data",
+   "label": "Mother's Name"
+  },
+  {
+   "fieldname": "mother_occupation",
+   "fieldtype": "Data",
+   "label": "Mother's Occupation"
+  },
+  {
+   "fieldname": "mother_mobile_no",
+   "fieldtype": "Data",
+   "label": "Mother's Mobile No.",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "sb_addr",
+   "fieldtype": "Section Break",
+   "label": "Address & Education"
+  },
+  {
+   "fieldname": "residential_address",
+   "fieldtype": "Small Text",
+   "label": "Residential Address",
+   "reqd": 1
+  },
+  {
+   "fieldname": "permanent_address",
+   "fieldtype": "Small Text",
+   "label": "Permanent Address"
+  },
+  {
+   "fieldname": "cb_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "passing_year",
+   "fieldtype": "Data",
+   "label": "Passing Year"
+  },
+  {
+   "fieldname": "college_name",
+   "fieldtype": "Data",
+   "label": "College Name"
+  },
+  {
+   "fieldname": "course_interested",
+   "fieldtype": "Link",
+   "label": "Course",
+   "options": "Course"
+  },
+  {
+   "fieldname": "student_photo",
+   "fieldtype": "Attach",
+   "label": "Passport Size Photo"
+  },
+  {
+   "fieldname": "sb_emg",
+   "fieldtype": "Section Break",
+   "label": "Emergency"
+  },
+  {
+   "fieldname": "emergency_contact",
+   "fieldtype": "Data",
+   "label": "Emergency Contact",
+   "options": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb_e",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Select",
+   "label": "Blood Group (if known)",
+   "options": "\nA+\nA-\nB+\nB-\nAB+\nAB-\nO+\nO-"
+  },
+  {
+   "fieldname": "sb_terms",
+   "fieldtype": "Section Break",
+   "label": "Rules & Consent"
+  },
+  {
+   "fieldname": "terms_html",
+   "fieldtype": "HTML",
+   "label": "Terms"
+  },
+  {
+   "fieldname": "terms_accepted",
+   "fieldtype": "Check",
+   "label": "Rules & Consent Accepted",
+   "reqd": 1
+  },
+  {
+   "fieldname": "guardian_consent",
+   "fieldtype": "Check",
+   "label": "Filled with parent/guardian's consent"
+  },
+  {
+   "fieldname": "terms_version",
+   "fieldtype": "Data",
+   "label": "Terms Version",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accepted_on",
+   "fieldtype": "Datetime",
+   "label": "Accepted On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ip_address",
+   "fieldtype": "Data",
+   "label": "Submitted From (IP)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_office",
+   "fieldtype": "Section Break",
+   "label": "For office use"
+  },
+  {
+   "fieldname": "enquiry",
+   "fieldtype": "Link",
+   "label": "Enquiry",
+   "options": "Student Enquiry",
+   "read_only": 1
+  },
+  {
+   "default": "Pending Review",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending Review\nApplied\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "student",
+   "fieldtype": "Link",
+   "label": "Student",
+   "options": "Student",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_o",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "office_remarks",
+   "fieldtype": "Small Text",
+   "label": "Office Remarks"
+  }
+ ],
+ "idx": 0,
+ "image_field": "student_photo",
+ "is_submittable": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-09-14 15:45:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "Admission Form",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Employees",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "student_name,mobile",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "student_name",
+ "track_changes": 1
+}

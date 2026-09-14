@@ -89,7 +89,7 @@ def run_tests():
 
 		# --- B6/B7: approve and reject via the whitelisted status method ---
 		print("  - approve / reject through update_timesheet_status")
-		from tnc_v2_360ithub.teachers.doctype.teacher import teacher as teacher_api
+		from tnc_v2_360ithub.tnc_v2.doctype.teacher import teacher as teacher_api
 
 		teacher_api.update_timesheet_status(ts.name, "Approved")
 		ts.reload()
@@ -107,8 +107,8 @@ def run_tests():
 
 		# --- B11/B12: both reports execute ---
 		print("  - Teachers Timesheet Report and Teachers Payable Report execute")
-		from tnc_v2_360ithub.teachers.report.teachers_timesheet_report import teachers_timesheet_report as r1
-		from tnc_v2_360ithub.teachers.report.teachers_payable_report import teachers_payable_report as r2
+		from tnc_v2_360ithub.tnc_v2.report.teachers_timesheet_report import teachers_timesheet_report as r1
+		from tnc_v2_360ithub.tnc_v2.report.teachers_payable_report import teachers_payable_report as r2
 
 		out1 = r1.execute({"from_date": today(), "to_date": today(), "teacher": teacher.name})
 		out2 = r2.execute({"from_date": today(), "to_date": today()})
