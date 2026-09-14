@@ -1,0 +1,62 @@
+[
+ {
+  "desk_access": 1,
+  "disabled": 1,
+  "doctype": "Role",
+  "idx": 0,
+  "is_custom": 0,
+  "name": "TNC Employee",
+  "role_name": "TNC Employee",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "idx": 0,
+  "is_custom": 0,
+  "name": "TNC Employees",
+  "role_name": "TNC Employees",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "idx": 0,
+  "is_custom": 0,
+  "name": "TNC Manager",
+  "role_name": "TNC Manager",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "idx": 0,
+  "is_custom": 0,
+  "name": "TNC Super Admin",
+  "role_name": "TNC Super Admin",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "idx": 0,
+  "is_custom": 0,
+  "name": "TNC Teachers",
+  "role_name": "TNC Teachers",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "idx": 0,
+  "is_custom": 1,
+  "name": "Employee Self Service",
+  "role_name": "Employee Self Service",
+  "two_factor_auth": 0
+ }
+]

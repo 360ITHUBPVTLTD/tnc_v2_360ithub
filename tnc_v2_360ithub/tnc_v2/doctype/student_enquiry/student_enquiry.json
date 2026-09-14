@@ -1,0 +1,336 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-09-12 10:49:14.007893",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "student_name",
+  "mobile",
+  "email",
+  "gender",
+  "city",
+  "cb1",
+  "course_interested",
+  "preferred_mode",
+  "source",
+  "referred_by_teacher",
+  "referred_by_student",
+  "sb_status",
+  "status",
+  "enquiry_date",
+  "counsellor",
+  "cb2",
+  "next_follow_up",
+  "lost_reason",
+  "lost_note",
+  "lost_on",
+  "student",
+  "form_token",
+  "converted_on",
+  "sb_lost_history",
+  "last_lost_on",
+  "last_lost_reason",
+  "cb_lh",
+  "reopened_on",
+  "lost_count",
+  "last_lost_note",
+  "sb_notes",
+  "notes",
+  "sb_overview",
+  "overview"
+ ],
+ "fields": [
+  {
+   "default": "ENQ-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "ENQ-.YYYY.-.#####"
+  },
+  {
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Student Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Mobile",
+   "options": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "label": "Gender",
+   "options": "\nMale\nFemale\nOther"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "course_interested",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Course Interested",
+   "options": "Course"
+  },
+  {
+   "fieldname": "preferred_mode",
+   "fieldtype": "Select",
+   "label": "Preferred Mode",
+   "options": "\nOffline\nOnline"
+  },
+  {
+   "default": "Call",
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Source",
+   "options": "Call\nWalk-in\nExisting Student\nTeacher\nSocial Media\nWebsite\nOther"
+  },
+  {
+   "depends_on": "eval:doc.source=='Teacher'",
+   "fieldname": "referred_by_teacher",
+   "fieldtype": "Link",
+   "label": "Referred By",
+   "mandatory_depends_on": "eval:doc.source=='Teacher'",
+   "options": "Teacher"
+  },
+  {
+   "depends_on": "eval:doc.source=='Existing Student'",
+   "fieldname": "referred_by_student",
+   "fieldtype": "Link",
+   "label": "Referred By",
+   "mandatory_depends_on": "eval:doc.source=='Existing Student'",
+   "options": "Student"
+  },
+  {
+   "fieldname": "sb_status",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "New",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "New\nDemo Scheduled\nDemo Attended\nConverted\nLost",
+   "read_only": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "enquiry_date",
+   "fieldtype": "Date",
+   "label": "Enquiry Date",
+   "reqd": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "counsellor",
+   "fieldtype": "Link",
+   "label": "Counsellor",
+   "options": "User"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "next_follow_up",
+   "fieldtype": "Date",
+   "label": "Next Follow Up",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status=='Lost'",
+   "fieldname": "lost_reason",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Lost Reason",
+   "mandatory_depends_on": "eval:doc.status=='Lost'",
+   "options": "\nFee too high\nJoined another institute\nNot interested now\nNo response\nTiming or location\nCourse not suitable\nOther"
+  },
+  {
+   "depends_on": "eval:doc.status=='Lost'",
+   "fieldname": "lost_note",
+   "fieldtype": "Small Text",
+   "label": "Lost Note"
+  },
+  {
+   "depends_on": "eval:doc.status=='Lost'",
+   "fieldname": "lost_on",
+   "fieldtype": "Date",
+   "label": "Lost On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "student",
+   "fieldtype": "Link",
+   "label": "Student",
+   "options": "Student",
+   "read_only": 1
+  },
+  {
+   "fieldname": "form_token",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Admission Form Token",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status=='Converted'",
+   "fieldname": "converted_on",
+   "fieldtype": "Date",
+   "label": "Converted On",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.last_lost_on",
+   "fieldname": "sb_lost_history",
+   "fieldtype": "Section Break",
+   "label": "Previously Lost"
+  },
+  {
+   "fieldname": "last_lost_on",
+   "fieldtype": "Date",
+   "label": "Last Marked Lost On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_lost_reason",
+   "fieldtype": "Data",
+   "label": "Last Lost Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_lh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reopened_on",
+   "fieldtype": "Date",
+   "label": "Reopened On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lost_count",
+   "fieldtype": "Int",
+   "label": "Times Marked Lost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_lost_note",
+   "fieldtype": "Small Text",
+   "label": "Last Lost Note",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_notes",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "sb_overview",
+   "fieldtype": "Section Break",
+   "label": "Demos and follow-ups"
+  },
+  {
+   "fieldname": "overview",
+   "fieldtype": "HTML",
+   "label": "Overview"
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-12 10:50:04.307063",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "Student Enquiry",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Employees",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "student_name,mobile",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "student_name",
+ "track_changes": 1
+}

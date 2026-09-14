@@ -1,0 +1,250 @@
+{
+ "allow_comments": 0,
+ "allow_delete": 0,
+ "allow_edit": 0,
+ "allow_incomplete": 0,
+ "allow_multiple": 1,
+ "allow_print": 0,
+ "anonymous": 1,
+ "apply_document_permissions": 0,
+ "button_label": "Submit",
+ "client_script": "frappe.web_form.after_load = () => {\n\tconst qs = new URLSearchParams(window.location.search);\n\tconst enq = qs.get(\"enquiry\"), tok = qs.get(\"t\");\n\tif (enq) {\n\t\tfrappe.web_form.set_value(\"enquiry\", enq);\n\t\tif (tok) {\n\t\t\tfrappe.call({ method: \"tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry.admission_prefill\", args: { enquiry: enq, t: tok } }).then((r) => {\n\t\t\t\tconst v = r.message || {};\n\t\t\t\tObject.keys(v).forEach((k) => { if (v[k] && !frappe.web_form.get_value(k)) frappe.web_form.set_value(k, v[k]); });\n\t\t\t\tif (v.student_name) frappe.web_form.set_value(\"student_name\", (v.student_name || \"\").toUpperCase());\n\t\t\t});\n\t\t}\n\t}\n\tfrappe.call({ method: \"tnc_v2_360ithub.admissions.terms.terms_html_api\" }).then((r) => {\n\t\tconst f = frappe.web_form.fields_dict.terms_html;\n\t\tif (f && f.$wrapper) f.$wrapper.html(r.message || \"\");\n\t});\n\tconst btn = () => $(\".web-form-footer .btn-primary, .web-form-actions .btn-primary, .web-form .btn-primary[type=submit]\");\n\tconst sync = () => btn().prop(\"disabled\", !frappe.web_form.get_value(\"terms_accepted\"));\n\tsetTimeout(sync, 300);\n\tfrappe.web_form.on(\"terms_accepted\", sync);\n};\nfrappe.web_form.validate = () => {\n\tif (!frappe.web_form.get_value(\"terms_accepted\")) {\n\t\tfrappe.msgprint(__(\"कृपया नियम एवं शर्तें स्वीकार करें। / Please accept the rules and consent to continue.\"));\n\t\treturn false;\n\t}\n\tconst m = (frappe.web_form.get_value(\"mobile\") || \"\").replace(/\\D/g, \"\");\n\tif (m.length < 10) { frappe.msgprint(__(\"Please enter a valid 10-digit mobile number.\")); return false; }\n\treturn true;\n};",
+ "condition_json": "[]",
+ "creation": "2026-09-14 10:00:00.000000",
+ "custom_css": ".tnc-terms{border:1px solid #cbd5e1;border-radius:8px;padding:12px 16px;max-height:340px;overflow:auto;background:#fafafa;font-size:14px;line-height:1.7}\n.tnc-terms h4{font-size:15px;margin:0 0 8px} .tnc-terms h5{font-size:14px;margin:12px 0 4px} .tnc-terms ol{padding-left:22px;margin:0}\n.web-form-footer .btn-primary:disabled{opacity:.5;cursor:not-allowed}",
+ "doc_type": "Admission Form",
+ "docstatus": 0,
+ "doctype": "Web Form",
+ "idx": 0,
+ "introduction_text": "<p><b>TEAM NURSING CLASSES</b> · A Dedicated institute for Nursing Officer · New Bypass, Tej Pratap Nagar, Krrish Hyundai Showroom ke Samane, Anisabad, Patna – 800002 · Mob. 7484999051 / 9471070851</p><p>कृपया सभी विवरण सही-सही भरें। फॉर्म जमा करने से पहले नीचे दिए गए नियम एवं शर्तें पढ़कर स्वीकार करना अनिवार्य है।</p>",
+ "is_standard": 1,
+ "login_required": 0,
+ "max_attachment_size": 5,
+ "modified": "2026-09-14 15:45:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "admission",
+ "owner": "Administrator",
+ "published": 1,
+ "route": "admission",
+ "show_attachments": 0,
+ "show_list": 0,
+ "show_sidebar": 0,
+ "success_message": "आपका प्रवेश फॉर्म प्राप्त हो गया है। धन्यवाद! हमारे काउंसलर शीघ्र ही आपसे संपर्क करेंगे। / Your admission form has been received. Thank you! Our counsellor will contact you shortly.",
+ "success_title": "Thank you",
+ "title": "Admission Form",
+ "web_form_fields": [
+  {
+   "fieldname": "enquiry",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Enquiry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break",
+   "label": "Student's Profile"
+  },
+  {
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "label": "Name (in capital letters)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "date_of_birth",
+   "fieldtype": "Date",
+   "label": "Date of Birth",
+   "reqd": 1
+  },
+  {
+   "fieldname": "aadhar_number",
+   "fieldtype": "Data",
+   "label": "Aadhaar No."
+  },
+  {
+   "fieldname": "place_of_birth",
+   "fieldtype": "Data",
+   "label": "Place of Birth"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "India",
+   "fieldname": "nationality",
+   "fieldtype": "Data",
+   "label": "Nationality"
+  },
+  {
+   "fieldname": "religion",
+   "fieldtype": "Data",
+   "label": "Religion"
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "label": "Gender",
+   "options": "\nMale\nFemale\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "label": "Category",
+   "options": "\nGeneral\nEWS\nOBC\nSC\nST"
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile No.",
+   "options": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break",
+   "label": "Parents"
+  },
+  {
+   "fieldname": "fathers_name",
+   "fieldtype": "Data",
+   "label": "Father's Name"
+  },
+  {
+   "fieldname": "father_occupation",
+   "fieldtype": "Data",
+   "label": "Father's Occupation"
+  },
+  {
+   "fieldname": "father_mobile_no",
+   "fieldtype": "Data",
+   "label": "Father's Mobile No.",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "mothers_name",
+   "fieldtype": "Data",
+   "label": "Mother's Name"
+  },
+  {
+   "fieldname": "mother_occupation",
+   "fieldtype": "Data",
+   "label": "Mother's Occupation"
+  },
+  {
+   "fieldname": "mother_mobile_no",
+   "fieldtype": "Data",
+   "label": "Mother's Mobile No.",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "sb3",
+   "fieldtype": "Section Break",
+   "label": "Address & Education"
+  },
+  {
+   "fieldname": "residential_address",
+   "fieldtype": "Small Text",
+   "label": "Residential Address",
+   "reqd": 1
+  },
+  {
+   "fieldname": "permanent_address",
+   "fieldtype": "Small Text",
+   "label": "Permanent Address"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "passing_year",
+   "fieldtype": "Data",
+   "label": "Passing Year"
+  },
+  {
+   "fieldname": "college_name",
+   "fieldtype": "Data",
+   "label": "College Name"
+  },
+  {
+   "fieldname": "course_interested",
+   "fieldtype": "Link",
+   "label": "Course",
+   "options": "Course"
+  },
+  {
+   "fieldname": "student_photo",
+   "fieldtype": "Attach",
+   "label": "Passport Size Photo"
+  },
+  {
+   "fieldname": "sb4",
+   "fieldtype": "Section Break",
+   "label": "Emergency"
+  },
+  {
+   "fieldname": "emergency_contact",
+   "fieldtype": "Data",
+   "label": "Emergency Contact",
+   "options": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb4",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Select",
+   "label": "Blood Group (if known)",
+   "options": "\nA+\nA-\nB+\nB-\nAB+\nAB-\nO+\nO-"
+  },
+  {
+   "fieldname": "sb5",
+   "fieldtype": "Section Break",
+   "label": "नियम एवं शर्तें / Rules & Consent"
+  },
+  {
+   "fieldname": "terms_html",
+   "fieldtype": "HTML",
+   "label": "Terms",
+   "options": ""
+  },
+  {
+   "description": "I have read, understood and voluntarily accept all the rules and conditions above.",
+   "fieldname": "terms_accepted",
+   "fieldtype": "Check",
+   "label": "मैंने उपरोक्त सभी नियम एवं शर्तें पढ़, समझ और स्वेच्छा से स्वीकार की हैं।",
+   "reqd": 1
+  },
+  {
+   "description": "Filled with my parent/guardian's consent.",
+   "fieldname": "guardian_consent",
+   "fieldtype": "Check",
+   "label": "यह फॉर्म अभिभावक की सहमति से भरा गया है।"
+  }
+ ]
+}

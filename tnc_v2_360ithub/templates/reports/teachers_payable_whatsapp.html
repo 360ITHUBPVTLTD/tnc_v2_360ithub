@@ -1,0 +1,25 @@
+<h3>Weekly Timesheet Summary ({{ start_date }} to {{ end_date }})</h3>
+<p>Dear {{ teacher_name }},</p>
+<p>Here is your summary of activities for the last week:</p>
+<table border="1">
+    <tr>
+        <th>Date</th>
+        <th>Online</th>
+        <th>Offline</th>
+        <th>YouTube</th>
+        <th>Total (min)</th>
+        <th>Amount</th>
+    </tr>
+    {% for date, entry in timesheet_map.items() %}
+    <tr>
+        <td>{{ date }}</td>
+        <td>{{ entry.Online | length }}</td>
+        <td>{{ entry.Offline | length }}</td>
+        <td>{{ entry.Youtube | length }}</td>
+        <td>{{ entry.total }}</td>
+        <td>{{ entry.amount }}</td>
+    </tr>
+    {% endfor %}
+</table>
+<br>
+<p>Best Regards,<br>TNC</p>

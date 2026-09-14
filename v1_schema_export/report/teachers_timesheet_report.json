@@ -1,0 +1,46 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "disabled": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 2,
+ "is_standard": "Yes",
+ "module": "institute_management_360ithub",
+ "name": "Teachers Timesheet Report",
+ "prepared_report": 0,
+ "ref_doctype": "Teachers Timesheet",
+ "report_name": "Teachers Timesheet Report",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "idx": 1,
+   "name": "eb4gmstil4",
+   "parent": "Teachers Timesheet Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 2,
+   "name": "m1c72tab78",
+   "parent": "Teachers Timesheet Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "TNC Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 3,
+   "name": "a4p544rt63",
+   "parent": "Teachers Timesheet Report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "TNC Super Admin"
+  }
+ ],
+ "timeout": 0
+}

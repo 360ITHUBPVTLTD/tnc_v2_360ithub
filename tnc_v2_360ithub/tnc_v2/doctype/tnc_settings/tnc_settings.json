@@ -1,0 +1,133 @@
+{
+ "actions": [],
+ "creation": "2026-09-11 11:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "notifications_section",
+  "in_app_notifications_enabled",
+  "fcm_enabled",
+  "column_break_n1",
+  "whatsapp_provider",
+  "whatsapp_instance",
+  "reminders_section",
+  "task_reminders_enabled",
+  "column_break_r1",
+  "reminder_cron_note",
+  "teachers_section",
+  "teacher_timesheet_approval"
+ ],
+ "fields": [
+  {
+   "fieldname": "notifications_section",
+   "fieldtype": "Section Break",
+   "label": "Task Notifications"
+  },
+  {
+   "default": "1",
+   "fieldname": "in_app_notifications_enabled",
+   "fieldtype": "Check",
+   "label": "In-app (bell) notifications"
+  },
+  {
+   "default": "1",
+   "description": "Requires the fcm_360ithub app to be installed. Skipped silently otherwise.",
+   "fieldname": "fcm_enabled",
+   "fieldtype": "Check",
+   "label": "Mobile push (FCM) notifications"
+  },
+  {
+   "fieldname": "column_break_n1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Disabled",
+   "description": "Webtoolex requires the webtoolex_whatsapp app. Every send is recorded in WhatsApp Message Log regardless.",
+   "fieldname": "whatsapp_provider",
+   "fieldtype": "Select",
+   "label": "WhatsApp provider",
+   "options": "Disabled\nWebtoolex"
+  },
+  {
+   "depends_on": "eval:doc.whatsapp_provider=='Webtoolex'",
+   "description": "Leave empty to use the provider's default instance.",
+   "fieldname": "whatsapp_instance",
+   "fieldtype": "Data",
+   "label": "WhatsApp Instance name"
+  },
+  {
+   "fieldname": "reminders_section",
+   "fieldtype": "Section Break",
+   "label": "Daily task reminder"
+  },
+  {
+   "default": "0",
+   "description": "Replaces v1's hard-coded production-site check. Off by default on new sites.",
+   "fieldname": "task_reminders_enabled",
+   "fieldtype": "Check",
+   "label": "Send 08:00 WhatsApp task digest"
+  },
+  {
+   "fieldname": "column_break_r1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "The digest runs at 08:00 site time on working days (skips Sundays and Holiday List dates).",
+   "fieldname": "reminder_cron_note",
+   "fieldtype": "Small Text",
+   "label": "Note",
+   "read_only": 1
+  },
+  {
+   "fieldname": "teachers_section",
+   "fieldtype": "Section Break",
+   "label": "Teachers"
+  },
+  {
+   "description": "Users who can approve or reject Teachers Timesheets and raise teacher invoices and payments. TNC Manager and Administrator always can.",
+   "fieldname": "teacher_timesheet_approval",
+   "fieldtype": "Table MultiSelect",
+   "label": "Timesheet approvers",
+   "options": "Timesheet Approver"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-09-11 11:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "TNC Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "TNC Super Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "TNC Employees",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

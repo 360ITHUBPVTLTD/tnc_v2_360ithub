@@ -1,0 +1,254 @@
+[
+ {
+  "custom_custom_role": 1,
+  "doctype": "Role Profile",
+  "idx": 8,
+  "name": "TNC Employees",
+  "role_profile": "TNC Employees",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "idx": 1,
+    "name": "5kkcngrjs3",
+    "parent": "TNC Employees",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Employees"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 2,
+    "name": "73h2o8b1n1",
+    "parent": "TNC Employees",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 3,
+    "name": "eflhsjc9g9",
+    "parent": "TNC Employees",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee Self Service"
+   }
+  ]
+ },
+ {
+  "custom_custom_role": 1,
+  "doctype": "Role Profile",
+  "idx": 4,
+  "name": "TNC Manager",
+  "role_profile": "TNC Manager",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "idx": 1,
+    "name": "592e9d2i0s",
+    "parent": "TNC Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Employees"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 2,
+    "name": "5bslvalmms",
+    "parent": "TNC Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Manager"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 3,
+    "name": "9671n628d3",
+    "parent": "TNC Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee Self Service"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 4,
+    "name": "967m2kdm4v",
+    "parent": "TNC Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee"
+   }
+  ]
+ },
+ {
+  "custom_custom_role": 1,
+  "doctype": "Role Profile",
+  "idx": 53,
+  "name": "TNC Super Admin",
+  "role_profile": "TNC Super Admin",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "idx": 1,
+    "name": "jdaak3h7pq",
+    "parent": "TNC Super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Super Admin"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 2,
+    "name": "k724fgb6qt",
+    "parent": "TNC Super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Employees"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 3,
+    "name": "99lubns933",
+    "parent": "TNC Super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee Self Service"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 4,
+    "name": "99ll8eacbg",
+    "parent": "TNC Super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 5,
+    "name": "j94oo7r6pt",
+    "parent": "TNC Super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Leave Approver"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 6,
+    "name": "jbrofro4aa",
+    "parent": "TNC Super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Expense Approver"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 7,
+    "name": "sb5hburvsd",
+    "parent": "TNC Super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Manager"
+   }
+  ]
+ },
+ {
+  "custom_custom_role": 1,
+  "doctype": "Role Profile",
+  "idx": 6,
+  "name": "TNC Teacher",
+  "role_profile": "TNC Teacher",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "idx": 1,
+    "name": "b39g3h5qon",
+    "parent": "TNC Teacher",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 2,
+    "name": "b3974on9i8",
+    "parent": "TNC Teacher",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee Self Service"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 3,
+    "name": "b98gq7kvsc",
+    "parent": "TNC Teacher",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Supplier"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 4,
+    "name": "cbt8e7v5s3",
+    "parent": "TNC Teacher",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Employees"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 5,
+    "name": "9lr4msodfk",
+    "parent": "TNC Teacher",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Manager"
+   }
+  ]
+ },
+ {
+  "custom_custom_role": 0,
+  "doctype": "Role Profile",
+  "idx": 1,
+  "name": "super Admin",
+  "role_profile": "super Admin",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "idx": 1,
+    "name": "c2e0o08101",
+    "parent": "super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 2,
+    "name": "c2eh5ed2rj",
+    "parent": "super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Manager"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 3,
+    "name": "c2eh7nu5ka",
+    "parent": "super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Super Admin"
+   },
+   {
+    "doctype": "Has Role",
+    "idx": 4,
+    "name": "c2e29h39io",
+    "parent": "super Admin",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "TNC Teachers"
+   }
+  ]
+ }
+]

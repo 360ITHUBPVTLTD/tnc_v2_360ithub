@@ -1,0 +1,44 @@
+[
+ {
+  "cron_format": "00 23 * * *",
+  "frequency": "Cron",
+  "method": "clarity_360ithub.custom_attendance.checkin_out_for_missed_logs",
+  "name": "custom_attendance.checkin_out_for_missed_logs",
+  "stopped": 0
+ },
+ {
+  "cron_format": "0 8 * * *",
+  "frequency": "Cron",
+  "method": "tnc_frappe_custom_app.custom_employee.enqueue_task_reminders",
+  "name": "custom_employee.enqueue_task_reminders",
+  "stopped": 0
+ },
+ {
+  "cron_format": "",
+  "frequency": "Daily",
+  "method": "clarity_360ithub.custom_task.daily_overdue_status_update",
+  "name": "custom_task.daily_overdue_status_update",
+  "stopped": 0
+ },
+ {
+  "cron_format": "",
+  "frequency": "Daily",
+  "method": "team_task_360ithub.team_task_360ithub.doctype.team_task_schedular.team_task_schedular.schedule_team_tasks",
+  "name": "qqqejs1tlo",
+  "stopped": 0
+ },
+ {
+  "cron_format": "30 7 * * *",
+  "frequency": "Cron",
+  "method": "tnc_frappe_custom_app.tnc_custom_app.recurring_task.scheduler.run_scheduler",
+  "name": "scheduler.run_scheduler",
+  "stopped": 0
+ },
+ {
+  "cron_format": "0 7 1 * *",
+  "frequency": "Cron",
+  "method": "institute_management_360ithub.tasks.send_monthly_teacher_task_summary_reports",
+  "name": "tasks.send_monthly_teacher_task_summary_reports",
+  "stopped": 0
+ }
+]

@@ -1,0 +1,39 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "disabled": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "No",
+ "json": "{\"filters\":[],\"fields\":[[\"name\",\"Recurring Task\"],[\"subject\",\"Recurring Task\"],[\"priority\",\"Recurring Task\"],[\"frequency\",\"Recurring Task\"]],\"order_by\":\"`tabRecurring Task`.`creation` desc\",\"add_totals_row\":0,\"page_length\":20,\"column_widths\":{\"name\":120,\"subject\":286,\"priority\":294,\"frequency\":388},\"group_by\":null}",
+ "letter_head": "TNC Logo",
+ "module": "TNC Custom App",
+ "name": "Recurring task report",
+ "prepared_report": 0,
+ "ref_doctype": "Recurring Task",
+ "report_name": "Recurring task report",
+ "report_type": "Report Builder",
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "idx": 1,
+   "name": "jevc9u7jh4",
+   "parent": "Recurring task report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "idx": 2,
+   "name": "jevpf49o6i",
+   "parent": "Recurring task report",
+   "parentfield": "roles",
+   "parenttype": "Report",
+   "role": "TNC Super Admin"
+  }
+ ],
+ "timeout": 0
+}

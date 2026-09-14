@@ -1,0 +1,226 @@
+[
+ {
+  "designation_name": "Accountant",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Accountant",
+  "skills": []
+ },
+ {
+  "designation_name": "Administrative Assistant",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Administrative Assistant",
+  "skills": []
+ },
+ {
+  "designation_name": "Administrative Officer",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Administrative Officer",
+  "skills": []
+ },
+ {
+  "designation_name": "Analyst",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Analyst",
+  "skills": []
+ },
+ {
+  "designation_name": "Associate",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Associate",
+  "skills": []
+ },
+ {
+  "designation_name": "Business Analyst",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Business Analyst",
+  "skills": []
+ },
+ {
+  "designation_name": "Business Development Manager",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Business Development Manager",
+  "skills": []
+ },
+ {
+  "designation_name": "Consultant",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Consultant",
+  "skills": []
+ },
+ {
+  "designation_name": "Chief Executive Officer",
+  "doctype": "Designation",
+  "idx": 2,
+  "name": "Chief Executive Officer",
+  "skills": []
+ },
+ {
+  "designation_name": "Chief Financial Officer",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Chief Financial Officer",
+  "skills": []
+ },
+ {
+  "designation_name": "Chief Operating Officer",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Chief Operating Officer",
+  "skills": []
+ },
+ {
+  "designation_name": "Chief Technology Officer",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Chief Technology Officer",
+  "skills": []
+ },
+ {
+  "designation_name": "Customer Service Representative",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Customer Service Representative",
+  "skills": []
+ },
+ {
+  "designation_name": "Designer",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Designer",
+  "skills": []
+ },
+ {
+  "designation_name": "Engineer",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Engineer",
+  "skills": []
+ },
+ {
+  "designation_name": "Executive Assistant",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Executive Assistant",
+  "skills": []
+ },
+ {
+  "designation_name": "Finance Manager",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Finance Manager",
+  "skills": []
+ },
+ {
+  "designation_name": "HR Manager",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "HR Manager",
+  "skills": []
+ },
+ {
+  "designation_name": "Head of Marketing and Sales",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Head of Marketing and Sales",
+  "skills": []
+ },
+ {
+  "designation_name": "Manager",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Manager",
+  "skills": []
+ },
+ {
+  "designation_name": "Managing Director",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Managing Director",
+  "skills": []
+ },
+ {
+  "designation_name": "Marketing Manager",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Marketing Manager",
+  "skills": []
+ },
+ {
+  "designation_name": "Marketing Specialist",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Marketing Specialist",
+  "skills": []
+ },
+ {
+  "designation_name": "President",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "President",
+  "skills": []
+ },
+ {
+  "designation_name": "Product Manager",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Product Manager",
+  "skills": []
+ },
+ {
+  "designation_name": "Project Manager",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Project Manager",
+  "skills": []
+ },
+ {
+  "designation_name": "Researcher",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Researcher",
+  "skills": []
+ },
+ {
+  "designation_name": "Sales Representative",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Sales Representative",
+  "skills": []
+ },
+ {
+  "designation_name": "Secretary",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Secretary",
+  "skills": []
+ },
+ {
+  "designation_name": "Software Developer",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Software Developer",
+  "skills": []
+ },
+ {
+  "designation_name": "Vice President",
+  "doctype": "Designation",
+  "idx": 0,
+  "name": "Vice President",
+  "skills": []
+ },
+ {
+  "designation_name": "Executive",
+  "doctype": "Designation",
+  "idx": 9,
+  "name": "Executive",
+  "skills": []
+ }
+]

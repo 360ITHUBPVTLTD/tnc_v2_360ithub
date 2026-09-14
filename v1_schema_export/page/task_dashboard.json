@@ -1,0 +1,24 @@
+{
+ "content": null,
+ "doctype": "Page",
+ "idx": 0,
+ "module": "institute_management_360ithub",
+ "name": "task-dashboard",
+ "page_name": "task-dashboard",
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "idx": 1,
+   "name": "58nea5802o",
+   "parent": "task-dashboard",
+   "parentfield": "roles",
+   "parenttype": "Page",
+   "role": "TNC Manager"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Task Dashboard"
+}
