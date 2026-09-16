@@ -191,39 +191,9 @@ def ensure_teacher_payable_accounts(company="TNC Nursing", commit=True):
 		frappe.db.commit()
 
 
-# Custom Fields v1 carried on standard doctypes that no v2 app provides
-# (definitions from v1_schema_export/custom_field/all.json). Employee.custom_fcm_token
-# is where the mobile app stores its push token and where notifications.send_fcm
-# reads it; the others belong to the teacher payables flow.
-V1_CUSTOM_FIELDS = {
-	"Employee": [
-		{"fieldname": "custom_fcm_token", "label": "FCM Token", "fieldtype": "Small Text",
-			"insert_after": "create_user_permission", "translatable": 1, "module": "TNC v2"},
-		{"fieldname": "custom_teacher", "label": "Teacher", "fieldtype": "Link", "options": "Teacher",
-			"insert_after": "status", "module": "TNC v2"},
-	],
-	"Payment Entry": [
-		{"fieldname": "custom_description", "label": "Description", "fieldtype": "JSON",
-			"insert_after": "mode_of_payment", "read_only": 1, "module": "TNC v2"},
-	],
-	"Purchase Invoice": [
-		{"fieldname": "custom_timesheet_ids", "label": "Timesheet Ids", "fieldtype": "Small Text",
-			"insert_after": "due_date", "translatable": 1, "module": "TNC v2"},
-	],
-}
+# Custom Fields on standard doctypes (Employee.custom_fcm_token, Payment Entry.custom_description, ...)
+# live in tnc_v2/custom/<doctype>.json (Customize Form -> Export Customizations), synced on migrate.
 
-
-def ensure_v1_custom_fields(commit=True):
-	"""Create V1_CUSTOM_FIELDS where missing (idempotent), then they are exported
-	as Custom Field fixtures by module."""
-	from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
-
-	create_custom_fields(V1_CUSTOM_FIELDS, ignore_validate=True, update=True)
-	for dt, fields in V1_CUSTOM_FIELDS.items():
-		for f in fields:
-			print(("ok      " if frappe.db.exists("Custom Field", f"{dt}-{f['fieldname']}") else "MISSING ") + f"{dt}.{f['fieldname']}")
-	if commit:
-		frappe.db.commit()
 
 
 def ensure_expense_claim_accounts(company="TNC Nursing", account_name="TNC Other -EXP", commit=True):

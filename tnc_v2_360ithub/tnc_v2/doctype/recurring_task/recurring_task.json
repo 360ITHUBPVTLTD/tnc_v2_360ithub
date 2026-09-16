@@ -47,7 +47,7 @@
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "hidden": 1,
-   "in_list_view": 1,
+   "in_list_view": 0,
    "label": "Naming Series",
    "options": "REC-TSK-.#####",
    "reqd": 1
@@ -229,7 +229,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-24 14:55:45.668599",
+ "modified": "2026-09-16 20:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Recurring Task",
