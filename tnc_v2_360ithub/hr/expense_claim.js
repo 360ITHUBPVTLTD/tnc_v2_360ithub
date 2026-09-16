@@ -13,7 +13,7 @@ frappe.ui.form.on("Expense Claim", {
 	},
 	validate(frm) {
 		if (!frm.doc.expense_for) {
-			frappe.msgprint(__("Please choose Expense For: Online Coaching Expense or Offline Coaching Expense."));
+			frappe.msgprint(__("Please choose Expense For: Online or Offline."));
 			frappe.validated = false;
 		}
 	},
