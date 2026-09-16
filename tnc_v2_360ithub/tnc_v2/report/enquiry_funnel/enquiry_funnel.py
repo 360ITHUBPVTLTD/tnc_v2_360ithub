@@ -32,7 +32,7 @@ def execute(filters=None):
 
 	agg = {}
 	for r in rows:
-		key = r.grp or (_("Not lost") if group_field == "lost_reason" else _("(not set)"))
+		key = r.grp or (_("Not lost") if group_field == "lost_reason" else (_("No counsellor assigned") if group_field == "counsellor" else _("Not set")))
 		a = agg.setdefault(key, {"grp": key, "enquiries": 0, "with_demo": 0, "demos": 0, "attended": 0, "converted": 0, "lost": 0, "open": 0, "days": []})
 		a["enquiries"] += 1
 		a["demos"] += r.demos or 0
@@ -50,46 +50,45 @@ def execute(filters=None):
 		else:
 			a["open"] += 1
 
+	label = filters.get("group_by") or "Counsellor"
+	opts = {"Counsellor": "User", "Course": "Course"}.get(label)
 	data = []
 	for a in sorted(agg.values(), key=lambda x: (-x["enquiries"], str(x["grp"]))):
 		n = a["enquiries"]
 		data.append({
-			"grp": a["grp"], "enquiries": n, "with_demo": a["with_demo"], "demos": a["demos"], "attended": a["attended"],
+			"grp": a["grp"], "grp_doctype": opts if (opts and frappe.db.exists(opts, a["grp"])) else None, "enquiries": n, "with_demo": a["with_demo"], "demos": a["demos"], "attended": a["attended"],
 			"converted": a["converted"], "lost": a["lost"], "open": a["open"],
 			"conversion_pct": flt(a["converted"] / n * 100, 1) if n else 0,
 			"demo_attend_pct": flt(a["attended"] / a["with_demo"] * 100, 1) if a["with_demo"] else 0,
 			"avg_days": flt(sum(a["days"]) / len(a["days"]), 1) if a["days"] else None,
 		})
 
-	label = filters.get("group_by") or "Counsellor"
-	opts = {"Counsellor": "User", "Course": "Course"}.get(label)
 	columns = [
-		{"fieldname": "grp", "label": _(label), "fieldtype": "Link" if opts else "Data", "options": opts, "width": 260},
-		{"fieldname": "enquiries", "label": _("Enquiries"), "fieldtype": "Int", "width": 100},
-		{"fieldname": "with_demo", "label": _("Got a Demo"), "fieldtype": "Int", "width": 100},
-		{"fieldname": "demos", "label": _("Demo Classes"), "fieldtype": "Int", "width": 110},
-		{"fieldname": "attended", "label": _("Attended"), "fieldtype": "Int", "width": 100},
-		{"fieldname": "demo_attend_pct", "label": _("Demo Attendance %"), "fieldtype": "Percent", "precision": 1, "width": 140},
-		{"fieldname": "converted", "label": _("Admitted"), "fieldtype": "Int", "width": 100},
-		{"fieldname": "conversion_pct", "label": _("Conversion %"), "fieldtype": "Percent", "precision": 1, "width": 120},
-		{"fieldname": "lost", "label": _("Lost"), "fieldtype": "Int", "width": 80},
-		{"fieldname": "open", "label": _("Still Open"), "fieldtype": "Int", "width": 100},
-		{"fieldname": "avg_days", "label": _("Avg Days to Admission"), "fieldtype": "Float", "precision": 1, "width": 160},
+		{"fieldname": "grp", "label": _(label), "fieldtype": "Dynamic Link" if opts else "Data", "options": "grp_doctype", "width": 260},
+		{"fieldname": "enquiries", "label": _("Total Enquiries"), "fieldtype": "Int", "width": 120},
+		{"fieldname": "with_demo", "label": _("Scheduled Demo"), "fieldtype": "Int", "width": 160},
+		{"fieldname": "attended", "label": _("Students Attended Demo"), "fieldtype": "Int", "width": 170},
+		{"fieldname": "demo_attend_pct", "label": _("Demo Attendance %"), "fieldtype": "Percent", "precision": 1, "width": 160},
+		{"fieldname": "converted", "label": _("Admissions Taken"), "fieldtype": "Int", "width": 140},
+		{"fieldname": "conversion_pct", "label": _("Enquiry to Admission %"), "fieldtype": "Percent", "precision": 1, "width": 170},
+		{"fieldname": "lost", "label": _("Enquiries Lost"), "fieldtype": "Int", "width": 120},
+		{"fieldname": "open", "label": _("Enquiries Still Open"), "fieldtype": "Int", "width": 150},
+		{"fieldname": "avg_days", "label": _("Avg Days: Enquiry to Admission"), "fieldtype": "Float", "precision": 1, "width": 200},
 	]
 	chart = {
 		"data": {"labels": [d["grp"] for d in data], "datasets": [
-			{"name": _("Enquiries"), "values": [d["enquiries"] for d in data]},
-			{"name": _("Attended demo"), "values": [d["attended"] for d in data]},
-			{"name": _("Admitted"), "values": [d["converted"] for d in data]},
-			{"name": _("Lost"), "values": [d["lost"] for d in data]}]},
+			{"name": _("Total Enquiries"), "values": [d["enquiries"] for d in data]},
+			{"name": _("Students Attended Demo"), "values": [d["attended"] for d in data]},
+			{"name": _("Admissions Taken"), "values": [d["converted"] for d in data]},
+			{"name": _("Enquiries Lost"), "values": [d["lost"] for d in data]}]},
 		"type": "bar", "colors": ["#93c5fd", "#fdba74", "#86efac", "#fca5a5"],
 	}
 	total_enq = sum(d["enquiries"] for d in data)
 	summary = [
-		{"label": _("Enquiries"), "value": total_enq, "datatype": "Int"},
-		{"label": _("Admitted"), "value": sum(d["converted"] for d in data), "datatype": "Int", "indicator": "Green"},
-		{"label": _("Conversion"), "value": flt(sum(d["converted"] for d in data) / total_enq * 100, 1) if total_enq else 0, "datatype": "Percent", "indicator": "Blue"},
-		{"label": _("Lost"), "value": sum(d["lost"] for d in data), "datatype": "Int", "indicator": "Red"},
+		{"label": _("Total Enquiries"), "value": total_enq, "datatype": "Int"},
+		{"label": _("Admissions Taken"), "value": sum(d["converted"] for d in data), "datatype": "Int", "indicator": "Green"},
+		{"label": _("Enquiry to Admission %"), "value": flt(sum(d["converted"] for d in data) / total_enq * 100, 1) if total_enq else 0, "datatype": "Percent", "indicator": "Blue"},
+		{"label": _("Enquiries Lost"), "value": sum(d["lost"] for d in data), "datatype": "Int", "indicator": "Red"},
 		{"label": _("Still Open"), "value": sum(d["open"] for d in data), "datatype": "Int", "indicator": "Orange"},
 	]
 	return columns, data, None, chart, summary

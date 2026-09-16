@@ -1,6 +1,7 @@
 # Copyright (c) 2026, 360ITHub and contributors
 # For license information, please see license.txt
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -21,6 +22,28 @@ class DemoClass(Document):
 
 	def on_update(self):
 		self.sync_enquiry_status()
+		self.followup_after_result()
+
+	def followup_after_result(self):
+		"""Once the demo result is known, the counsellor gets a next-day Enquiry follow-up so the
+		student is called while the demo is fresh. One per demo; nothing if the enquiry already
+		has an open enquiry follow-up or is Converted / Lost."""
+		if self.result not in ("Attended", "Not Attended") or not self.enquiry:
+			return
+		before = self.get_doc_before_save()
+		if before and before.result == self.result:
+			return
+		enq = frappe.db.get_value("Student Enquiry", self.enquiry, ["status", "counsellor", "student_name", "mobile"], as_dict=True)
+		if not enq or enq.status in ("Converted", "Lost"):
+			return
+		if frappe.db.exists("Student Follow-Up", {"reference_type": "Student Enquiry", "reference_name": self.enquiry, "purpose": "Demo", "status": "Open", "notes": ["like", f"%{self.name}%"]}):
+			return
+		from frappe.utils import add_days, today
+		note = (_("Demo attended on {0} ({1}). Call to ask how it went and offer admission.") if self.result == "Attended"
+			else _("Did not attend the demo on {0} ({1}). Call to reschedule or ask why.")).format(frappe.format_value(self.demo_date, {"fieldtype": "Date"}), self.name)
+		frappe.get_doc({"doctype": "Student Follow-Up", "reference_type": "Student Enquiry", "reference_name": self.enquiry, "purpose": "Demo",
+			"student_name": enq.student_name, "mobile": enq.mobile, "follow_up_date": today(), "next_follow_up_date": add_days(today(), 1),
+			"followup_type": "Call", "status": "Open", "assigned_to": enq.counsellor, "notes": note}).insert(ignore_permissions=True)
 
 	def after_delete(self):
 		self.sync_enquiry_status()

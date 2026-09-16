@@ -24,6 +24,9 @@ frappe.ui.form.on("Student Batch Enrollment", {
 			if (!frm.doc.batch && frm.__student_course) f.course = frm.__student_course;
 			return { filters: f };
 		});
+		if (frm.doc.student && !frm.doc.batch && frm.is_new()) {
+			frappe.db.get_value("Student", frm.doc.student, "batch_interested").then((r) => { if (r.message && r.message.batch_interested && !frm.doc.batch) frm.set_value("batch", r.message.batch_interested); });
+		}
 		if (frm.doc.student && !frm.doc.batch && frm.__student_course === undefined) {
 			frappe.db.get_value("Student", frm.doc.student, ["course_interested", "enquiry"]).then((r) => {
 				const v = r.message || {};

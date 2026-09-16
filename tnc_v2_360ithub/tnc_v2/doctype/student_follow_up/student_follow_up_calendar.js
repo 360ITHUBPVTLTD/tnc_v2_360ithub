@@ -3,6 +3,6 @@ frappe.views.calendar["Student Follow-Up"] = {
 	get_events_method: "tnc_v2_360ithub.admissions.followups.get_calendar_events",
 	filters: [
 		{ fieldtype: "Link", fieldname: "assigned_to", options: "User", label: __("Assigned To") },
-		{ fieldtype: "Select", fieldname: "purpose", options: "\nEnquiry\nFee\nGeneral", label: __("Purpose") },
+		{ fieldtype: "Select", fieldname: "purpose", options: "\nEnquiry\nDemo\nFee\nGeneral", label: __("Purpose") },
 	],
 };

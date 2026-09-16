@@ -23,6 +23,7 @@
   "category",
   "cb_p1",
   "student_photo",
+  "batch_interested",
   "course_interested",
   "status",
   "status_reason",
@@ -151,7 +152,15 @@
    "label": "Student Photo"
   },
   {
+   "fieldname": "batch_interested",
+   "fieldtype": "Link",
+   "label": "Batch Interested",
+   "options": "Student Batch"
+  },
+  {
    "description": "From the enquiry; used to narrow the batch list when enrolling.",
+   "fetch_from": "batch_interested.course",
+   "fetch_if_empty": 1,
    "fieldname": "course_interested",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -160,14 +169,14 @@
    "options": "Course"
   },
   {
-   "default": "Trial",
-   "description": "Trial until the first enrolment is submitted, then Active. Attendance Hold is set by attendance rules. Completed / Discontinued close the student.",
+   "default": "Enrolment Pending",
+   "description": "Enrolment Pending until the first enrolment is submitted, then Active. Attendance Hold is set by attendance rules. Completed / Discontinued close the student.",
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Trial\nActive\nAttendance Hold\nCompleted\nDiscontinued"
+   "options": "Enrolment Pending\nActive\nAttendance Hold\nCompleted\nDiscontinued"
   },
   {
    "depends_on": "eval:['Attendance Hold','Discontinued'].includes(doc.status)",
@@ -192,6 +201,7 @@
    "fieldtype": "Data",
    "in_global_search": 1,
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Mobile",
    "options": "Phone",
    "reqd": 1
@@ -429,7 +439,7 @@
  "is_submittable": 0,
  "istable": 0,
  "links": [],
- "modified": "2026-09-11 18:00:00.000000",
+ "modified": "2026-09-16 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Student",

@@ -124,7 +124,7 @@ class StudentBatchEnrollment(Document):
 			so = self.make_sales_order()
 			self.db_set("sales_order", so.name)
 		# first paid-for enrolment ends the trial
-		if frappe.db.get_value("Student", self.student, "status") == "Trial":
+		if frappe.db.get_value("Student", self.student, "status") == "Enrolment Pending":
 			frappe.db.set_value("Student", self.student, "status", "Active", update_modified=False)
 
 	def on_cancel(self):

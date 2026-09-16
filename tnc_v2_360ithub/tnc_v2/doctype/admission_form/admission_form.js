@@ -1,6 +1,10 @@
 // Copyright (c) 2026, 360ITHub and contributors
 frappe.ui.form.on("Admission Form", {
 	refresh(frm) {
+		if (frm.doc.name_mismatch && frm.doc.status === "Pending Review") {
+			frm.dashboard.clear_headline();
+			frm.dashboard.set_headline(`<span class="indicator-pill red">${__("Name differs from enquiry")}</span> ${__("Form says {0}; the enquiry {1} says {2}. Check with the student before applying.", [`<b>${frappe.utils.escape_html(frm.doc.student_name)}</b>`, frm.doc.enquiry, `<b>${frappe.utils.escape_html(frm.doc.__onload && frm.doc.__onload.enquiry_name || "")}</b>`])}`);
+		}
 		frappe.call({ method: "tnc_v2_360ithub.admissions.terms.terms_html_api" }).then((r) => frm.get_field("terms_html").$wrapper.html(r.message || ""));
 		if (frm.is_new() || frm.doc.status === "Applied") {
 			if (frm.doc.student) frm.add_custom_button(__("Student"), () => frappe.set_route("Form", "Student", frm.doc.student)).addClass("btn-primary");

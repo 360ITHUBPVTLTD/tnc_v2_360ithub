@@ -149,7 +149,7 @@ def get_reference_followups(reference_type, reference_name):
 		if r.next_follow_up_date and getdate(r.next_follow_up_date) < today: return _badge(_("Overdue"), "red")
 		if r.next_follow_up_date and getdate(r.next_follow_up_date) == today: return _badge(_("Today"), "orange")
 		return _badge(_("Open"), "blue")
-	kinds = {"Fee": "red", "Enquiry": "blue", "General": "gray"}
+	kinds = {"Fee": "red", "Enquiry": "blue", "Demo": "orange", "General": "gray"}
 	trs = ""
 	for r in rows:
 		fee = f"<div class='small text-muted'>{e(r.payment_term or '')} · {_money(r.amount_pending)}</div>" if r.purpose == "Fee" else ""
@@ -158,8 +158,29 @@ def get_reference_followups(reference_type, reference_name):
 			f"<td>{e(formatdate(r.next_follow_up_date)) if r.next_follow_up_date else ''}</td><td class='small'>{e(r.assigned_to or '')}</td>"
 			f"<td><a class='btn btn-xs btn-default' href='/app/student-follow-up/{e(r.name)}'>{_('Open')}</a></td></tr>")
 	open_n = sum(1 for r in rows if r.status == "Open")
+	plan = ""
+	if reference_type == "Student":
+		nxt = frappe.db.sql("""select ps.payment_term, ps.due_date, (ps.payment_amount - ifnull(ps.paid_amount, 0)) pending
+			from `tabPayment Schedule` ps join `tabSales Order` so on so.name = ps.parent
+			where so.student = %s and so.docstatus = 1 and (ps.payment_amount - ifnull(ps.paid_amount, 0)) > 0.5
+			order by ps.due_date limit 1""", reference_name, as_dict=True)
+		if nxt:
+			n = nxt[0]
+			due = getdate(n.due_date)
+			create_on = add_days(due, -LEAD_DAYS)
+			has_open = any(r.status == "Open" and r.purpose == "Fee" and r.payment_term == n.payment_term for r in rows)
+			if has_open:
+				when = _("reminder follow-up already created, see above")
+			elif due < today:
+				when = _("overdue since {0}").format(formatdate(due))
+			elif create_on <= today:
+				when = _("the system will create a reminder follow-up automatically at 7 AM tomorrow")
+			else:
+				when = _("the system will create a reminder follow-up automatically on {0} at 7 AM, {1} days before the due date").format(formatdate(create_on), LEAD_DAYS)
+			plan = (f"<div class='tnc-sec' style='margin-top:8px;padding:10px 12px;border:1px solid #dbeafe;border-radius:8px;background:#f8fbff'>"
+				f"<b>{_('Next fee reminder')}</b>: {e(n.payment_term or '')} · {_money(n.pending)} · {_('due')} {e(formatdate(due))} — {when}.</div>")
 	html = STYLE + f"""<div class="tnc-ov">
 	<div class="tnc-head"><div><div style="font-size:15px;font-weight:600">{_('Follow-ups')}</div><div class="text-muted">{open_n} {_('open')} · {len(rows) - open_n} {_('closed')}</div></div>
 	  <div class="tnc-stats"><a class="btn btn-sm btn-primary" data-action="followups-page">{_('Open Follow-ups page')}</a></div></div>
-	<div class="tnc-sec">{'<table class="tnc-table"><thead><tr><th>' + _('Status') + '</th><th>' + _('Purpose') + '</th><th>' + _('Date') + '</th><th>' + _('How') + '</th><th>' + _('Notes') + '</th><th>' + _('Next') + '</th><th>' + _('Assigned') + '</th><th></th></tr></thead><tbody>' + trs + '</tbody></table>' if rows else '<div class="tnc-empty">' + _('No follow-up yet.') + '</div>'}</div></div>"""
+	<div class="tnc-sec">{'<table class="tnc-table"><thead><tr><th>' + _('Status') + '</th><th>' + _('Purpose') + '</th><th>' + _('Date') + '</th><th>' + _('How') + '</th><th>' + _('Notes') + '</th><th>' + _('Next') + '</th><th>' + _('Assigned') + '</th><th></th></tr></thead><tbody>' + trs + '</tbody></table>' if rows else '<div class="tnc-empty">' + _('No follow-up yet.') + '</div>'}</div>{plan}</div>"""
 	return {"html": html, "open": open_n}

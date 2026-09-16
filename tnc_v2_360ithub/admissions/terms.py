@@ -52,7 +52,7 @@ def terms_html():
 	parts = [f'<div class="tnc-terms"><h4>{TITLE}</h4><p>{INTRO}</p>']
 	for head, items in SECTIONS:
 		parts.append(f"<h5>{head}</h5><ol>" + "".join(f"<li>{i}</li>" for i in items) + "</ol>")
-	parts.append(f'<p class="text-muted small">Version {TERMS_VERSION}</p></div>')
+	parts.append('</div>')  # the version is recorded on the form, not shown to the student
 	return "".join(parts)
 
 

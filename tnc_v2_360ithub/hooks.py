@@ -49,7 +49,7 @@ app_include_js = "/assets/tnc_v2_360ithub/js/tnc_admissions.js"
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-doctype_js = {"Sales Order": "admissions/sales_order.js"}
+doctype_js = {"Sales Order": "admissions/sales_order.js", "Expense Claim": "hr/expense_claim.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -168,6 +168,7 @@ doc_events = {
 		"on_cancel": "tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_purchase_invoice_cancel",
 	},
 	"Payment Entry": {
+		"validate": "tnc_v2_360ithub.hr.expense_claim.guard_payment_reference",
 		"on_submit": "tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_payment_entry_update",
 		"on_cancel": "tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_payment_entry_update",
 	},
@@ -177,6 +178,9 @@ doc_events = {
 	# Mobile app posts Expense Claims without an approver; copy it from the Employee.
 	"Expense Claim": {
 		"validate": "tnc_v2_360ithub.hr.expense_claim.set_defaults",
+	},
+	"Journal Entry": {
+		"validate": "tnc_v2_360ithub.hr.expense_claim.guard_payment_reference",
 	},
 	# enrolment Sales Orders: fee and schedule are changed through the enrolment only
 	"Sales Order": {

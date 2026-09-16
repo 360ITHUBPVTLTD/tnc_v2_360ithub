@@ -9,7 +9,7 @@ frappe.pages["follow-ups"].on_page_load = function (wrapper) {
 		change() { state.scope = { Mine: "mine", Everyone: "all", "One counsellor": "user" }[scope.get_value()]; user_field.$wrapper.toggle(state.scope === "user"); load(); } });
 	const user_field = page.add_field({ fieldname: "user", fieldtype: "Link", label: __("Counsellor"), options: "User", change() { state.user = user_field.get_value(); load(); } });
 	user_field.$wrapper.hide();
-	const purpose = page.add_field({ fieldname: "purpose", fieldtype: "Select", label: __("Purpose"), options: "\nEnquiry\nFee\nGeneral", change() { state.purpose = purpose.get_value(); load(); } });
+	const purpose = page.add_field({ fieldname: "purpose", fieldtype: "Select", label: __("Purpose"), options: "\nEnquiry\nDemo\nFee\nGeneral", change() { state.purpose = purpose.get_value(); load(); } });
 	const search = page.add_field({ fieldname: "q", fieldtype: "Data", label: __("Search"), placeholder: __("Name, mobile, batch, note..."),
 		change() { state.q = (search.get_value() || "").trim().toLowerCase(); render(); } });
 	search.$input && search.$input.on("input", frappe.utils.debounce(() => { state.q = (search.get_value() || "").trim().toLowerCase(); render(); }, 200));
@@ -27,7 +27,7 @@ frappe.pages["follow-ups"].on_page_load = function (wrapper) {
 		.tnc-fu table{width:100%;border-collapse:collapse;border:1px solid #e5e7eb;background:#fff;font-size:13px}
 		.tnc-fu th{background:#dbeafe;color:#1e3a8a;text-align:left;padding:10px;font-weight:700;border-bottom:1px solid #bfdbfe;white-space:nowrap}
 		.tnc-fu td{padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:middle}
-		.tnc-fu .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600} .pill.Fee{background:#fee2e2;color:#991b1b} .pill.Enquiry{background:#e5e7eb;color:#111} .pill.General{background:#e5e7eb;color:#374151}
+		.tnc-fu .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600} .pill.Demo{background:#fef3c7;color:#92400e} .pill.Fee{background:#fee2e2;color:#991b1b} .pill.Enquiry{background:#e5e7eb;color:#111} .pill.General{background:#e5e7eb;color:#374151}
 		.tnc-fu .acts{display:flex;gap:6px;flex-wrap:wrap} .tnc-fu .note{color:#475569;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 		.tnc-fu .empty{padding:24px;text-align:center;color:#64748b;border:1px dashed #d1d5db;border-radius:6px}
 		.tnc-fu a.name{color:#111;font-weight:600;text-decoration:underline}
@@ -71,9 +71,10 @@ frappe.pages["follow-ups"].on_page_load = function (wrapper) {
 				const fee = r.purpose === "Fee" ? `<div class="small text-muted">${r.payment_term || ""} · ${__("due")} ${fmt(r.instalment_due_date)} · <b class="text-danger">${format_currency(r.amount_pending, "INR")}</b></div>` : "";
 				const acts = [`<a class="btn btn-xs btn-primary" data-act="log" data-name="${r.name}">${__("Log outcome")}</a>`];
 				if (r.purpose === "Fee" && r.sales_order) acts.push(`<a class="btn btn-xs btn-default" data-act="pay" data-so="${r.sales_order}" data-amount="${r.amount_pending}" data-label="${r.payment_term || ""}">${__("Receive Payment")}</a>`);
-				if (r.reference_type === "Student Enquiry") acts.push(`<a class="btn btn-xs btn-default" href="${link}">${__("Open")}</a>`);
-				else acts.push(`<a class="btn btn-xs btn-default" href="${link}">${__("Student")}</a>`);
-				return `<tr><td><a class="name" href="${link}">${frappe.utils.escape_html(r.student_name || r.reference_name)}</a><div class="small text-muted">${r.reference_type === "Student" ? __("Student") : __("Enquiry")} ${r.reference_name}</div></td>
+				const fu_link = `/app/student-follow-up/${encodeURIComponent(r.name)}`;
+				acts.push(`<a class="btn btn-xs btn-default" href="${fu_link}">${__("Follow-up")}</a>`);
+				acts.push(`<a class="btn btn-xs btn-default" href="${link}">${r.reference_type === "Student Enquiry" ? __("Enquiry") : __("Student")}</a>`);
+				return `<tr><td><a class="name" href="${fu_link}" title="${__("Open this follow-up")}">${frappe.utils.escape_html(r.student_name || r.reference_name)}</a><div class="small text-muted"><a href="${link}" style="color:#64748b">${r.reference_type === "Student" ? __("Student") : __("Enquiry")} ${r.reference_name}</a></div></td>
 					<td>${contact}</td><td><span class="pill ${r.purpose}">${r.purpose}</span>${fee}</td>
 					<td class="note" title="${frappe.utils.escape_html(r.notes || "")}">${frappe.utils.escape_html((r.notes || "").split("\n").pop())}</td>
 					<td>${fmt(r.next_follow_up_date)}</td><td class="small">${frappe.user.full_name(r.assigned_to) || r.assigned_to || ""}</td><td><div class="acts">${acts.join("")}</div></td></tr>`;

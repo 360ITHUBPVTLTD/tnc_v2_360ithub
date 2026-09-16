@@ -17,8 +17,94 @@ def ensure_guest_uploads():
 		frappe.db.set_single_value("System Settings", {"allow_guests_to_upload_files": 1, "allowed_doctypes_for_guest_uploads": ""})
 
 
+def ensure_expense_claim_account():
+	"""Expense Claim asks for a Payable Account unless the company has a default. v1 staff
+	picked Creditors on every claim by hand; make it the default."""
+	for company in frappe.get_all("Company", pluck="name"):
+		if not frappe.db.get_value("Company", company, "default_expense_claim_payable_account"):
+			acc = frappe.db.get_value("Company", company, "default_payable_account") or frappe.db.get_value("Account", {"account_type": "Payable", "is_group": 0, "company": company, "account_name": "Creditors"}, "name")
+			if acc:
+				frappe.db.set_value("Company", company, "default_expense_claim_payable_account", acc, update_modified=False)
+
+
+EXPENSE_CLAIM_TYPES = {
+	# type name -> expense account name (without the company suffix). Agreed with Pankaj 16 Sep 2026.
+	"Travel (Ola / Auto / Bus / Train)": "TNC Travelling -EXP",
+	"Ola / Cab": "TNC Ola -EXP",
+	"Porter / Courier": "TNC Porter -EXP",
+	"Food & Refreshment": "TNC Food -EXP",
+	"Water": "TNC Water -EXP",
+	"Stationery & Printing": "TNC Stationery - EXP",
+	"Internet & Mobile Recharge": "TNC Internet -EXP",
+	"Electricity": "TNC Electricity -EXP",
+	"Medical": "TNC Medical -EXP",
+	"Marketing & Events": "Marketing Expenses",
+	"Repairs & Maintenance": "Office Maintenance Expenses",
+	"Other": "TNC Other -EXP",
+	# v1 names kept so old claims keep their type; accounts corrected from "Other"
+	"Travel & Accommodation": "TNC Travelling -EXP",
+	"Marketing & Program Expenses": "Marketing Expenses",
+	"Office & Administration Expenses": "Administrative Expenses",
+	"Staff Welfare Expenses": "TNC Refreshment -EXP",
+}
+
+
+def ensure_expense_claim_types():
+	"""Expense Claim Types the mobile app offers, each posting to its own expense account."""
+	for company in frappe.get_all("Company", pluck="name"):
+		for type_name, account_name in EXPENSE_CLAIM_TYPES.items():
+			acc = frappe.db.get_value("Account", {"account_name": account_name, "company": company, "is_group": 0}, "name")
+			if not acc:
+				continue
+			if frappe.db.exists("Expense Claim Type", type_name):
+				doc = frappe.get_doc("Expense Claim Type", type_name)
+			else:
+				doc = frappe.get_doc({"doctype": "Expense Claim Type", "expense_type": type_name})
+			row = next((r for r in doc.accounts if r.company == company), None)
+			if row:
+				row.default_account = acc
+			else:
+				doc.append("accounts", {"company": company, "default_account": acc})
+			doc.flags.ignore_permissions = True
+			doc.save() if not doc.is_new() else doc.insert()
+
+
+ENQUIRY_SOURCES = {
+	# name -> (asks_referrer, show_on_web_form); order = order on the form and in the desk list
+	"Friend / Existing Student": ("Student", 1),
+	"Teacher": ("Teacher", 1),
+	"Instagram / Facebook": (None, 1),
+	"YouTube": (None, 1),
+	"Google Search": (None, 1),
+	"Institute Visit": (None, 1),
+	"Other": (None, 1),
+	# office-only channels
+	"Walk-in": (None, 0), "Call": (None, 0), "College Data": (None, 0),
+}
+# old names folded into the list above
+SOURCE_MERGES = {"Existing Student": "Friend / Existing Student", "Social Media": "Instagram / Facebook", "Website": "Other",
+	"WhatsApp Forward": "Other", "Poster / Flyer / Newspaper": "Other", "College Visit": "Institute Visit", "College Visit / Seminar": "Institute Visit"}
+
+
+def ensure_enquiry_sources():
+	for old, new in SOURCE_MERGES.items():
+		if frappe.db.exists("Enquiry Source", old):
+			if not frappe.db.exists("Enquiry Source", new):
+				frappe.get_doc({"doctype": "Enquiry Source", "source_name": new}).insert(ignore_permissions=True)
+			frappe.db.sql("update `tabStudent Enquiry` set source=%s where source=%s", (new, old))
+			frappe.delete_doc("Enquiry Source", old, force=1, ignore_permissions=True)
+	for idx, (name, (asks, on_form)) in enumerate(ENQUIRY_SOURCES.items(), start=1):
+		if frappe.db.exists("Enquiry Source", name):
+			frappe.db.set_value("Enquiry Source", name, {"asks_referrer": asks, "show_on_web_form": on_form, "idx": idx}, update_modified=False)
+		else:
+			frappe.get_doc({"doctype": "Enquiry Source", "source_name": name, "asks_referrer": asks, "show_on_web_form": on_form, "idx": idx}).insert(ignore_permissions=True)
+
+
 def ensure_defaults():
 	ensure_guest_uploads()
+	ensure_enquiry_sources()
+	ensure_expense_claim_types()
+	ensure_expense_claim_account()
 	ensure_customer_group()
 	ensure_item_group()
 	ensure_sac()
@@ -84,7 +170,7 @@ def ensure_workspace():
 		frappe.get_doc({"doctype": "Number Card", "name": label, "label": label, "type": "Document Type", "document_type": dt, "function": "Count",
 			"filters_json": frappe.as_json([[dt, f[0], f[1], f[2], False] for f in filters]), "is_public": 1, "show_percentage_stats": 1, "stats_time_interval": "Monthly", "color": color, "module": "TNC v2"}).insert(ignore_permissions=True)
 	shortcuts = [("Follow-ups", "Page", "follow-ups", "Red"), ("Share Forms", "Page", "share-forms", "Grey"), ("Student Enquiry", "DocType", "Student Enquiry", "Blue"), ("Demo Class", "DocType", "Demo Class", "Orange"), ("Student", "DocType", "Student", "Green"),
-		("Enrol in Batch", "DocType", "Student Batch Enrollment", "Green"), ("Student Batch", "DocType", "Student Batch", "Grey"), ("Course", "DocType", "Course", "Grey"),
+		("Enrol in Batch", "DocType", "Student Batch Enrollment", "Green"), ("Batches", "DocType", "Student Batch", "Grey"),
 		("Sales Orders", "DocType", "Sales Order", "Grey"), ("Enquiry Funnel", "Report", "Enquiry Funnel", "Blue")]
 	content = [{"id": "hdr", "type": "header", "data": {"text": "<span class=\"h4\"><b>Admissions</b></span>", "col": 12}}]
 	content += [{"id": f"nc{i}", "type": "number_card", "data": {"number_card_name": label, "col": 3 if i else 3}} for i, (label, *_r) in enumerate(NUMBER_CARDS)]

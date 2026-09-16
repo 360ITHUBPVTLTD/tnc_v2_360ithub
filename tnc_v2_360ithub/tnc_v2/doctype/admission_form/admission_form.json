@@ -53,6 +53,7 @@
   "sb_office",
   "enquiry",
   "status",
+  "name_mismatch",
   "student",
   "cb_o",
   "reviewed_by",
@@ -308,6 +309,14 @@
    "read_only": 1
   },
   {
+   "fieldname": "name_mismatch",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Name differs from enquiry",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "student",
    "fieldtype": "Link",
    "label": "Student",
@@ -336,7 +345,7 @@
  "is_submittable": 0,
  "istable": 0,
  "links": [],
- "modified": "2026-09-14 15:45:00.000000",
+ "modified": "2026-09-15 16:30:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Admission Form",

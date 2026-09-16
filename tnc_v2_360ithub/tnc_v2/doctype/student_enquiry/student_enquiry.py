@@ -29,6 +29,8 @@ class StudentEnquiry(Document):
 				self.status = before.status
 		elif self.is_new():
 			self.status = "New"
+			from tnc_v2_360ithub.admissions.invites import guard
+			guard(self)
 		if self.status == "Converted" and not self.student:
 			frappe.throw(_("Use the Convert to Student action instead of setting the status by hand."))
 		if self.status == "Lost" and not self.lost_reason:
@@ -37,12 +39,23 @@ class StudentEnquiry(Document):
 			self.lost_on = None
 		elif not self.lost_on:
 			self.lost_on = today()
-		if self.counsellor in ("Guest", "") or (self.is_new() and frappe.session.user == "Guest"):
-			self.counsellor = None  # website enquiries wait for a manager to assign
+		if self.counsellor == "Guest":
+			self.counsellor = None  # a website enquiry gets the counsellor who sent the link (invites.guard), else waits for a manager
+		if not self.counsellor and frappe.session.user != "Guest" and self.is_new():
+			self.counsellor = frappe.session.user
+		if not (self.referrer_name or "").strip() and (self.referrer_teacher_name or "").strip():
+			self.referrer_name = self.referrer_teacher_name.strip()  # web form: teacher name typed by the student
+		if not (self.student_name or "").strip():
+			self.student_name = self.mobile  # name is optional at enquiry time; the number identifies the lead
+		if not self.is_new() and self.status == "Converted":
+			before = self.get_doc_before_save()
+			if before and before.counsellor and before.counsellor != self.counsellor:
+				frappe.throw(_("The counsellor cannot be changed after the enquiry is converted (used for incentives)."))
 		self.warn_duplicate_mobile()
-		if self.source != "Teacher":
+		asks = frappe.db.get_value("Enquiry Source", self.source, "asks_referrer") if self.source else None
+		if asks != "Teacher":
 			self.referred_by_teacher = None
-		if self.source != "Existing Student":
+		if asks != "Student":
 			self.referred_by_student = None
 
 
@@ -78,6 +91,8 @@ def convert_to_student(enquiry, extra=None, link_student=None):
 	enq = frappe.get_doc("Student Enquiry", enquiry)
 	if enq.student and frappe.db.exists("Student", enq.student):
 		return enq.student
+	if not enq.counsellor:
+		frappe.throw(_("Please set the Counsellor (sales person) on the enquiry before converting. It is needed for incentive calculation."))
 	if link_student:
 		# same person already admitted: link, do not create a second Student
 		if not frappe.db.exists("Student", link_student):
@@ -106,16 +121,17 @@ def convert_to_student(enquiry, extra=None, link_student=None):
 		"gender": enq.gender,
 		"city": enq.city,
 		"course_interested": enq.course_interested,
+		"batch_interested": enq.batch_interested,
 		"counsellor": enq.counsellor,
 		"enquiry": enq.name,
-		"status": "Trial",
+		"status": "Enrolment Pending",
 	}
 	for k, v in (extra or {}).items():
 		if v not in (None, "") and frappe.get_meta("Student").has_field(k):
 			data[k] = v
 	student = frappe.get_doc(data)
 	student.insert()
-	enq.db_set({"student": student.name, "status": "Converted", "converted_on": today()})
+	enq.db_set({"student": student.name, "status": "Converted", "converted_on": today(), "converted_by": frappe.session.user})
 	enq.add_comment("Info", _("Converted to Student {0}").format(student.name))
 	return student.name
 
@@ -190,20 +206,35 @@ def admission_form_status(enquiry):
 	return {"pending": form, "applied": applied[0] if applied else None, "link": link}
 
 
+LINK_HOURS = 48  # a personal admission link works for this long after it is sent
+
+
+def admission_link_expired(enq):
+	from frappe.utils import now_datetime, get_datetime
+	return not enq.form_token_sent_on or (now_datetime() - get_datetime(enq.form_token_sent_on)).total_seconds() > LINK_HOURS * 3600
+
+
 def admission_link(enq):
-	"""Personal admission link: enquiry id plus a token, so only the link's holder can
-	prefill their own details. The token is created once and reused."""
-	if not enq.form_token:
-		enq.db_set("form_token", frappe.generate_hash(length=24), update_modified=False)
+	"""Personal admission link: enquiry id plus a token. A new token is issued when the
+	previous one has expired, so an old forwarded link stops working after LINK_HOURS."""
+	from frappe.utils import now_datetime
+	if not enq.form_token or admission_link_expired(enq):
+		enq.db_set({"form_token": frappe.generate_hash(length=24), "form_token_sent_on": now_datetime()}, update_modified=False)
 	return f"{frappe.utils.get_url()}/admission/new?enquiry={enq.name}&t={enq.form_token}"
 
 
 @frappe.whitelist(allow_guest=True)
 def admission_prefill(enquiry, t):
 	"""Public form: the enquiry's details for prefilling, only with the matching token."""
-	row = frappe.db.get_value("Student Enquiry", enquiry, ["form_token", "student_name", "mobile", "email", "gender", "city", "course_interested", "status"], as_dict=True)
-	if not row or not t or row.form_token != t or row.status == "Converted":
+	row = frappe.db.get_value("Student Enquiry", enquiry, ["form_token", "form_token_sent_on", "student_name", "mobile", "email", "gender", "city", "course_interested", "batch_interested", "status"], as_dict=True)
+	if not row or not t or row.form_token != t:
 		return {}
+	if admission_link_expired(row):
+		return {"closed": _("This link has expired. Please ask the institute for a new link.")}
+	if row.status == "Converted":
+		return {"closed": _("This enquiry is already admitted. Please contact the institute.")}
+	if frappe.db.exists("Admission Form", {"enquiry": enquiry, "status": ["!=", "Rejected"]}):
+		return {"closed": _("An admission form has already been submitted with this link. Please contact the institute if you need to correct it.")}
 	return {"student_name": row.student_name, "mobile": row.mobile, "email": row.email, "gender": row.gender, "city": row.city, "course_interested": row.course_interested}
 
 
@@ -212,15 +243,10 @@ def _admission_message(enq, link=None):
 	return _("Namaste {0}, welcome to Team Nursing Classes! Please fill your admission form using the link below. Read the rules on the form and tick to accept. Our counsellor will help if you have any question.").format(enq.student_name)
 
 
-@frappe.whitelist()
-def admission_link_preview(enquiry):
-	"""Everything the Send WhatsApp dialog shows before the user confirms: the
-	instance that will send (state, credits, number), the recipient and the message."""
+def whatsapp_instance_state():
+	"""State of the WhatsApp instance that will send: provider, connection, credits, number."""
 	from tnc_v2_360ithub import notifications
 	from frappe.utils import cint
-	enq = frappe.get_doc("Student Enquiry", enquiry)
-	enq.check_permission("read")
-	link = admission_link(enq)
 	s = notifications.settings()
 	inst = {"provider": s.whatsapp_provider, "ok": False, "msg": None, "name": None, "connected": 0, "active": 0, "credits": 0, "number": None}
 	if s.whatsapp_provider != "Webtoolex":
@@ -241,6 +267,19 @@ def admission_link_preview(enquiry):
 				inst.update({"label": d.instance_name or name, "connected": cint(d.connection_status), "active": cint(d.active), "credits": cint(d.remaining_credits), "number": d.connected_number or d.assigned_mobile_number})
 		else:
 			inst["msg"] = _("No WhatsApp Instance configured")
+	return inst
+
+
+@frappe.whitelist()
+def admission_link_preview(enquiry):
+	"""Everything the Send WhatsApp dialog shows before the user confirms: the
+	instance that will send (state, credits, number), the recipient and the message."""
+	from tnc_v2_360ithub import notifications
+	from frappe.utils import cint
+	enq = frappe.get_doc("Student Enquiry", enquiry)
+	enq.check_permission("read")
+	link = admission_link(enq)
+	inst = whatsapp_instance_state()
 	digits = "".join(ch for ch in (enq.mobile or "") if ch.isdigit())[-10:]
 	return {"instance": inst, "mobile": digits, "link": link, "message": _admission_message(enq), "student_name": enq.student_name}
 
@@ -272,3 +311,10 @@ def send_admission_link(enquiry, mobile=None, message=None):
 	if status != "Sent" and not reason:
 		reason = frappe.db.get_value("WhatsApp Message Log", {"reference_doctype": "Student Enquiry", "reference_name": enq.name}, "error", order_by="creation desc")
 	return {"status": status, "reason": reason, "link": link, "message": msg, "mobile": to}
+
+
+@frappe.whitelist(allow_guest=True)
+def open_batches():
+	"""Public enquiry form: batches a student can pick, with course and mode for the label."""
+	rows = frappe.get_all("Student Batch", filters={"status": ["in", ["Upcoming", "Ongoing"]]}, fields=["name", "batch_name", "course_name", "mode", "starting_date"], order_by="starting_date asc")
+	return [{"value": r.name, "label": f"{r.batch_name}" + (f" · {r.mode}" if r.mode else "") + (f" · from {frappe.format_value(r.starting_date, {'fieldtype': 'Date'})}" if r.starting_date else "")} for r in rows]

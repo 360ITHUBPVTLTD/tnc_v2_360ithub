@@ -12,3 +12,17 @@ import frappe
 def set_defaults(doc, method=None):
 	if doc.employee and not doc.expense_approver:
 		doc.expense_approver = frappe.db.get_value("Employee", doc.employee, "expense_approver")
+
+
+def guard_payment_reference(doc, method=None):
+	"""Payment Entry / Journal Entry validate: no payment against a rejected or unsubmitted
+	Expense Claim, even when the entry is typed by hand instead of from the Create button."""
+	rows = doc.get("references") if doc.doctype == "Payment Entry" else doc.get("accounts")
+	for r in rows or []:
+		if r.get("reference_doctype") != "Expense Claim" or not r.get("reference_name"):
+			continue
+		status, docstatus = frappe.db.get_value("Expense Claim", r.reference_name, ["approval_status", "docstatus"]) or (None, None)
+		if status == "Rejected":
+			frappe.throw(frappe._("Expense Claim {0} is rejected. Payment cannot be made against it.").format(r.reference_name))
+		if docstatus != 1:
+			frappe.throw(frappe._("Expense Claim {0} is not submitted. Payment cannot be made against it.").format(r.reference_name))
