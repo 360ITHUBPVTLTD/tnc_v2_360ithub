@@ -22,7 +22,16 @@
   "duration",
   "cb2",
   "result",
-  "remarks"
+  "remarks",
+  "sb_rating",
+  "counsellor_rating",
+  "counsellor_rating_note",
+  "cb_rating",
+  "student_rating",
+  "student_feedback",
+  "rated_on",
+  "rating_token",
+  "rating_sent_on"
  ],
  "fields": [
   {
@@ -116,13 +125,67 @@
    "fieldname": "remarks",
    "fieldtype": "Small Text",
    "label": "Remarks"
+  },
+  {
+   "depends_on": "eval:doc.result=='Attended'",
+   "fieldname": "sb_rating",
+   "fieldtype": "Section Break",
+   "label": "Ratings (out of 5)"
+  },
+  {
+   "description": "How likely is this student to join? 5 = very likely.",
+   "fieldname": "counsellor_rating",
+   "fieldtype": "Rating",
+   "label": "Counsellor's rating of the student"
+  },
+  {
+   "fieldname": "counsellor_rating_note",
+   "fieldtype": "Small Text",
+   "label": "Counsellor's note"
+  },
+  {
+   "fieldname": "cb_rating",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "student_rating",
+   "fieldtype": "Rating",
+   "label": "Student's rating of the demo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "student_feedback",
+   "fieldtype": "Small Text",
+   "label": "Student's feedback",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rated_on",
+   "fieldtype": "Datetime",
+   "label": "Student rated on",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rating_token",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Rating Link Token",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "rating_sent_on",
+   "fieldtype": "Datetime",
+   "label": "Rating link sent on",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "idx": 0,
  "is_submittable": 0,
  "istable": 0,
  "links": [],
- "modified": "2026-09-11 18:00:00.000000",
+ "modified": "2026-09-15 18:30:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Demo Class",

@@ -144,7 +144,7 @@ def get_student_overview(student):
 	tl = "".join(f"<li><span class='text-muted small'>{e(formatdate(d))}</span> &nbsp; {'<a href=' + chr(34) + e(link) + chr(34) + '>' + txt + '</a>' if link else txt}</li>" for d, txt, link in events)
 	due_txt = e(formatdate(next_due)) if next_due else "—"
 	due_kind = "red" if next_due and next_due < getdate(nowdate()) else ("orange" if next_due else "gray")
-	status_kind = {"Trial": "orange", "Active": "green", "Attendance Hold": "red", "Completed": "blue", "Discontinued": "gray"}.get(doc.status, "gray")
+	status_kind = {"Enrolment Pending": "orange", "Active": "green", "Attendance Hold": "red", "Completed": "blue", "Discontinued": "gray"}.get(doc.status, "gray")
 	photo = f'<img src="{e(doc.student_photo)}" class="tnc-photo">' if doc.student_photo else f'<div class="tnc-photo tnc-photo-empty">{e((doc.student_name or "?")[:1])}</div>'
 	html = STYLE + f"""
 	<div class="tnc-ov">
@@ -185,7 +185,7 @@ def _paid_against_order(sales_order):
 def get_enquiry_overview(enquiry):
 	doc = frappe.get_doc("Student Enquiry", enquiry)
 	doc.check_permission("read")
-	demos = frappe.get_all("Demo Class", filters={"enquiry": enquiry}, fields=["name", "demo_date", "from_time", "to_time", "batch", "result"], order_by="demo_date desc")
+	demos = frappe.get_all("Demo Class", filters={"enquiry": enquiry}, fields=["name", "demo_date", "from_time", "to_time", "batch", "result", "counsellor_rating", "student_rating", "rated_on", "rating_sent_on"], order_by="demo_date desc")
 	fups = frappe.get_all("Student Follow-Up", filters={"reference_type": "Student Enquiry", "reference_name": enquiry},
 		fields=["name", "follow_up_date", "followup_type", "notes", "next_follow_up_date", "status", "done_by"], order_by="follow_up_date desc")
 	kinds = {"Scheduled": "orange", "Attended": "green", "Not Attended": "red", "Cancelled": "gray"}
@@ -193,13 +193,22 @@ def get_enquiry_overview(enquiry):
 		if not d.from_time:
 			return ""
 		return " " + e(str(d.from_time)[:5]) + (" - " + e(str(d.to_time)[:5]) if d.to_time else "")
-	drows = "".join(f"<tr><td><a href='/app/demo-class/{e(d.name)}'>{e(formatdate(d.demo_date))}{_slot(d)}</a></td><td>{e(d.batch)}</td><td>{_badge(d.result, kinds.get(d.result, 'gray'))}</td></tr>" for d in demos)
+	def _stars(v):
+		n = int(round((v or 0) * 5))
+		return ("<span style='color:#f5b301'>" + "★" * n + "</span><span style='color:#d4d7dd'>" + "★" * (5 - n) + "</span>") if n else "<span class='text-muted'>–</span>"
+	def _rating(d):
+		if d.result != "Attended":
+			return ""
+		stu = _stars(d.student_rating) if d.rated_on else ("<span class='text-muted small'>" + _("link sent") + "</span>" if d.rating_sent_on else "<span class='text-muted small'>" + _("not asked") + "</span>")
+		return f"<div class='small'>{_('Counsellor')}: {_stars(d.counsellor_rating)}</div><div class='small'>{_('Student')}: {stu}</div>"
+	drows = "".join(f"<tr><td><a href='/app/demo-class/{e(d.name)}'>{e(formatdate(d.demo_date))}{_slot(d)}</a></td><td>{e(d.batch)}</td><td>{_badge(d.result, kinds.get(d.result, 'gray'))}</td><td>{_rating(d)}</td></tr>" for d in demos)
 	frows = "".join(f"<tr><td><a href='/app/student-follow-up/{e(f.name)}'>{e(formatdate(f.follow_up_date))}</a></td><td>{e(f.followup_type or '')}</td><td>{e((f.notes or '')[:90])}</td><td>{e(formatdate(f.next_follow_up_date)) if f.next_follow_up_date else ''}</td><td>{_badge(f.status, 'green' if f.status == 'Closed' else 'orange')}</td></tr>" for f in fups)
 	def table(head, rows):
 		return '<table class="tnc-table"><thead><tr>' + ''.join(f'<th>{h}</th>' for h in head) + '</tr></thead><tbody>' + rows + '</tbody></table>'
 	html = STYLE + f"""<div class="tnc-enq"><div class="tnc-two">
 	<div><h6>{_('Demo classes')} ({len(demos)})</h6>
-	{table([_('When'), _('Batch'), _('Result')], drows) if demos else '<div class="tnc-empty">' + _('No demo yet.') + '</div>'}</div>
+	{table([_('When'), _('Batch'), _('Result'), _('Rating')], drows) if demos else '<div class="tnc-empty">' + _('No demo yet.') + '</div>'}</div>
 	<div><h6>{_('Follow-ups')} ({len(fups)})</h6>
 	{table([_('Date'), _('Type'), _('Notes'), _('Next'), ''], frows) if fups else '<div class="tnc-empty">' + _('No follow-up yet.') + '</div>'}</div></div></div>"""
 	return {"html": html, "demos": len(demos), "attended": sum(1 for d in demos if d.result == "Attended")}
+

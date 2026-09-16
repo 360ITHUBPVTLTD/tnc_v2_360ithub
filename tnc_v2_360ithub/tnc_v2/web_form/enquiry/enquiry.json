@@ -7,20 +7,20 @@
  "allow_print": 0,
  "anonymous": 1,
  "apply_document_permissions": 0,
- "button_label": "Submit",
- "client_script": "frappe.web_form.validate = () => {\n\tconst m = (frappe.web_form.get_value(\"mobile\") || \"\").replace(/\\D/g, \"\");\n\tif (m.length < 10) { frappe.msgprint(__(\"Please enter a valid 10-digit mobile number.\")); return false; }\n\tfrappe.web_form.set_value(\"source\", \"Website\");\n\treturn true;\n};",
+ "button_label": "Send my enquiry",
+ "client_script": "const tnc_brand = () => {\n\tif ($(\".tnc-brand\").length) return;\n\tconst $c = $(\".web-form-container\");\n\t$c.prepend(`<div class=\"tnc-brand\"><img src=\"/assets/tnc_v2_360ithub/images/tnc_logo.png\" alt=\"TNC\"><div><div class=\"n\">Team <span>Nursing</span> Classes</div><div class=\"t\">A dedicated institute for Nursing Officer · Anisabad, Patna</div></div></div><div class=\"tnc-strip\"></div>`);\n\t$c.append(`<div class=\"tnc-help\">${__(\"Need help?\")} <a href=\"tel:7484999051\">📞 7484999051</a> · <a href=\"tel:9471070851\">9471070851</a></div>`);\n};\nconst tnc_notice = (msg) => { tnc_brand(); $(\".web-form-container\").children().not(\".tnc-brand,.tnc-strip,.tnc-help\").remove(); $(\".tnc-strip\").after(`<div class=\"tnc-notice\">${msg}</div>`); };\nconst qs = new URLSearchParams(window.location.search);\nconst inv_m = qs.get(\"m\"), inv_t = qs.get(\"t\");\nconst inv_notice = tnc_notice;\ntnc_brand();\nfrappe.call({ method: \"tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry.open_batches\" }).then((r) => {\n\tconst f = frappe.web_form.fields_dict.batch_interested, list = r.message || [];\n\tif (f && list.length) { f.df.options = [{ value: \"\", label: \"\" }].concat(list); f.df.read_only = 0; f.refresh(); }\n});\nfrappe.call({ method: \"tnc_v2_360ithub.admissions.invites.web_form_sources\" }).then((r) => {\n\tconst f = frappe.web_form.fields_dict.source, list = r.message || [];\n\tif (f && list.length) { f.df.options = [\"\"].concat(list).join(\"\\n\"); f.df.read_only = 0; f.refresh(); f.$input && f.$input.prop(\"disabled\", false); }\n});\nif (!inv_m || !inv_t) {\n\tinv_notice(__(\"This form opens only from the personal link sent by the institute on WhatsApp. Please call the institute for your link.\"));\n} else {\n\tfrappe.call({ method: \"tnc_v2_360ithub.admissions.invites.enquiry_invite_state\", args: { m: inv_m, t: inv_t } }).then((r) => {\n\t\tconst v = r.message || {};\n\t\tif (!v.valid) { inv_notice(__(\"This link is not valid. Please call the institute for your link.\")); return; }\n\t\tif (v.closed) { inv_notice(v.closed); return; }\n\t\tfrappe.web_form.set_value(\"mobile\", v.mobile);\n\t\tfrappe.web_form.set_value(\"invite_token\", inv_t);\n\t\tfrappe.web_form.set_df_property(\"mobile\", \"read_only\", 1);\n\t});\n}\nfrappe.web_form.validate = () => {\n\tconst m = (frappe.web_form.get_value(\"mobile\") || \"\").replace(/\\D/g, \"\");\n\tif (m.length < 10) { frappe.msgprint(__(\"Please enter a valid 10-digit mobile number.\")); return false; }\n\tif (!frappe.web_form.get_value(\"source\")) { frappe.msgprint(__(\"Please tell us how you heard about us.\")); return false; }\n\tconst src = frappe.web_form.get_value(\"source\");\n\tif (src === \"Friend / Existing Student\" && !(frappe.web_form.get_value(\"referrer_name\") || \"\").trim()) { frappe.msgprint(__(\"Please tell us the name of the student who referred you.\")); return false; }\n\tif (src === \"Teacher\") {\n\t\tconst t = (frappe.web_form.get_value(\"referrer_teacher_name\") || \"\").trim();\n\t\tif (!t) { frappe.msgprint(__(\"Please tell us the name of the teacher who referred you.\")); return false; }\n\t\tfrappe.web_form.set_value(\"referrer_name\", t);\n\t}\n\treturn true;\n};",
  "condition_json": "[]",
  "creation": "2026-09-14 10:00:00.000000",
- "custom_css": "",
+ "custom_css": "@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Noto+Sans:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap');\n:root{--tnc-red:#d81f26;--tnc-red-dark:#b3161c;--tnc-ink:#1f2430;--tnc-ink-2:#5b6472;--tnc-line:#e3e6eb;--tnc-bg:#f4f5f7;--tnc-soft:#fdecec}\n.navbar,.web-footer,footer,.page-header-actions-block,.web-form-header .breadcrumb,.web-form-actions .btn-secondary{display:none!important}\nbody{background:var(--tnc-bg)!important;font-family:\"Noto Sans\",\"Noto Sans Devanagari\",system-ui,-apple-system,\"Segoe UI\",sans-serif;color:var(--tnc-ink)}\n.web-form-container,.page_content,.container{max-width:760px!important;margin:0 auto!important;padding:0 14px 40px!important}\n.tnc-brand{display:flex;align-items:center;gap:14px;padding:22px 4px 14px}\n.tnc-brand img{width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);flex:none}\n.tnc-brand .n{font-family:Manrope,sans-serif;font-weight:800;font-size:20px;line-height:1.15;color:var(--tnc-ink)}\n.tnc-brand .n span{color:var(--tnc-red)}\n.tnc-brand .t{font-size:12.5px;color:var(--tnc-ink-2);margin-top:2px}\n.tnc-strip{height:4px;background:linear-gradient(90deg,var(--tnc-red) 0 70%,var(--tnc-ink) 70%);border-radius:2px;margin:0 4px 18px}\n.web-form-header{padding:0 4px!important;border:0!important}\n.web-form-header .title{font-family:Manrope,sans-serif;font-weight:800;font-size:26px;letter-spacing:-.01em;color:var(--tnc-ink);margin:0 0 6px}\n.web-form-header .introduction{color:var(--tnc-ink-2);font-size:14.5px;line-height:1.55}\n.web-form-header .introduction p{margin:0 0 6px}\n.web-form-wrapper{background:#fff;border:1px solid var(--tnc-line);border-radius:14px;padding:6px 22px 10px!important;box-shadow:0 8px 30px rgba(31,36,48,.06);margin-top:14px}\n.web-form .form-section,.web-form .section-body{border:0!important}\n.web-form .section-head{font-family:Manrope,sans-serif;font-weight:700;font-size:15px;color:var(--tnc-red);text-transform:uppercase;letter-spacing:.06em;padding:18px 0 4px!important;margin:8px 0 0!important;border-top:1px solid var(--tnc-line)!important}\n.web-form .form-section:first-of-type .section-head{border-top:0!important}\n.web-form .form-section:first-of-type .section-head{padding-top:12px!important}\n.frappe-control .control-label{font-weight:600;font-size:13px;color:var(--tnc-ink);margin-bottom:5px}\n.frappe-control .control-label .reqd,.frappe-control .control-label:has(+ .control-input-wrapper .reqd){color:var(--tnc-red)}\n.form-control,.frappe-control input,.frappe-control select,.frappe-control textarea{border:1.5px solid var(--tnc-line)!important;border-radius:10px!important;background:#fff!important;min-height:46px;font-size:16px!important;padding:10px 12px!important;color:var(--tnc-ink)!important;transition:border-color .15s,box-shadow .15s}\n.frappe-control textarea{min-height:84px}\n.form-control:focus,.frappe-control input:focus,.frappe-control select:focus,.frappe-control textarea:focus{border-color:var(--tnc-red)!important;box-shadow:0 0 0 3px rgba(216,31,38,.14)!important;outline:0}\n.frappe-control[data-fieldtype=\"Check\"]{background:var(--tnc-soft);border:1px solid #f5c2c4;border-radius:10px;padding:12px 14px;margin-top:10px}\n.frappe-control[data-fieldtype=\"Check\"] .checkbox .label-area{font-size:15px;font-weight:600;color:var(--tnc-ink);line-height:1.5}\n.frappe-control[data-fieldtype=\"Check\"] input[type=checkbox]{width:20px;height:20px;accent-color:var(--tnc-red);min-height:0}\n.frappe-control[data-fieldname=\"mobile\"] input[readonly],.frappe-control input[readonly]{background:#f7f8fa!important;color:var(--tnc-ink-2)!important;border-style:dashed!important}\n.frappe-control[data-fieldname=\"mobile\"] .control-label::after{content:\" · locked to your number\";font-weight:400;color:var(--tnc-ink-2);font-size:12px}\n.frappe-control[data-fieldtype=\"Attach\"] .btn{border-radius:10px;border:1.5px dashed var(--tnc-red);color:var(--tnc-red);background:#fff;font-weight:600;min-height:46px;width:100%}\n.frappe-control[data-fieldname=\"terms_html\"]{max-height:340px;overflow-y:auto;border:1px solid var(--tnc-line);border-radius:10px;padding:14px 16px;background:#fafbfc;font-size:14px;line-height:1.6}\n.web-form-footer{padding:16px 0 0!important;border:0!important}\n.web-form-actions .btn-primary,.web-form-footer .btn-primary{background:var(--tnc-red)!important;border:0!important;border-radius:12px!important;font-family:Manrope,sans-serif;font-weight:700;font-size:16px;min-height:52px;width:100%;box-shadow:0 6px 16px rgba(216,31,38,.28);transition:transform .08s,background .15s}\n.web-form-actions .btn-primary:hover,.web-form-footer .btn-primary:hover{background:var(--tnc-red-dark)!important}\n.web-form-actions .btn-primary:active{transform:translateY(1px)}\n.web-form-actions .btn-primary:disabled{background:#c9ccd2!important;box-shadow:none;cursor:not-allowed}\n.tnc-notice{background:#fff;border:1px solid var(--tnc-line);border-left:5px solid var(--tnc-red);border-radius:12px;padding:20px 22px;font-size:16px;line-height:1.55;box-shadow:0 8px 30px rgba(31,36,48,.06)}\n.tnc-help{text-align:center;color:var(--tnc-ink-2);font-size:12.5px;margin-top:18px}\n.tnc-help a{color:var(--tnc-red);font-weight:600;text-decoration:none}\n.success-page,.web-form-success{background:#fff;border:1px solid var(--tnc-line);border-radius:14px;padding:30px 24px;text-align:center;box-shadow:0 8px 30px rgba(31,36,48,.06)}\n.success-page .success-title,.web-form-success .title{font-family:Manrope,sans-serif;font-weight:800;color:var(--tnc-red);font-size:24px}\n.success-page .success-message,.web-form-success .message{font-size:16px;color:var(--tnc-ink);line-height:1.6}\n.success-page .btn,.web-form-success .btn{display:none}\n@media (max-width:480px){.web-form-wrapper{padding:4px 14px 8px!important}.tnc-brand .n{font-size:17px}.web-form-header .title{font-size:22px}}\n\n.web-form,.web-form-container>.web-form{background:transparent!important;box-shadow:none!important;border:0!important;padding:0!important}\n.web-form-header .indicator-pill,.web-form-header .indicator,.form-message{display:none!important}\n.web-form-footer .btn-default,.web-form-footer .discard-btn,.web-form-actions .btn-default,.web-form-actions .discard-btn{display:none!important}\n.web-form .form-section:first-child .section-head,.web-form .section-head:first-child{border-top:0!important;padding-top:12px!important}\n.web-form .form-section .section-head::before{display:none}\n\n.web-form-header{background:transparent!important;box-shadow:none!important;margin-bottom:0!important}\n",
  "doc_type": "Student Enquiry",
  "docstatus": 0,
  "doctype": "Web Form",
  "idx": 0,
- "introduction_text": "<p>Tell us a little about yourself and our counsellor will call you within one working day.</p>",
+ "introduction_text": "<p>Fill this short form and our counsellor will call you within one working day.</p><p>कृपया अपना नाम, कोर्स और शहर भरें। हमारे काउंसलर एक कार्यदिवस में आपसे संपर्क करेंगे।</p>",
  "is_standard": 1,
  "login_required": 0,
  "max_attachment_size": 5,
- "modified": "2026-09-14 14:00:00.000000",
+ "modified": "2026-09-16 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "enquiry",
@@ -30,7 +30,7 @@
  "show_attachments": 0,
  "show_list": 0,
  "show_sidebar": 0,
- "success_message": "Thank you for your interest in Team Nursing Classes. Our counsellor will call you within one working day.",
+ "success_message": "Thank you for your interest in Team Nursing Classes. Our counsellor will call you within one working day. / धन्यवाद! हमारे काउंसलर एक कार्यदिवस में आपसे संपर्क करेंगे।",
  "success_title": "Thank you",
  "title": "Enquire Now",
  "web_form_fields": [
@@ -63,16 +63,10 @@
    "reqd": 1
   },
   {
-   "fieldname": "course_interested",
-   "fieldtype": "Link",
-   "label": "Course you are interested in",
-   "options": "Course"
-  },
-  {
-   "fieldname": "preferred_mode",
+   "fieldname": "batch_interested",
    "fieldtype": "Select",
-   "label": "Preferred Mode",
-   "options": "\nOffline\nOnline"
+   "label": "Which batch are you interested in?",
+   "options": ""
   },
   {
    "fieldname": "city",
@@ -80,17 +74,38 @@
    "label": "City"
   },
   {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "hidden": 0,
+   "label": "How did you hear about us?",
+   "options": "\nFriend / Existing Student\nTeacher\nInstagram / Facebook\nYouTube\nGoogle Search\nInstitute Visit\nOther",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.source=='Friend / Existing Student'",
+   "fieldname": "referrer_name",
+   "fieldtype": "Data",
+   "label": "Name of the student who referred you",
+   "mandatory_depends_on": "eval:doc.source=='Friend / Existing Student'"
+  },
+  {
+   "depends_on": "eval:doc.source=='Teacher'",
+   "fieldname": "referrer_teacher_name",
+   "fieldtype": "Data",
+   "label": "Name of the teacher who referred you",
+   "mandatory_depends_on": "eval:doc.source=='Teacher'"
+  },
+  {
    "fieldname": "notes",
    "fieldtype": "Small Text",
    "label": "Your message (optional)"
   },
   {
-   "default": "Website",
-   "fieldname": "source",
+   "fieldname": "invite_token",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "Source",
-   "read_only": 1
+   "label": "Invite Token"
   }
  ]
 }

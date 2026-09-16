@@ -3,6 +3,8 @@
 """Admission Form: the paper admission form filled online (public web form /admission
 or on a tablet at the counter). Not a Student by itself: staff review it and press
 "Apply to Student", which fills or creates the Student and records the consent."""
+import re
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -16,9 +18,13 @@ COPY_FIELDS = ("student_name", "date_of_birth", "aadhar_number", "place_of_birth
 
 
 class AdmissionForm(Document):
+	def onload(self):
+		if self.enquiry:
+			self.set_onload("enquiry_name", frappe.db.get_value("Student Enquiry", self.enquiry, "student_name"))
+
 	def validate(self):
-		if not self.terms_accepted:
-			frappe.throw(_("The rules and consent must be accepted before the form can be submitted."))
+		if not self.terms_accepted or not self.guardian_consent:
+			frappe.throw(_("Both the rules consent and the guardian consent must be ticked before the form can be submitted."))
 		if self.student_name:
 			self.student_name = self.student_name.strip().upper()
 		if self.is_new():
@@ -31,6 +37,30 @@ class AdmissionForm(Document):
 			frappe.throw(_("Please enter a valid 10-digit mobile number."))
 		if self.is_new():
 			self.attach_to_enquiry()
+			self.guard_enquiry_link()
+
+	def guard_enquiry_link(self):
+		"""A personal link is for one student, once. The mobile on the form must be the
+		enquiry's mobile, and an enquiry that already has a live form takes no second one."""
+		if not self.enquiry:
+			if frappe.session.user == "Guest":
+				frappe.throw(_("Please use the personal admission link sent to you by the institute."), frappe.PermissionError)
+			return
+		enq = frappe.db.get_value("Student Enquiry", self.enquiry, ["mobile", "status", "student_name", "form_token", "form_token_sent_on"], as_dict=True)
+		enq_mobile, enq_status = enq.mobile, enq.status
+		d10 = lambda m: "".join(ch for ch in (m or "") if ch.isdigit())[-10:]
+		if frappe.session.user == "Guest":
+			from tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry import admission_link_expired
+			if admission_link_expired(enq):
+				frappe.throw(_("This link has expired. Please ask the institute for a new link."), frappe.PermissionError)
+		norm = lambda n: re.sub(r"[^a-z]", "", (n or "").lower())
+		self.name_mismatch = 1 if enq.student_name and norm(enq.student_name) != norm(self.student_name) else 0
+		if enq_mobile and d10(enq_mobile) != d10(self.mobile):
+			frappe.throw(_("This admission link was sent to a different mobile number. Please fill the form with the number your enquiry was made from, or ask the institute for your own link."), frappe.PermissionError)
+		if frappe.db.exists("Admission Form", {"enquiry": self.enquiry, "status": ["!=", "Rejected"]}):
+			frappe.throw(_("An admission form has already been submitted for this enquiry. Please contact the institute if you need to correct it."), frappe.DuplicateEntryError)
+		if enq_status == "Converted":
+			frappe.throw(_("This enquiry is already admitted. Please contact the institute."), frappe.PermissionError)
 
 	def attach_to_enquiry(self):
 		"""Link the open enquiry this form belongs to: the one named in the link the
@@ -47,7 +77,10 @@ class AdmissionForm(Document):
 
 	def after_insert(self):
 		if self.enquiry:
-			frappe.get_doc("Student Enquiry", self.enquiry).add_comment("Info", _("Admission form {0} received, consent accepted.").format(self.name))
+			enq = frappe.get_doc("Student Enquiry", self.enquiry)
+			enq.add_comment("Info", _("Admission form {0} received, consent accepted.").format(self.name))
+			if self.name_mismatch:
+				enq.add_comment("Info", _("⚠ Name on admission form {0} is <b>{1}</b>, enquiry name is <b>{2}</b>. Please check before applying.").format(self.name, self.student_name, enq.student_name))
 
 
 @frappe.whitelist()
@@ -65,7 +98,7 @@ def apply_to_student(name, student=None):
 		doc = frappe.get_doc("Student", student)
 	else:
 		doc = frappe.new_doc("Student")
-		doc.status = "Trial"
+		doc.status = "Enrolment Pending"
 	for f in COPY_FIELDS:
 		if form.get(f) not in (None, "") and frappe.get_meta("Student").has_field(f):
 			doc.set(f, form.get(f))
@@ -89,7 +122,7 @@ def apply_to_student(name, student=None):
 			convert_to_student(linked or open_enq[0].name, link_student=doc.name)
 		else:
 			enq = frappe.get_doc({"doctype": "Student Enquiry", "student_name": doc.student_name, "mobile": doc.mobile, "email": doc.email, "gender": doc.gender,
-				"course_interested": form.course_interested, "source": "Website", "notes": _("Created from admission form {0}").format(form.name)})
+				"course_interested": form.course_interested, "source": "Other", "notes": _("Created from admission form {0}").format(form.name)})
 			enq.flags.ignore_permissions = True
 			enq.insert()
 			convert_to_student(enq.name, link_student=doc.name)

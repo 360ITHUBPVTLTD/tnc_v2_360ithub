@@ -5,6 +5,10 @@ import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 FIELDS = {
+	# Client meeting 14 Sep: every claim is tagged to the online or the offline classes side.
+	"Expense Claim": [
+		{"fieldname": "expense_for", "fieldtype": "Select", "label": "Expense For", "options": "\nOnline Coaching Expense\nOffline Coaching Expense", "insert_after": "expense_approver", "in_list_view": 1, "in_standard_filter": 1, "allow_on_submit": 0, "module": "TNC v2"},
+	],
 	"Sales Order": [
 		{"fieldname": "admissions_section", "fieldtype": "Section Break", "label": "Admission", "insert_after": "customer_name", "collapsible": 0, "module": "TNC v2"},
 		{"fieldname": "student", "fieldtype": "Link", "label": "Student", "options": "Student", "insert_after": "admissions_section", "read_only": 1, "in_standard_filter": 1, "module": "TNC v2"},

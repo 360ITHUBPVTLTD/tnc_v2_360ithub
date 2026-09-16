@@ -43,10 +43,11 @@
    "options": "FUP-.#####"
   },
   {
+   "default": "Student Enquiry",
    "fieldname": "reference_type",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Reference Type",
+   "label": "Follow-up For",
    "options": "Student Enquiry\nStudent",
    "reqd": 1
   },
@@ -54,7 +55,7 @@
    "fieldname": "reference_name",
    "fieldtype": "Dynamic Link",
    "in_list_view": 1,
-   "label": "Reference Name",
+   "label": "Enquiry / Student",
    "options": "reference_type",
    "reqd": 1
   },
@@ -65,7 +66,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Purpose",
-   "options": "Enquiry\nFee\nGeneral",
+   "options": "Enquiry\nDemo\nFee\nGeneral",
    "reqd": 1
   },
   {
@@ -195,7 +196,7 @@
  "is_submittable": 0,
  "istable": 0,
  "links": [],
- "modified": "2026-09-11 18:00:00.000000",
+ "modified": "2026-09-16 15:30:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Student Follow-Up",

@@ -125,8 +125,8 @@ frappe.ui.form.on("Student Enquiry", {
 		const d = new frappe.ui.Dialog({
 			title: __("Schedule Demo Class"),
 			fields: [
-				{ fieldname: "batch", fieldtype: "Link", label: __("Batch"), options: "Student Batch", reqd: 1,
-				  description: frm.doc.course_interested ? __("Batches of {0}", [frm.doc.course_interested]) : __("Set Course Interested on the enquiry to narrow this list"),
+				{ fieldname: "batch", fieldtype: "Link", label: __("Batch"), options: "Student Batch", reqd: 1, default: frm.doc.batch_interested || undefined,
+				  description: frm.doc.course_interested ? __("Batches of {0}", [frm.doc.course_interested]) : __("Open batches"),
 				  get_query: () => ({ filters: Object.assign({ status: ["in", ["Upcoming", "Ongoing"]] }, frm.doc.course_interested ? { course: frm.doc.course_interested } : {}) }) },
 				{ fieldname: "demo_date", fieldtype: "Date", label: __("Date"), reqd: 1, default: frappe.datetime.get_today() },
 				{ fieldname: "from_time", fieldtype: "Time", label: __("From Time"), reqd: 1, onchange: () => show_duration() },

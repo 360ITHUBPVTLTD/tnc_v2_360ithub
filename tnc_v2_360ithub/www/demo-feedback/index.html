@@ -1,0 +1,68 @@
+{% extends "templates/web.html" %}
+{% block title %}Rate your demo class · Team Nursing Classes{% endblock %}
+{% block head_include %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Noto+Sans:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap">
+<style>
+:root{--r:#d81f26;--ink:#1f2430;--ink2:#5b6472;--line:#e3e6eb}
+.navbar,.web-footer,footer{display:none!important}
+body{background:#f4f5f7;font-family:"Noto Sans","Noto Sans Devanagari",system-ui,sans-serif;color:var(--ink)}
+.dfb{max-width:560px;margin:0 auto;padding:22px 16px 40px}
+.brand{display:flex;align-items:center;gap:14px;padding-bottom:14px}
+.brand img{width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.brand .n{font-family:Manrope,sans-serif;font-weight:800;font-size:20px;line-height:1.15}.brand .n span{color:var(--r)}
+.brand .t{font-size:12.5px;color:var(--ink2)}
+.strip{height:4px;background:linear-gradient(90deg,var(--r) 0 70%,var(--ink) 70%);border-radius:2px;margin-bottom:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 20px;box-shadow:0 8px 30px rgba(31,36,48,.06)}
+h1{font-family:Manrope,sans-serif;font-weight:800;font-size:22px;margin:0 0 6px}
+.sub{color:var(--ink2);font-size:14.5px;margin-bottom:18px;line-height:1.5}
+.stars{display:flex;gap:8px;justify-content:center;margin:10px 0 6px}
+.stars button{font-size:42px;line-height:1;background:none;border:0;color:#d4d7dd;cursor:pointer;padding:4px;transition:transform .1s,color .1s}
+.stars button.on{color:#f5b301;transform:scale(1.08)}
+.stars button:focus-visible{outline:3px solid rgba(216,31,38,.3);border-radius:8px}
+.lbl{text-align:center;font-weight:600;min-height:22px;color:var(--ink2);margin-bottom:14px}
+textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px;font-size:16px;min-height:96px;font-family:inherit}
+textarea:focus{border-color:var(--r);box-shadow:0 0 0 3px rgba(216,31,38,.14);outline:0}
+.btn-go{width:100%;margin-top:14px;background:var(--r);color:#fff;border:0;border-radius:12px;min-height:52px;font-family:Manrope,sans-serif;font-weight:700;font-size:16px;box-shadow:0 6px 16px rgba(216,31,38,.28)}
+.btn-go:disabled{background:#c9ccd2;box-shadow:none}
+.notice{border-left:5px solid var(--r)}
+.help{text-align:center;color:var(--ink2);font-size:12.5px;margin-top:18px}.help a{color:var(--r);font-weight:600;text-decoration:none}
+.done{text-align:center}.done .big{font-size:56px}.done h2{font-family:Manrope,sans-serif;color:var(--r);font-weight:800}
+</style>
+{% endblock %}
+{% block page_content %}
+<div class="dfb">
+  <div class="brand"><img src="/assets/tnc_v2_360ithub/images/tnc_logo.png" alt="TNC"><div><div class="n">Team <span>Nursing</span> Classes</div><div class="t">A dedicated institute for Nursing Officer · Anisabad, Patna</div></div></div>
+  <div class="strip"></div>
+  <div class="card" id="box"><div class="sub">Loading…</div></div>
+  <div class="help">Need help? <a href="tel:7484999051">📞 7484999051</a> · <a href="tel:9471070851">9471070851</a></div>
+</div>
+<script>
+(function(){
+  const qs = new URLSearchParams(location.search), d = qs.get("d"), t = qs.get("t"), box = document.getElementById("box");
+  const call = (method, args) => fetch("/api/method/" + method, {method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"}, body: JSON.stringify(args)}).then(r => r.json());
+  const notice = (m) => { box.className = "card notice"; box.innerHTML = `<div style="font-size:16px;line-height:1.55">${m}</div>`; };
+  if (!d || !t) { notice("This page opens only from the personal link sent by the institute on WhatsApp."); return; }
+  call("tnc_v2_360ithub.admissions.demo_rating.page_state", {d, t}).then(r => {
+    const v = r.message || {};
+    if (v.closed) { notice(v.closed); return; }
+    const words = ["", "Poor", "Fair", "Good", "Very good", "Excellent"], hindi = ["", "खराब", "ठीक-ठाक", "अच्छा", "बहुत अच्छा", "उत्कृष्ट"];
+    let stars = 0;
+    box.innerHTML = `<h1>How was your demo class?</h1>
+      <div class="sub">${v.student_name ? "Namaste " + v.student_name + "! " : ""}Demo on ${v.demo_date}${v.batch ? " · " + v.batch : ""}.<br>डेमो क्लास कैसी लगी? कृपया स्टार देकर बताएं।</div>
+      <div class="stars">${[1,2,3,4,5].map(i => `<button type="button" data-i="${i}" aria-label="${i} star">★</button>`).join("")}</div>
+      <div class="lbl" id="lbl">Tap a star</div>
+      <textarea id="fb" placeholder="Anything you want to tell us? (optional) / कुछ कहना चाहें तो लिखें"></textarea>
+      <button class="btn-go" id="go" disabled>Submit rating</button>`;
+    const btns = [...box.querySelectorAll(".stars button")], go = document.getElementById("go"), lbl = document.getElementById("lbl");
+    const paint = (n) => btns.forEach(b => b.classList.toggle("on", +b.dataset.i <= n));
+    btns.forEach(b => { b.onmouseenter = () => paint(+b.dataset.i); b.onmouseleave = () => paint(stars); b.onclick = () => { stars = +b.dataset.i; paint(stars); lbl.textContent = words[stars] + " · " + hindi[stars]; go.disabled = false; }; });
+    go.onclick = () => { go.disabled = true; go.textContent = "Sending…";
+      call("tnc_v2_360ithub.admissions.demo_rating.submit", {d, t, rating: stars, feedback: document.getElementById("fb").value}).then(r => {
+        if (r.message && r.message.ok) { box.className = "card done"; box.innerHTML = `<div class="big">${"★".repeat(stars)}</div><h2>Thank you!</h2><div class="sub">Your rating has been recorded. Our counsellor will be in touch.<br>धन्यवाद! आपकी रेटिंग दर्ज हो गई है।</div>`; }
+        else { go.disabled = false; go.textContent = "Submit rating"; notice((r._server_messages && JSON.parse(JSON.parse(r._server_messages)[0]).message) || "Could not save. Please try again."); }
+      });
+    };
+  });
+})();
+</script>
+{% endblock %}

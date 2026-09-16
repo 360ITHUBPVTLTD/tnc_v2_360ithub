@@ -434,6 +434,61 @@ def step_teachers():
 		insert_doc(s, "Teacher", r, data)
 
 
+def step_students():
+	"""v1 Student -> v2 Student, keeping the TNC-ADM-xxxxx names. v1 holds little beyond
+	name, gender, mobile and the customer link; the academic child rows become the
+	college / passout fields plus a note. Status: Enrolled -> Active, else Enrolment Pending."""
+	s = "students"
+	acad = v1_children("Previous Academic Record", "Student", "academics")
+	gender = {"Male": "Male", "Female": "Female", "others": "Other", "Others": "Other"}
+	for r in v1_list("Student"):
+		rows = sorted(acad.get(r["name"]) or [], key=lambda a: a.get("passing_year") or "")
+		latest = rows[-1] if rows else {}
+		notes = "; ".join(
+			" ".join(str(x) for x in (a.get("academic_level"), a.get("college_name"), (a.get("passing_year") or "")[:4], f"{a['percentage']}%" if a.get("percentage") else None) if x)
+			for a in rows
+		)
+		customer = r.get("customer_id") if r.get("customer_id") and frappe.db.exists("Customer", r["customer_id"]) else None
+		data = {
+			"naming_series": "TNC-ADM-.#####",
+			"student_name": (r.get("student_name") or "").strip() or r["name"],
+			"gender": gender.get(r.get("gender") or ""),
+			"date_of_birth": r.get("date_of_birth"),
+			"category": r.get("category") or None,
+			"email": r.get("email"),
+			"mobile": r.get("mobile_number"),
+			"aadhar_number": r.get("aadhar_number"),
+			"state": r.get("state"), "district": r.get("district"),
+			"nationality": r.get("nationality"), "religion": r.get("religion"),
+			"address": r.get("residential_address"), "permanent_address": r.get("permanent_address"),
+			"college": latest.get("college_name"),
+			"passout_year": (latest.get("passing_year") or r.get("passout_year") or "")[:4] or None,
+			"fathers_name": r.get("fathers_name"), "father_occupation": r.get("father_occupation"), "father_mobile_no": r.get("father_mobile_no"),
+			"mothers_name": r.get("mothers_name"), "mother_occupation": r.get("mother_occupation"), "mother_mobile_no": r.get("mother_mobile_no"),
+			"guardian_name": r.get("guardian_name"),
+			"customer": customer,
+			"status": "Active" if r.get("batch_enrollment_details") == "Enrolled" else "Enrolment Pending",
+			"notes": (f"Academics (v1): {notes}" if notes else None),
+		}
+		data = {k: v for k, v in data.items() if v not in (None, "")}
+
+		def files(doc, r=r):
+			for field, dtype in (("student_photo", "Photo"), ("aadhar", "Aadhaar"), ("final_year_result", "Marksheet")):
+				url = copy_file(s, r.get(field), "Student", doc.name, "student_photo" if field == "student_photo" else None)
+				if url:
+					if field == "student_photo":
+						frappe.db.set_value("Student", doc.name, "student_photo", url, update_modified=False)
+					doc.append("documents", {"document_type": dtype, "file": url})
+			if doc.get("documents"):
+				doc.flags.ignore_validate = True
+				doc.save(ignore_permissions=True)
+
+		insert_doc(s, "Student", r, data, after=files)
+	# keep the running number above the highest migrated name
+	mx = frappe.db.sql("select max(cast(substring_index(name, '-', -1) as unsigned)) from tabStudent where name like 'TNC-ADM-%%'")[0][0] or 0
+	frappe.db.sql("insert into tabSeries (name, current) values ('TNC-ADM-', %s) on duplicate key update current = greatest(current, %s)", (mx, mx))
+
+
 def step_recurring_tasks(pause=False):
 	s = "recurring_tasks"
 	owners = v1_children("Recurring Task Owner", "Recurring Task")
@@ -921,6 +976,7 @@ STEPS = [
 	("fix_teacher_suppliers", step_fix_teacher_suppliers),
 	("user_permissions", step_user_permissions),
 	("fix_contacts", step_fix_contacts),
+	("students", step_students),
 	("recurring_tasks", step_recurring_tasks),
 	("tasks", step_tasks),
 	("comments", step_comments),

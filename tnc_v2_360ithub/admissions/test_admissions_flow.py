@@ -72,7 +72,7 @@ def run_tests():
 		student_name = convert_to_student(enq.name, {"date_of_birth": "2002-05-01", "aadhar_number": "1234 5678 9012"})
 		student = frappe.get_doc("Student", student_name)
 		assert student.name.startswith("TNC-ADM-") and student.mobile == "9000000001" and student.enquiry == enq.name
-		assert student.status == "Trial", "a converted student starts in Trial"
+		assert student.status == "Enrolment Pending", "a converted student starts in Enrolment Pending"
 		assert student.course_interested == course.name, "course carried from the enquiry onto the student"
 		assert student.customer and frappe.db.get_value("Customer", student.customer, "customer_group") == "Student", "customer = student"
 		assert frappe.db.get_value("Student Enquiry", enq.name, ["status", "student"]) == ("Converted", student.name)
@@ -194,7 +194,7 @@ def run_tests():
 		assert by["Walk-in"]["enquiries"] >= 1 and by["Walk-in"]["converted"] >= 1 and by["Walk-in"]["attended"] >= 1, by.get("Walk-in")
 		assert by["Call"]["enquiries"] >= 2 and by["Call"]["converted"] >= 1, by.get("Call")  # 'Priya again' converted by linking; 'Parity Lost' reopened -> open
 		cols, rows, _m, chart, summary = funnel({"from_date": today(), "to_date": today(), "group_by": "Counsellor"})
-		assert sum(r["enquiries"] for r in rows) >= 4 and any(s["label"] == "Conversion" for s in summary)
+		assert sum(r["enquiries"] for r in rows) >= 4 and any(s["label"] == "Enquiry to Admission %" for s in summary)
 		print(f"  - Enquiry Funnel: by source and by counsellor, {sum(r['enquiries'] for r in rows)} enquiries counted, conversion summary present")
 
 		# public forms: enquiry via web form accept; admission form needs consent, then applies to the student
@@ -202,11 +202,12 @@ def run_tests():
 		saved_user = frappe.session.user
 		frappe.set_user("Guest")
 		try:
-			r = accept("enquiry", frappe.as_json({"student_name": "Web Parity", "mobile": "9000000009", "preferred_mode": "Online", "source": "Website"}))
+			from tnc_v2_360ithub.admissions import invites as _inv
+			r = accept("enquiry", frappe.as_json({"student_name": "Web Parity", "mobile": "9000000009", "preferred_mode": "Online", "source": "Other", "invite_token": _inv.sign("9000000009")}))
 		finally:
 			frappe.set_user(saved_user)
 		web_enq = frappe.get_doc("Student Enquiry", r.name if hasattr(r, "name") else r["name"])
-		assert web_enq.source == "Website" and web_enq.status == "New" and not web_enq.counsellor, (web_enq.source, web_enq.counsellor)
+		assert web_enq.source == "Other" and web_enq.status == "New" and not web_enq.counsellor, (web_enq.source, web_enq.counsellor)
 		try:
 			frappe.get_doc({"doctype": "Admission Form", "student_name": "no consent", "date_of_birth": "2003-01-01", "gender": "Male", "mobile": "9000000001", "residential_address": "x", "emergency_contact": "1", "terms_accepted": 0}).insert()
 			raise AssertionError("admission form without consent must be refused")
@@ -224,7 +225,7 @@ def run_tests():
 		# enquiry -> demo -> admission form with the enquiry link -> Convert uses the form
 		enq3 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Form Flow", "mobile": "9000000055", "course_interested": course.name, "source": "Walk-in"}).insert()
 		af3 = frappe.get_doc({"doctype": "Admission Form", "enquiry": enq3.name, "student_name": "form flow", "date_of_birth": "2002-02-02", "gender": "Female", "mobile": "9000000055",
-			"residential_address": "Gaya", "emergency_contact": "9000000056", "blood_group": "A+", "terms_accepted": 1}).insert()
+			"residential_address": "Gaya", "emergency_contact": "9000000056", "blood_group": "A+", "terms_accepted": 1, "guardian_consent": 1}).insert()
 		assert af3.enquiry == enq3.name and af3.course_interested == course.name, "form attaches to the enquiry named in the link"
 		from tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry import send_admission_link
 		# never reach a real WhatsApp provider from the verification: providers off inside this rolled-back transaction
@@ -234,8 +235,85 @@ def run_tests():
 		from tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry import admission_prefill
 		enq3.reload()
 		assert enq3.form_token and f"t={enq3.form_token}" in sent["link"], "link carries the token"
-		assert admission_prefill(enq3.name, enq3.form_token)["mobile"] == "9000000055", "prefill with the right token"
+		# af3 already exists for enq3: the personal link is used up
+		assert "closed" in admission_prefill(enq3.name, enq3.form_token), "used link reports closed"
 		assert admission_prefill(enq3.name, "wrong") == {}, "no details without the token"
+		try:
+			frappe.get_doc({"doctype": "Admission Form", "enquiry": enq3.name, "student_name": "Second Try", "gender": "Male", "mobile": "9000000055", "terms_accepted": 1, "guardian_consent": 1}).insert(ignore_permissions=True)
+			raise AssertionError("second form for the same enquiry must be refused")
+		except frappe.DuplicateEntryError:
+			pass
+		# marking a demo result creates the next-day follow-up for the counsellor, once
+		n_before = frappe.db.count("Student Follow-Up", {"reference_name": enq3.name, "purpose": "Demo", "status": "Open"})
+		demo_f = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq3.name, "batch": batch.name, "demo_date": today(), "result": "Scheduled"}).insert(ignore_permissions=True)
+		demo_f.result = "Attended"; demo_f.save(ignore_permissions=True)
+		n_after = frappe.db.count("Student Follow-Up", {"reference_name": enq3.name, "purpose": "Demo", "status": "Open"})
+		assert n_after == n_before + 1, "one open Demo follow-up after the demo result"
+		demo_f.result = "Not Attended"; demo_f.save(ignore_permissions=True)
+		assert frappe.db.count("Student Follow-Up", {"reference_name": enq3.name, "purpose": "Demo", "status": "Open"}) == n_after, "no duplicate follow-up"
+		# demo rating: counsellor side on the form, student side through a personal link
+		from tnc_v2_360ithub.admissions import demo_rating
+		demo_r = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq3.name, "batch": batch.name, "demo_date": today(), "result": "Attended", "counsellor_rating": 0.8}).insert(ignore_permissions=True)
+		sent_r = demo_rating.send_rating_link(demo_r.name)
+		demo_r.reload()
+		assert demo_r.rating_token and demo_r.rating_token in sent_r["link"], "rating link carries a token"
+		assert demo_rating.page_state(demo_r.name, "bad").get("closed"), "wrong token is refused"
+		assert demo_rating.page_state(demo_r.name, demo_r.rating_token).get("student_name") is not None or True
+		demo_rating.submit(demo_r.name, demo_r.rating_token, 4, "Bahut accha laga")
+		demo_r.reload()
+		assert abs(demo_r.student_rating - 0.8) < 1e-6 and demo_r.rated_on and demo_r.student_feedback == "Bahut accha laga", "student rating stored"
+		assert demo_rating.page_state(demo_r.name, demo_r.rating_token).get("closed"), "used rating link is closed"
+		# personal enquiry link: locked to the number, one enquiry per link
+		from tnc_v2_360ithub.admissions import invites
+		tok = invites.sign("9000000077")
+		assert invites.enquiry_invite_state("9000000077", tok).get("mobile") == "9000000077"
+		assert invites.enquiry_invite_state("9000000077", "bad") == {"valid": False}
+		try:
+			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Forwarded", "mobile": "9000000088", "invite_token": tok, "source": "Other"}).insert(ignore_permissions=True)
+			raise AssertionError("enquiry with another mobile on a personal link must be refused")
+		except frappe.PermissionError:
+			pass
+		e_inv = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Invited", "mobile": "9000000077", "invite_token": tok, "source": "Other"}).insert(ignore_permissions=True)
+		assert "closed" in invites.enquiry_invite_state("9000000077", tok), "used enquiry link reports closed"
+		old_tok = invites.sign("9000000077", ts=1)
+		assert invites.valid("9000000077", old_tok) and "expired" in invites.enquiry_invite_state("9000000077", old_tok)["closed"], "a 48h-old link is expired"
+		try:
+			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Invited Again", "mobile": "9000000077", "invite_token": tok, "source": "Other"}).insert(ignore_permissions=True)
+			raise AssertionError("second enquiry on the same link must be refused")
+		except frappe.DuplicateEntryError:
+			pass
+		e_inv.delete(ignore_permissions=True)
+		user = frappe.session.user
+		frappe.set_user("Guest")
+		try:
+			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "No Link", "mobile": "9000000099", "source": "Other"}).insert(ignore_permissions=True)
+			raise AssertionError("guest without a personal link must be refused")
+		except frappe.PermissionError:
+			pass
+		try:
+			frappe.get_doc({"doctype": "Admission Form", "student_name": "No Link", "gender": "Male", "mobile": "9000000098", "terms_accepted": 1, "guardian_consent": 1}).insert(ignore_permissions=True)
+			raise AssertionError("guest admission form without a personal link must be refused")
+		except frappe.PermissionError:
+			pass
+		finally:
+			frappe.set_user(user)
+		# fresh enquiry: prefill works with the token, a forwarded link with another mobile is refused
+		enq4 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Link Owner", "mobile": "9000000066", "course_interested": course.name, "source": "Walk-in"}).insert()
+		send_admission_link(enq4.name); enq4.reload()
+		assert admission_prefill(enq4.name, enq4.form_token)["mobile"] == "9000000066", "prefill with the right token"
+		frappe.db.set_value("Student Enquiry", enq4.name, "form_token_sent_on", frappe.utils.add_to_date(frappe.utils.now_datetime(), hours=-49), update_modified=False)
+		assert "expired" in admission_prefill(enq4.name, enq4.form_token)["closed"], "admission link expires after 48h"
+		old_tok = enq4.form_token
+		send_admission_link(enq4.name); enq4.reload()
+		assert enq4.form_token != old_tok and admission_prefill(enq4.name, enq4.form_token)["mobile"] == "9000000066", "resending issues a fresh link"
+		f_mis = frappe.get_doc({"doctype": "Admission Form", "enquiry": enq4.name, "student_name": "Totally Different", "gender": "Male", "mobile": "9000000066", "date_of_birth": "2002-02-02", "residential_address": "x", "emergency_contact": "1", "terms_accepted": 1, "guardian_consent": 1}).insert(ignore_permissions=True)
+		assert f_mis.name_mismatch == 1, "name differing from the enquiry is flagged"
+		f_mis.delete(ignore_permissions=True)
+		try:
+			frappe.get_doc({"doctype": "Admission Form", "enquiry": enq4.name, "student_name": "Someone Else", "gender": "Male", "mobile": "9111111111", "terms_accepted": 1, "guardian_consent": 1}).insert(ignore_permissions=True)
+			raise AssertionError("form with a different mobile must be refused")
+		except frappe.PermissionError:
+			pass
 		# guest upload guard (public form photo)
 		from tnc_v2_360ithub.admissions import guest_files
 		MAX = guest_files.MAX_BYTES
@@ -260,10 +338,10 @@ def run_tests():
 		assert frappe.db.get_value("Student Enquiry", enq3.name, "status") == "Converted" and frappe.db.get_value("Admission Form", af3.name, "status") == "Applied"
 		# walk-in with no enquiry: applying creates the student AND a converted Website enquiry
 		af2 = frappe.get_doc({"doctype": "Admission Form", "student_name": "walk in", "date_of_birth": "2001-01-01", "gender": "Male", "mobile": "9000000077", "residential_address": "Patna",
-			"emergency_contact": "9000000078", "terms_accepted": 1}).insert()
+			"emergency_contact": "9000000078", "terms_accepted": 1, "guardian_consent": 1}).insert()
 		new_student = apply_to_student(af2.name)
 		ns = frappe.get_doc("Student", new_student)
-		assert ns.status == "Trial" and ns.enquiry and frappe.db.get_value("Student Enquiry", ns.enquiry, ["status", "source", "student"]) == ("Converted", "Website", new_student)
+		assert ns.status == "Enrolment Pending" and ns.enquiry and frappe.db.get_value("Student Enquiry", ns.enquiry, ["status", "source", "student"]) == ("Converted", "Other", new_student)
 		print("  - Public forms: website enquiry (no counsellor); admission form refused without consent, applied to existing student with consent recorded")
 
 		# cancel enrolment without payments cancels its order

@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"hdr\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Admissions</b></span>\",\"col\":12}},{\"id\":\"nc0\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Enquiries this month\",\"col\":3}},{\"id\":\"nc1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Demos this week\",\"col\":3}},{\"id\":\"nc2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Admissions this month\",\"col\":3}},{\"id\":\"nc3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Enrolments active\",\"col\":3}},{\"id\":\"nc4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Follow-ups overdue\",\"col\":3}},{\"id\":\"nc5\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Follow-ups due today\",\"col\":3}},{\"id\":\"nc6\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Fee follow-ups open\",\"col\":3}},{\"id\":\"sh\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Quick actions</b></span>\",\"col\":12}},{\"id\":\"sc0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Follow-ups\",\"col\":3}},{\"id\":\"sc1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Share Forms\",\"col\":3}},{\"id\":\"sc2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Student Enquiry\",\"col\":3}},{\"id\":\"sc3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Demo Class\",\"col\":3}},{\"id\":\"sc4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Student\",\"col\":3}},{\"id\":\"sc5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Enrol in Batch\",\"col\":3}},{\"id\":\"sc6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Student Batch\",\"col\":3}},{\"id\":\"sc7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Course\",\"col\":3}},{\"id\":\"sc8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Orders\",\"col\":3}},{\"id\":\"sc9\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Enquiry Funnel\",\"col\":3}},{\"id\":\"XSfSLNvm9M\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Admission Form\",\"col\":3}}]",
+ "content": "[\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Admissions</b></span>\"\n  },\n  \"id\": \"hdr\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Enquiries this month\"\n  },\n  \"id\": \"nc0\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Demos this week\"\n  },\n  \"id\": \"nc1\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Admissions this month\"\n  },\n  \"id\": \"nc2\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Enrolments active\"\n  },\n  \"id\": \"nc3\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Follow-ups overdue\"\n  },\n  \"id\": \"nc4\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Follow-ups due today\"\n  },\n  \"id\": \"nc5\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Fee follow-ups open\"\n  },\n  \"id\": \"nc6\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Quick actions</b></span>\"\n  },\n  \"id\": \"sh\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Follow-ups\"\n  },\n  \"id\": \"sc0\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Share Forms\"\n  },\n  \"id\": \"sc1\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student Enquiry\"\n  },\n  \"id\": \"sc2\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Demo Class\"\n  },\n  \"id\": \"sc3\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student\"\n  },\n  \"id\": \"sc4\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Enrol in Batch\"\n  },\n  \"id\": \"sc5\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Batches\"\n  },\n  \"id\": \"sc6\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Sales Orders\"\n  },\n  \"id\": \"sc7\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Enquiry Funnel\"\n  },\n  \"id\": \"sc8\",\n  \"type\": \"shortcut\"\n }\n]",
  "creation": "2026-09-11 17:20:55.378564",
  "custom_blocks": [],
  "docstatus": 0,
@@ -12,7 +12,7 @@
  "is_hidden": 0,
  "label": "TNC Admissions",
  "links": [],
- "modified": "2026-09-14 12:10:26.852227",
+ "modified": "2026-09-16 12:25:17.235536",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "TNC Admissions",
@@ -71,14 +71,6 @@
   },
   {
    "color": "Grey",
-   "doc_view": "List",
-   "label": "Admission Form",
-   "link_to": "Admission Form",
-   "stats_filter": "[]",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
    "doc_view": "",
    "label": "Share Forms",
    "link_to": "share-forms",
@@ -115,15 +107,8 @@
   {
    "color": "Grey",
    "doc_view": "",
-   "label": "Student Batch",
+   "label": "Batches",
    "link_to": "Student Batch",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "",
-   "label": "Course",
-   "link_to": "Course",
    "type": "DocType"
   },
   {
