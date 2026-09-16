@@ -18,6 +18,15 @@ def ensure_guest_uploads():
 
 
 def ensure_defaults():
+	# Everything below hangs off records the setup wizard creates: the root nodes of the
+	# Customer Group and Item Group trees, and the company the modes of payment belong to.
+	# On a site where the wizard has not been run, the first insert raises
+	# LinkValidationError ("Could not find Parent Customer Group: All Customer Groups"),
+	# and because after_migrate propagates, that takes the whole `bench migrate` down with
+	# it. Skip until the site is set up; the next migrate applies these.
+	if not frappe.db.get_single_value("System Settings", "setup_complete"):
+		print("admissions defaults skipped: setup wizard not complete")
+		return
 	ensure_guest_uploads()
 	ensure_customer_group()
 	ensure_item_group()
