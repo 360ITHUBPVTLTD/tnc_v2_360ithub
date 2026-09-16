@@ -12,7 +12,7 @@ frappe.ui.form.on("Expense Claim", {
 		}
 	},
 	validate(frm) {
-		if (!frm.doc.expense_for) {
+		if (!frm.doc.custom_expense_for) {
 			frappe.msgprint(__("Please choose Expense For: Online or Offline."));
 			frappe.validated = false;
 		}

@@ -111,13 +111,14 @@
   {
    "fieldname": "supplier_id",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Supplier ID",
    "options": "Supplier"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-04-14 17:44:29.394893",
+ "modified": "2026-09-16 20:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Teacher",

@@ -319,8 +319,6 @@ override_whitelisted_methods = {
 # v1_schema_export/ and filtered to what this app owns (module = "Tasks").
 
 fixtures = [
-	{"dt": "Custom Field", "filters": [["module", "=", "TNC v2"]]},
-	{"dt": "Property Setter", "filters": [["module", "=", "TNC v2"]]},
 	{"dt": "Role", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
 	{"dt": "Role Profile", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teacher"]]]},
 	{"dt": "Custom DocPerm", "filters": [["parent", "in", ["Task", "Comment", "Employee", "User", "Payment Entry", "Purchase Invoice", "Supplier"]], ["role", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
