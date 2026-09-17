@@ -1,9 +1,9 @@
 # TEMPLATE - copy to .github/workflows/deploy.yml in a new app's repo.
-# Replace every __PLACEHOLDER__ below. See SETUP-CICD-FOR-NEW-APP.md Part 2.
+# Replace every __PLACEHOLDER__, and list every bench in the matrix.
 #
 #   __APP_NAME__  the python package name, e.g. my_new_app
 #   __BRANCH__    the branch to deploy from, e.g. 360ithub_master
-name: Deploy to tncv2 bench
+name: Deploy __APP_NAME__
 
 on:
   push:
@@ -13,9 +13,9 @@ on:
       - 'license.txt'
   workflow_dispatch:
 
-# One bench, one deploy at a time. Never cancel a run mid-migrate.
+# One deploy at a time for this app. Never cancel a run mid-migrate.
 concurrency:
-  group: deploy-tncv2-__APP_NAME__
+  group: deploy-__APP_NAME__
   cancel-in-progress: false
 
 jobs:
@@ -38,9 +38,20 @@ jobs:
           ruff check --select=E9,F821,F632,F702 --no-cache .
 
   deploy:
-    name: Deploy to the bench
+    name: ${{ matrix.site }}
     needs: check
     runs-on: ubuntu-latest
+    strategy:
+      # One bench being down must not stop the others from deploying.
+      fail-fast: false
+      # One entry per bench that has this app installed. All targets on the same
+      # Dokploy server share the same secrets; only stack and site differ.
+      matrix:
+        include:
+          - stack: test-demo-erpnext-w6y5gf
+            site: tncv2.360ithub.com
+          # - stack: another-stack-name
+          #   site: erp.otherclient.com
     steps:
       - uses: appleboy/ssh-action@v1.2.0
         with:
@@ -48,4 +59,6 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 20m
-          script: /usr/local/bin/deploy-tnc-app.sh __APP_NAME__ __BRANCH__
+          script: >-
+            /usr/local/bin/deploy-tnc-app.sh
+            __APP_NAME__ __BRANCH__ ${{ matrix.stack }} ${{ matrix.site }}

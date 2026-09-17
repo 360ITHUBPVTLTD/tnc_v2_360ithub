@@ -14,11 +14,15 @@
 # on a volume, one layer below what Dokploy manages.
 set -euo pipefail
 
+#   deploy-tnc-app.sh <app> [branch] [stack] [site]
+#
+# Stack and site default to the tncv2 bench so existing callers keep working.
+# Pass them to deploy the same app to another Dokploy project on this server -
+# an app is often installed on several benches, and each needs its own target.
 APP="${1:-tnc_v2_360ithub}"
 BRANCH="${2:-360ithub_master}"
-
-STACK=test-demo-erpnext-w6y5gf
-SITE=tncv2.360ithub.com
+STACK="${3:-test-demo-erpnext-w6y5gf}"
+SITE="${4:-tncv2.360ithub.com}"
 WEB="$STACK-web-1"
 
 if [ "$(docker inspect -f '{{.State.Running}}' "$WEB" 2>/dev/null)" != "true" ]; then
@@ -26,7 +30,7 @@ if [ "$(docker inspect -f '{{.State.Running}}' "$WEB" 2>/dev/null)" != "true" ];
 	exit 1
 fi
 
-echo "==> $APP: pulling $BRANCH inside $WEB"
+echo "==> $APP @ $SITE: pulling $BRANCH inside $WEB"
 docker exec -i "$WEB" bash -s <<EOF
 set -euo pipefail
 cd "/home/frappe/frappe-bench/apps/$APP"
@@ -93,7 +97,7 @@ for _ in $(seq 1 30); do
 	# -S is deliberately absent: the first probes get a 502 while bench serve
 	# boots, and printing those makes a healthy deploy look like a failed one.
 	if curl -fs -o /dev/null -m 5 "https://$SITE/api/method/ping"; then
-		echo "==> deployed $APP@$BRANCH - site is up"
+		echo "==> deployed $APP@$BRANCH to $SITE - site is up"
 		exit 0
 	fi
 	sleep 5
