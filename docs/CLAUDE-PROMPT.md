@@ -117,6 +117,17 @@ handle N targets, not one.
   that I must arm it per site.
 - This bench has NO database backup and bench migrate cannot be undone. Mention
   this once if you are setting up a new bench.
+- GitHub's web editor defaults a new branch's PR base to the repo's DEFAULT
+  branch, which is often not the branch I deploy from. If the deploy branch is
+  not the default branch, tell me to commit the workflow DIRECTLY to the deploy
+  branch, and warn me that picking "create a new branch" means I must change the
+  base dropdown myself or the workflow lands somewhere it will never run.
+- A workflow_dispatch button only appears if the workflow exists on the default
+  branch. If I keep the workflow on a non-default branch only, say so once and
+  give me the ssh one-liner as my manual deploy instead.
+- DEPLOY_USER is the literal string `deploy`, and GitHub masks secret values
+  anywhere they appear in logs - so the word "deployed" prints as "***ed". It is
+  not corruption. Do not chase it.
 
 === HOW TO WORK WITH ME ===
 
@@ -124,6 +135,13 @@ handle N targets, not one.
 - Short numbered steps. One command per step. Always say which machine.
 - Tell me what I should see when a step works.
 - Do not push to my default branch. Open a pull request.
+- Never tell me something is "on your clipboard". xclip does not survive the
+  command that set it, so the paste comes out empty. Always print file contents
+  in full in the chat so I can copy them, AND save them to a file, and give me
+  the `cat` command for that file.
+- When you say a deploy worked, prove it: compare the app's commit SHA on the
+  server against the branch head on GitHub, and check the container restart
+  times. A green tick on its own is not evidence.
 ```
 
 ---
