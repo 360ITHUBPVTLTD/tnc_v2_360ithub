@@ -15,6 +15,22 @@ def _key():
 	return (frappe.local.conf.get("encryption_key") or frappe.local.conf.get("secret") or frappe.local.site).encode()
 
 
+def site_url():
+	"""Base address for links we send out. The address the staff member's browser used to reach the
+	server wins (https://tncv2.360ithub.com on live), so a stale host_name in the site config can never
+	leak a dev address or a port into a WhatsApp message. Outside a request, Frappe's host_name applies."""
+	import re
+	req = getattr(frappe.local, "request", None)
+	if req is not None:
+		proto = (req.headers.get("X-Forwarded-Proto") or req.scheme or "http").split(",")[0].strip()
+		host = (req.headers.get("X-Forwarded-Host") or req.host or "").split(",")[0].strip()
+		# WhatsApp does not make bare IP addresses clickable; on the office LAN keep the configured
+		# host name (the nip.io address) and use the browser's host only when it is a real domain
+		if host and not re.match(r"^(\d{1,3}\.){3}\d{1,3}(:\d+)?$", host) and not host.startswith("localhost"):
+			return f"{proto}://{host}"
+	return frappe.utils.get_url()
+
+
 def digits10(mobile):
 	return "".join(ch for ch in (mobile or "") if ch.isdigit())[-10:]
 
@@ -54,7 +70,7 @@ def expired(token):
 
 def link(mobile):
 	m = digits10(mobile)
-	return f"{frappe.utils.get_url()}/enquiry/new?m={m}&t={sign(m)}"
+	return f"{site_url()}/enquiry/new?m={m}&t={sign(m)}"
 
 
 def already_used(token):

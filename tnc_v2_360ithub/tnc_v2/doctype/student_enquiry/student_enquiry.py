@@ -224,7 +224,8 @@ def admission_link(enq):
 	from frappe.utils import now_datetime
 	if not enq.form_token or admission_link_expired(enq):
 		enq.db_set({"form_token": frappe.generate_hash(length=24), "form_token_sent_on": now_datetime()}, update_modified=False)
-	return f"{frappe.utils.get_url()}/admission/new?enquiry={enq.name}&t={enq.form_token}"
+	from tnc_v2_360ithub.admissions.invites import site_url
+	return f"{site_url()}/admission/new?enquiry={enq.name}&t={enq.form_token}"
 
 
 @frappe.whitelist(allow_guest=True)

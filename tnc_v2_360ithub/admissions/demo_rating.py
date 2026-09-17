@@ -15,7 +15,8 @@ LINK_DAYS = 7
 def _link(demo):
 	if not demo.rating_token:
 		demo.db_set({"rating_token": frappe.generate_hash(length=20), "rating_sent_on": now_datetime()}, update_modified=False)
-	return f"{get_url()}/demo-feedback?d={demo.name}&t={demo.rating_token}"
+	from tnc_v2_360ithub.admissions.invites import site_url
+	return f"{site_url()}/demo-feedback?d={demo.name}&t={demo.rating_token}"
 
 
 def _state(demo, t):
