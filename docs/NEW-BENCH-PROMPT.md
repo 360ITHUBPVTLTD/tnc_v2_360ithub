@@ -61,18 +61,36 @@ d) Check whether any custom app declares `required_apps` in its hooks.py. Frappe
 
 Show me what you found and WAIT for my OK before creating anything.
 
+=== WHO DOES WHAT ===
+
+YOU do, through the dokploy MCP - I am not creating anything by hand:
+  project-create, compose-create, compose-update (the compose file),
+  compose-saveEnvironment (the env vars), domain-create, compose-deploy.
+
+I do, because you cannot:
+  - point the DNS A record at the server (before you deploy anything)
+  - grant 360ithubdev read access to any private repo that lacks it
+  - complete the ERPNext setup wizard at the end
+  - copy GIT_SSH_KEY_B64 across from an existing bench, if you need me to:
+    Dokploy -> the tncv2-bench compose -> Environment -> copy that value.
+    The MCP redacts it, so you cannot read it yourself.
+
+Ask me for anything on my list at the moment you need it, not all at the start.
+
 === STEP 2: CREATE THE PROJECT AND COMPOSE ===
 
 Create the Dokploy project, then a compose service of type "raw" with the
 adapted compose file. Order the APPS list so dependencies come before the apps
 that need them: erpnext, hrms, india_compliance, then our custom apps.
 
-Give me the env vars I must set in Dokploy, and tell me which I must generate:
+Set these env vars yourself with compose-saveEnvironment:
   SITE_NAME, DB_ROOT_PASSWORD, ADMIN_PASSWORD,
   GIT_SSH_KEY_B64, GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL
 
-GIT_SSH_KEY_B64 is the base64 of the private deploy key registered on
-`360ithubdev`. Tell me the exact command to produce it. Never print the key.
+Generate DB_ROOT_PASSWORD and ADMIN_PASSWORD yourself - long and random. Do NOT
+print them in the chat. Tell me instead that I can read them in Dokploy under
+the compose service's Environment tab, and that I will need ADMIN_PASSWORD to
+log in as Administrator at the end.
 
 === STEP 3: DOMAINS ===
 
