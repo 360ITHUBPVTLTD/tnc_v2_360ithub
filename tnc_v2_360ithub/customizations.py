@@ -16,9 +16,18 @@ so a leftover can be removed without being re-added in the same run.
 WHAT IT DELETES: any Custom Field on a doctype we ship a `custom/*.json` for, with
 `is_system_generated = 0`, whose fieldname is absent from that file. That includes
 a field an admin created directly on a site through Customize Form and never
-exported. If you add a field on a live site, export it to the repo, or the next
-deploy will remove it. Set `disable_custom_field_reconcile` in that site's
-site_config.json to opt out.
+exported. If you add a field on a live site, export it to the repo, or this will
+remove it.
+
+Deleting a Custom Field drops its column, so it destroys data. That is why a site
+REPORTS ONLY until it is armed: every migrate prints exactly what would go, and
+nothing is touched. Read that list, then arm the site once:
+
+    bench --site <site> set-config -g reconcile_custom_fields 1 --parse
+
+From then on it enforces on every migrate, with no further steps. Set it back to 0
+on any site where admins are allowed to add fields through Customize Form without
+exporting them.
 
 WHAT IT NEVER DELETES: fields with `is_system_generated = 1` - the ones apps create
 programmatically, such as india_compliance's GST fields. `export_customizations`
@@ -43,7 +52,9 @@ APP = "tnc_v2_360ithub"
 # A deliberate removal is one or two fields. A number much larger than that almost
 # always means the JSON was exported from a bench that was missing an app, so the
 # file under-declares reality. Refuse and let a human look rather than delete the lot.
-MAX_DELETIONS_PER_DOCTYPE = 5
+# Raise it per site with:
+#   bench --site <site> set-config -g reconcile_custom_fields_max_deletions 20 --parse
+DEFAULT_MAX_DELETIONS_PER_DOCTYPE = 5
 
 
 def declared_fields_by_doctype() -> dict[str, set[str]]:
@@ -93,9 +104,13 @@ def reconcile_custom_fields(dry_run: bool = False):
 	        tnc_v2_360ithub.customizations.reconcile_custom_fields \\
 	        --kwargs "{'dry_run': True}"
 	"""
-	if frappe.conf.get("disable_custom_field_reconcile"):
-		print("reconcile_custom_fields: disabled for this site in site_config.json")
-		return
+	# Report-only until the site is armed. Deleting a Custom Field drops its column,
+	# so the first run on any site must be reviewable rather than destructive.
+	armed = bool(frappe.conf.get("reconcile_custom_fields"))
+	if not armed:
+		dry_run = True
+
+	max_deletions = int(frappe.conf.get("reconcile_custom_fields_max_deletions") or DEFAULT_MAX_DELETIONS_PER_DOCTYPE)
 
 	to_delete: dict[str, list[str]] = {}
 
@@ -112,10 +127,10 @@ def reconcile_custom_fields(dry_run: bool = False):
 		if not orphans:
 			continue
 
-		if len(orphans) > MAX_DELETIONS_PER_DOCTYPE:
+		if len(orphans) > max_deletions:
 			print(
 				f"reconcile_custom_fields: REFUSING to delete {len(orphans)} fields from "
-				f"{doctype} (limit {MAX_DELETIONS_PER_DOCTYPE}). Either the export is missing "
+				f"{doctype} (limit {max_deletions}). Either the export is missing "
 				f"another app's fields, or this is a bulk change that wants an explicit "
 				f"patch. Fields left in place: {orphans}"
 			)
@@ -126,10 +141,17 @@ def reconcile_custom_fields(dry_run: bool = False):
 	if not to_delete:
 		return
 
+	total = sum(len(v) for v in to_delete.values())
 	for doctype, fieldnames in to_delete.items():
 		print(f"reconcile_custom_fields: {doctype}: {'would delete' if dry_run else 'deleting'} {fieldnames}")
 
 	if dry_run:
+		if not armed:
+			print(
+				f"reconcile_custom_fields: REPORT ONLY - {total} field(s) left in place. "
+				f"Review the list above, then arm this site with: "
+				f"bench --site {frappe.local.site} set-config -g reconcile_custom_fields 1 --parse"
+			)
 		return
 
 	# delete_custom_fields goes through delete_doc, so Custom Field.on_trash runs:
