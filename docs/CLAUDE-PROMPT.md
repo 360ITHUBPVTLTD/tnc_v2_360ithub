@@ -1,207 +1,168 @@
-# Prompts to give Claude
+# The Prompt
 
-Copy a prompt below, replace the `<<...>>` parts with your values, and paste it
-into Claude Code.
+Copy the whole block below into Claude Code.
 
-Everything Claude needs to know about our setup is already written into these
-prompts, so it does not have to work it out again and cannot guess wrong.
+**Change only the two lines at the top** — the repo and the branch. Claude works
+out everything else itself, including which benches the app is on.
 
 ---
----
-
-# PROMPT 1 — Set up CI/CD for a new app
-
-**Use this for:** a brand new custom app that has no automatic deploy yet.
-
-**Edit these 5 lines before pasting:** app name, repo, branch, site, stack.
 
 ```
-Set up CI/CD for a Frappe custom app on our Dokploy bench, so that pushing to
-the branch deploys it automatically.
+Set up CI/CD for this Frappe custom app. Every push to the branch below must
+automatically deploy it to EVERY bench that has this app installed.
 
-MY APP
-- App name (python package): <<my_new_app>>
-- GitHub repo:               <<360ITHUBPVTLTD/my_new_app>>
-- Branch to deploy:          <<360ithub_master>>
-- Site:                      <<tncv2.360ithub.com>>
-- Dokploy stack (appName):   <<test-demo-erpnext-w6y5gf>>
-- Dokploy server:            194.146.12.226
+=== THE ONLY INPUT I AM GIVING YOU ===
 
-WHAT ALREADY EXISTS - do not create these again
-- A `deploy` user on the server, in the docker group, key-only login.
-- /usr/local/bin/deploy-tnc-app.sh on the server. It is generic and takes
-  <app> <branch> as arguments, so it already works for any app on this bench.
-- The SSH keypair: private key at ~/tncv2_deploy on my laptop, public key
-  already in /home/deploy/.ssh/authorized_keys on the server.
-- A working example to copy from: the tnc_v2_360ithub repo.
+GitHub repo:  <<360ITHUBPVTLTD/my_app>>
+Branch:       <<360ithub_master>>
 
-WHAT I WANT
-1. Check whether my app is already on the bench. If it is not, tell me the
-   exact line to add to the APPS=( ) list in the Dokploy compose file, and
-   remind me I must then run `bench install-app` by hand.
-2. Give me the .github/workflows/deploy.yml for my app, ready to paste.
-3. Tell me exactly which GitHub secrets to add and where.
-4. Give me the one command to smoke test it before I turn it on.
-5. Tell me how to verify afterwards that the code really landed on the server.
+Work out everything else yourself, then confirm it with me before changing
+anything.
 
-THINGS YOU MUST KNOW ABOUT THIS SETUP
-- There are three machines: my laptop, the Dokploy server (194.146.12.226), and
-  the container inside it. Label every command with which one to run it on. I
-  get this wrong otherwise.
-- The bench bootstrap FETCHES a newly added app but does NOT install it on the
-  site, because the install loop is behind `if [ ! -f "$SENTINEL" ]` and the
-  sentinel already exists. It fails silently. Always remind me about this.
+=== STEP 1: DISCOVER. Change nothing yet. ===
+
+a) Read the repo. The app name is the directory that contains hooks.py.
+
+b) Use the dokploy MCP to find EVERY bench that has this app installed:
+   - project-all to list all projects and their compose services
+   - compose-getConvertedCompose on each one, then look inside the bootstrap
+     script's APPS=( ... ) list for this app name
+   For each match, record: project name, composeId, stack appName, SITE_NAME,
+   the domain, and serverId.
+
+c) docker-getContainersByAppNameMatch on each stack to confirm it is running.
+
+d) Print a table of every target you found:
+       project | stack | site | running?
+   Then STOP and ask me to confirm before you change anything.
+
+If the app is on NO bench yet, tell me the exact line to add to the APPS=( )
+list in the compose file, and remind me that after clicking Deploy in Dokploy I
+must still run `bench --site <site> install-app <app>` BY HAND. The bootstrap
+downloads the app but does not install it, because the install loop sits behind
+`if [ ! -f "$SENTINEL" ]` and that sentinel already exists on a working bench.
+It fails silently.
+
+=== STEP 2: WHAT ALREADY EXISTS. Do not rebuild these. ===
+
+- Dokploy server 194.146.12.226, with a `deploy` user in the docker group,
+  key-only login.
+- /usr/local/bin/deploy-tnc-app.sh on that server. It already pulls, migrates,
+  restarts web/worker/scheduler, and health-checks the site.
+- SSH keypair: private key at ~/tncv2_deploy on my laptop, public key already in
+  /home/deploy/.ssh/authorized_keys on the server.
+- A working reference to copy from: the tnc_v2_360ithub repo - see
+  .github/workflows/deploy.yml, deploy/deploy-tnc-app.sh and docs/.
+
+=== STEP 3: MULTIPLE BENCHES IS THE POINT ===
+
+The same app is often installed on several Dokploy projects. The deploy must
+handle N targets, not one.
+
+- deploy-tnc-app.sh ALREADY takes the target as arguments:
+      deploy-tnc-app.sh <app> <branch> <stack> <site>
+  Stack and site default to the tncv2 bench when omitted. Do not change the
+  script. If the copy on the server is older than this, tell me to run:
+      scp ~/tncv2-cicd/deploy-tnc-app.sh root@194.146.12.226:/usr/local/bin/deploy-tnc-app.sh
+
+- The workflow must deploy to every target with a matrix:
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+            - stack: <stack-1>
+              site:  <site-1>
+            - stack: <stack-2>
+              site:  <site-2>
+
+  fail-fast: false matters. If one client's bench is down I still want the
+  others deployed.
+
+- Keep `concurrency` grouped per app so two pushes never overlap.
+
+- All targets on the same server share the same DEPLOY_HOST / DEPLOY_USER /
+  DEPLOY_SSH_KEY secrets. Only stack and site differ. If you find a target with a
+  different serverId, tell me - that one needs its own host secret and its own
+  key installed.
+
+=== STEP 4: WHAT TO GIVE ME ===
+
+1. The .github/workflows/deploy.yml with the matrix filled in from what you
+   found in Step 1. Start from docs/deploy.yml.template in the tnc_v2_360ithub
+   repo - it already has the matrix shape.
+2. Exactly which GitHub secrets to add, and where.
+3. One command to smoke test a SINGLE target before I turn anything on.
+4. How to verify afterwards that the code landed on EVERY target.
+
+=== THINGS YOU MUST KNOW ABOUT THIS SETUP ===
+
+- Three machines are involved: my laptop, the Dokploy server (194.146.12.226),
+  and the container inside it. Label every single command with which one to run
+  it on. I get this wrong otherwise.
 - `bench get-app` names the git remote `upstream`, NOT `origin`.
 - Dokploy's Deploy button and its auto-deploy webhook CANNOT deploy app code.
-  They only redeploy the compose stack. App code lives on the bench-data volume.
-- The lint step must only use ruff rules E9,F821,F632,F702. The full ruff config
+  They only redeploy the compose stack, and the bootstrap skips any app whose
+  folder already exists. App code lives on the bench-data volume, below what
+  Dokploy manages.
+- The lint gate must use only ruff rules E9,F821,F632,F702. The full ruff config
   reports hundreds of style findings and would make the pipeline permanently red.
 - The deploy script runs from /usr/local/bin on the server. Editing the copy in
   the git repo changes nothing until it is scp'd across.
+- A green tick only means the script exited 0. Verify with container restart
+  times and the commit SHA on the server.
+- If this app ships custom/*.json files: removing a Customize Form field does
+  NOT work through the JSON alone, because bench migrate never deletes custom
+  fields. Add the reconcile_custom_fields after_migrate hook as well, copying
+  tnc_v2_360ithub/customizations.py. Tell me it reports before it deletes and
+  that I must arm it per site.
+- This bench has NO database backup and bench migrate cannot be undone. Mention
+  this once if you are setting up a new bench.
 
-HOW TO WORK WITH ME
-- Give me short numbered steps, not long explanations.
-- One command per step, and say which machine to run it on.
+=== HOW TO WORK WITH ME ===
+
+- Show me the discovered target list and wait for my OK before changing anything.
+- Short numbered steps. One command per step. Always say which machine.
 - Tell me what I should see when a step works.
-- Wait for me to confirm a step before moving to the next one.
+- Do not push to my default branch. Open a pull request.
 ```
 
 ---
----
 
-# PROMPT 2 — Removing a Customize Form field does not work
+## After it is set up
 
-**Use this for:** you removed a field, exported, merged, and it is still on the
-site.
+Short follow-ups you can paste any time. Same rules apply — Claude already has
+the context from the prompt above if you are in the same session.
 
-```
-I removed a custom field from my Frappe app using Customize Form, exported the
-customizations, committed and merged. The deploy went green but the field is
-still on the server.
-
-MY APP
-- App name: <<my_new_app>>
-- Repo:     <<360ITHUBPVTLTD/my_new_app>>
-- Site:     <<tncv2.360ithub.com>>
-
-I know the cause: bench migrate's sync_customizations only inserts and updates
-custom fields, it never deletes one that was removed from the JSON.
-
-We already solved this in the tnc_v2_360ithub repo, in
-tnc_v2_360ithub/customizations.py (reconcile_custom_fields, registered as the
-LAST after_migrate hook). Please adapt that same solution for my app.
-
-Do not hardcode any field names. It must work for every add and remove from now
-on, automatically.
-
-Before I merge it, show me how to preview what it would delete, because deleting
-a custom field drops its database column and destroys data.
-```
-
----
----
-
-# PROMPT 3 — Set up CI/CD on a different client's bench
-
-**Use this for:** a new client server, not the TNC one.
+**A deploy failed:**
 
 ```
-Set up CI/CD for a Frappe custom app on a DIFFERENT client bench. We already
-have this working for tncv2.360ithub.com and I want the same thing here.
+The deploy for <<my_app>> failed. Here is the log:
 
-THE NEW CLIENT
-- Dokploy server IP:   <<1.2.3.4>>
-- Dokploy stack:       <<client-stack-name>>
-- Site:                <<erp.client.com>>
-- App name:            <<erp_client_custom>>
-- GitHub repo:         <<360ITHUBPVTLTD/erp_client_custom>>
-- Branch:              <<360ithub_master>>
+<<paste>>
 
-WHAT TO COPY FROM
-The tnc_v2_360ithub repo has: deploy/deploy-tnc-app.sh, the workflow in
-.github/workflows/deploy.yml, and docs/CICD-GUIDE.md.
-
-IMPORTANT
-- deploy-tnc-app.sh HARDCODES STACK and SITE at the top. For this client, make a
-  separate copy at /usr/local/bin/deploy-<<client>>-app.sh with the new values.
-  Do not parameterise it - deploying to the wrong client's site is a bad failure.
-- This is a new server, so the one-time setup is needed too: create the `deploy`
-  user, install the script, create and install an SSH key.
-- Give me short numbered steps and label every command with which machine to run
-  it on: my laptop, the client's server, or the container.
+Check the real state on the server before answering - the log is often
+truncated by bench migrate's progress bars, so do not guess from it alone.
 ```
 
----
----
-
-# PROMPT 4 — A deploy failed and I do not understand why
+**A removed custom field is still on the site:**
 
 ```
-A deploy failed for my Frappe app and I need help reading it.
-
-- App:   <<my_new_app>>
-- Repo:  <<360ITHUBPVTLTD/my_new_app>>
-- Site:  <<tncv2.360ithub.com>>
-- Stack: <<test-demo-erpnext-w6y5gf>>
-- Server: 194.146.12.226
-
-Here is what the Actions log said:
-
-<<paste the error here>>
-
-Please check the real state on the server before telling me what is wrong - do
-not guess from the log alone. A green tick only means the script exited 0, and
-the log often gets truncated by bench migrate's progress bars.
-
-Useful facts:
-- container restart times tell you whether the script reached the restart step
-- the app's commit SHA on the server tells you whether the code actually landed
+I removed a custom field from <<my_app>> with Customize Form, exported, and
+merged. The field is still on the site. Fix this properly - no hardcoded field
+names, it must work for every add and remove from now on.
 ```
 
----
----
-
-# PROMPT 5 — Add a database backup
-
-**Do this one soon.** We currently have no backup at all, and `bench migrate`
-cannot be undone.
+**Add a backup (do this one soon):**
 
 ```
-Our Dokploy bench has no backup of any kind - no compose backup, no volume
-backup, no schedule - and we have just automated bench migrate against it. A bad
-migration would have nothing to restore from.
-
-- Dokploy server: 194.146.12.226
-- Stack:          <<test-demo-erpnext-w6y5gf>>
-- Site:           <<tncv2.360ithub.com>>
-- Database:       mariadb 10.6, running as the `db` service in the compose stack
-
-Set up a daily automatic backup. Tell me what I need to provide (for example S3
-credentials, or a local path) and walk me through it in short numbered steps,
-saying which machine to run each command on.
-
-Also tell me how to test that a restore actually works. A backup nobody has
-restored from is not a backup.
+Our Dokploy bench has no backup at all and we have automated bench migrate
+against it. Set up a daily database backup, and tell me how to test that a
+restore actually works.
 ```
 
----
----
-
-# How to write your own prompt
-
-If none of the above fits, include these four things and Claude will do well:
-
-| Include | Why |
-|---|---|
-| **Your values** — app, repo, branch, site, stack, server | Otherwise it guesses or asks |
-| **What already exists** — deploy user, the script, the SSH key | Stops it rebuilding things |
-| **The gotchas** — the install-app trap, `upstream` not `origin`, Dokploy's button not deploying code | Stops it repeating mistakes we already paid for |
-| **How you want to be told** — short numbered steps, one command each, labelled by machine | This is the difference between a usable answer and a wall of text |
-
-**Two sentences worth adding to almost any prompt:**
+**Add the app to one more bench:**
 
 ```
-Label every command with which machine to run it on: my laptop, the Dokploy
-server, or the container. Give me short numbered steps and wait for me to
-confirm each one before moving on.
+<<my_app>> now also needs to deploy to <<project name>>. Find that bench, add it
+to the workflow matrix, and tell me anything I need to do on the server first.
 ```
