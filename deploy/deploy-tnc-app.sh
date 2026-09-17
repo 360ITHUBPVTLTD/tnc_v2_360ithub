@@ -64,7 +64,22 @@ else
 fi
 
 cd /home/frappe/frappe-bench
-bench --site "$SITE" migrate
+
+# bench migrate prints a progress bar line per percent per app - thousands of \r
+# lines. Left unfiltered they flood the CI log and everything after them gets
+# truncated, so a healthy deploy looks like it hung at "Updating DocTypes 100%".
+# Capture instead, then print only the lines worth reading. On failure dump the
+# tail so the traceback survives.
+log=/tmp/migrate-\$\$.log
+if ! bench --site "$SITE" migrate > "\$log" 2>&1; then
+	echo "FATAL: bench migrate failed on $SITE:" >&2
+	grep -vE '\] +[0-9]{1,3}%\$' "\$log" | tail -60 >&2
+	rm -f "\$log"
+	exit 1
+fi
+grep -vE '\] +[0-9]{1,3}%\$|^[[:space:]]*\$' "\$log" | tail -20
+rm -f "\$log"
+
 bench --site "$SITE" clear-cache
 EOF
 
