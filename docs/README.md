@@ -5,7 +5,8 @@
 | File | What it is | Length |
 |---|---|---|
 | **SIMPLE-STEPS** | Set up CI/CD for a new app. Just the steps. | 4 pages |
-| **CLAUDE-PROMPT** | Ready-made prompts to paste into Claude. Edit the `<<...>>` parts for your app. | 7 pages |
+| **CLAUDE-PROMPT** | Prompt for putting CI/CD on an app that already has a bench. Edit the `<<...>>` parts. | 4 pages |
+| **NEW-BENCH-PROMPT** | Prompt for creating a whole new client bench from scratch, then its CI/CD. | 4 pages |
 | CICD-GUIDE | Full reference. Read only when something is not covered above. | 21 pages |
 
 Each one has a `.md` (read on GitHub) and a `.docx` (share with people).
