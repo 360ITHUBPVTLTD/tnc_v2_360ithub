@@ -11,7 +11,9 @@ Edit the input block at the top, paste the whole thing into Claude Code.
 ---
 
     Create a new Frappe/ERPNext v15 bench on a Dokploy server for a new client,
-    as its own Dokploy project, then set up CI/CD for its custom apps.
+    as its own Dokploy project. Stop when the bench is live and verified - I set
+    up CI/CD separately, with its own prompt. Do not create workflows, deploy
+    users or SSH keys for deployment.
 
     === THE INPUT I AM GIVING YOU ===
 
@@ -435,23 +437,8 @@ Edit the input block at the top, paste the whole thing into Claude Code.
     Also tell me once that this bench has NO database backup until I create one
     in Dokploy, and that bench migrate cannot be undone.
 
-    === STEP 7: CI/CD ===
-
-    For each custom app, set up the deploy pipeline. In short:
-      - a shared script on the server, /usr/local/bin/deploy-<client>-app.sh,
-        taking <app> <branch> <stack> <site>. It pulls inside the web container,
-        refuses to run against a dirty working tree, migrates, restarts web,
-        worker and scheduler, then polls the site until it answers.
-      - a `deploy` user on the server in the docker group, key-only login
-      - GitHub Actions calling it over SSH, with DEPLOY_HOST / DEPLOY_USER /
-        DEPLOY_SSH_KEY as repo secrets
-      - a matrix with fail-fast: false if an app is on several benches
-      - a lint gate of ONLY ruff E9,F821,F632,F702 - the full config reports
-        hundreds of style findings and makes the pipeline permanently red
-      - smoke test one target by hand before turning the workflow on
-
-    The full version of this is docs/CLAUDE-PROMPT.md in the tnc_v2_360ithub
-    repo. Use it if you can reach that repo.
+    That is the end of the job. Finish by printing the stack appName and the site
+    name together - I need both when I set up CI/CD separately.
 
     === THINGS YOU MUST KNOW. All of these are real failures we have had. ===
 
