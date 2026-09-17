@@ -71,8 +71,10 @@ def add_code(doc, lines, indent=0.0):
     pf.left_indent = Inches(0.18 + indent); pf.right_indent = Inches(0.1)
     pf.space_before = Pt(6); pf.space_after = Pt(8)
     pf.line_spacing = 1.0
-    # An ASCII diagram split across a page break is unreadable.
-    pf.keep_together = True
+    # An ASCII diagram split across a page break is unreadable. Only for blocks
+    # that can actually fit on a page - a 200-line one would leave a huge gap.
+    if len(lines) <= 45:
+        pf.keep_together = True
     shade(p._p, CODE_BG)
     for i, line in enumerate(lines):
         if i:
@@ -149,6 +151,31 @@ def render(doc, lines, indent=0.0, quoted=False, first_h1_seen=None):
                 rows.append(split_row(lines[j])); j += 1
             add_table(doc, rows)
             i = j; continue
+
+        # indented code block (4 spaces), the other markdown code form
+        if not quoted and line.startswith("    ") and line[4:5] not in ("", " "):
+            j = i
+            buf = []
+            while j < len(lines):
+                cur = lines[j]
+                if cur.startswith("    "):
+                    buf.append(cur[4:])
+                    j += 1
+                elif not cur.strip():
+                    # a blank line continues the block only if more indent follows
+                    k = j
+                    while k < len(lines) and not lines[k].strip():
+                        k += 1
+                    if k < len(lines) and lines[k].startswith("    "):
+                        buf.extend([""] * (k - j))
+                        j = k
+                    else:
+                        break
+                else:
+                    break
+            add_code(doc, buf, indent)
+            i = j
+            continue
 
         # horizontal rule
         if re.fullmatch(r"-{3,}", s):
