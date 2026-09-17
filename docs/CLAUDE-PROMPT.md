@@ -31,6 +31,8 @@ b) Use the dokploy MCP to find EVERY bench that has this app installed:
    the domain, and serverId.
 
 c) docker-getContainersByAppNameMatch on each stack to confirm it is running.
+   Also read sites/apps.txt in the web container - being in the compose APPS
+   list is not the same as being installed on the site.
 
 d) Print a table of every target you found:
        project | stack | site | running?
@@ -93,6 +95,9 @@ handle N targets, not one.
 2. Exactly which GitHub secrets to add, and where.
 3. One command to smoke test a SINGLE target before I turn anything on.
 4. How to verify afterwards that the code landed on EVERY target.
+
+Before I turn it on, run the lint gate against my repo yourself and tell me if
+it passes. A pipeline that is red on day one teaches everyone to ignore it.
 
 === THINGS YOU MUST KNOW ABOUT THIS SETUP ===
 
