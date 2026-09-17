@@ -90,7 +90,9 @@ doctype_js = {"Sales Order": "admissions/sales_order.js", "Expense Claim": "hr/e
 
 # before_install = "tnc_v2_360ithub.install.before_install"
 # after_install = "tnc_v2_360ithub.install.after_install"
-after_migrate = ["tnc_v2_360ithub.admissions.setup.ensure_defaults", "tnc_v2_360ithub.admissions.custom_fields.ensure_custom_fields"]
+# reconcile_custom_fields must stay LAST: it reads is_system_generated, and
+# ensure_custom_fields above flips that flag to 0 for our "TNC v2" fields.
+after_migrate = ["tnc_v2_360ithub.admissions.setup.ensure_defaults", "tnc_v2_360ithub.admissions.custom_fields.ensure_custom_fields", "tnc_v2_360ithub.customizations.reconcile_custom_fields"]
 
 # Uninstallation
 # ------------
