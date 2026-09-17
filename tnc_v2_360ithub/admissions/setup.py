@@ -6,6 +6,10 @@ import frappe
 CUSTOMER_GROUP = "Student"
 ITEM_GROUP = "Fee Component"
 SAC_EDUCATION = "999293"  # commercial training and coaching services
+# Roots of ERPNext's group trees. They are created by the setup wizard, not by
+# install-app, so on a fresh site migrate runs before they exist.
+ROOT_CUSTOMER_GROUP = "All Customer Groups"
+ROOT_ITEM_GROUP = "All Item Groups"
 
 
 def ensure_guest_uploads():
@@ -114,13 +118,21 @@ def ensure_defaults():
 
 
 def ensure_customer_group():
+	# Without the root group the insert below raises a link error and takes the whole
+	# after_migrate hook - and so `bench migrate` - down with it. Skip; the next migrate
+	# after the setup wizard has run will create it.
+	if not frappe.db.exists("Customer Group", ROOT_CUSTOMER_GROUP):
+		return
 	if not frappe.db.exists("Customer Group", CUSTOMER_GROUP):
-		frappe.get_doc({"doctype": "Customer Group", "customer_group_name": CUSTOMER_GROUP, "parent_customer_group": "All Customer Groups", "is_group": 0}).insert(ignore_permissions=True)
+		frappe.get_doc({"doctype": "Customer Group", "customer_group_name": CUSTOMER_GROUP, "parent_customer_group": ROOT_CUSTOMER_GROUP, "is_group": 0}).insert(ignore_permissions=True)
 
 
 def ensure_item_group():
+	# Same as ensure_customer_group: no root tree yet on a fresh site.
+	if not frappe.db.exists("Item Group", ROOT_ITEM_GROUP):
+		return
 	if not frappe.db.exists("Item Group", ITEM_GROUP):
-		frappe.get_doc({"doctype": "Item Group", "item_group_name": ITEM_GROUP, "parent_item_group": "All Item Groups", "is_group": 0}).insert(ignore_permissions=True)
+		frappe.get_doc({"doctype": "Item Group", "item_group_name": ITEM_GROUP, "parent_item_group": ROOT_ITEM_GROUP, "is_group": 0}).insert(ignore_permissions=True)
 
 
 def ensure_sac():
