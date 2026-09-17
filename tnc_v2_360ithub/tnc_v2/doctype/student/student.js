@@ -1,5 +1,9 @@
 frappe.ui.form.on("Student", {
 	refresh(frm) {
+		if (!frm.is_new() && !frm.doc.terms_accepted && frm.doc.status === "Active") {
+			frm.dashboard.clear_headline();
+			frm.dashboard.set_headline(`<span class="indicator-pill orange no-indicator-dot">${__("Form not submitted by student")}</span> ${__("Student has not filled the admission form yet, details are missing.")} ${frm.doc.enquiry ? `<a href="/app/student-enquiry/${frm.doc.enquiry}">${__("Send the form again from the enquiry")}</a>` : ""}`);
+		}
 		frm.trigger("render_overview");
 		frm.trigger("render_payments");
 		frm.trigger("render_followups");

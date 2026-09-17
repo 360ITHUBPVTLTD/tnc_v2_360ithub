@@ -102,6 +102,9 @@ def ensure_enquiry_sources():
 
 def ensure_defaults():
 	ensure_guest_uploads()
+	if frappe.db.get_single_value("TNC Settings", "demo_fee_amount") is None:
+		frappe.db.set_single_value("TNC Settings", {"demo_fee_amount": 500, "demo_fee_adjust": 1})
+	ensure_demo_fee_item()
 	ensure_enquiry_sources()
 	ensure_expense_claim_types()
 	ensure_expense_claim_account()
@@ -150,6 +153,7 @@ NUMBER_CARDS = [
 	("Follow-ups overdue", None, "tnc_v2_360ithub.admissions.followups.count_overdue_followups", "Red"),
 	("Follow-ups due today", "Student Follow-Up", [["status", "=", "Open"], ["next_follow_up_date", "Timespan", "today"]], "Orange"),
 	("Fee follow-ups open", "Student Follow-Up", [["status", "=", "Open"], ["purpose", "=", "Fee"]], "Red"),
+	("Form not submitted by student", "Student", [["status", "=", "Active"], ["terms_accepted", "=", 0]], "Orange"),
 ]
 
 
@@ -204,6 +208,27 @@ MODES_OF_PAYMENT = [
 	("Card", "Bank", "BOI TNC A/c - Bank of india"),
 	("Cheque", "Bank", "BOI TNC A/c - Bank of india"),
 ]
+
+
+DEMO_FEE_ITEM = "Demo Fee"
+DEMO_FEE_ACCOUNT = "Demo Fee Income"
+
+
+def ensure_demo_fee_item(company=None):
+	"""Service item 'Demo Fee' posting to its own income account, so kept demo fees are visible."""
+	company = company or frappe.defaults.get_global_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
+	ensure_item_group(); ensure_sac()
+	acc = frappe.db.get_value("Account", {"account_name": DEMO_FEE_ACCOUNT, "company": company}, "name")
+	if not acc:
+		parent = frappe.db.get_value("Account", {"account_name": "Direct Income", "company": company, "is_group": 1}, "name") or frappe.db.get_value("Account", {"root_type": "Income", "company": company, "is_group": 1, "parent_account": ["is", "not set"]}, "name")
+		acc = frappe.get_doc({"doctype": "Account", "account_name": DEMO_FEE_ACCOUNT, "parent_account": parent, "company": company, "root_type": "Income", "report_type": "Profit and Loss", "account_type": "Income Account"}).insert(ignore_permissions=True).name
+	if not frappe.db.exists("Item", DEMO_FEE_ITEM):
+		frappe.get_doc({"doctype": "Item", "item_code": DEMO_FEE_ITEM, "item_name": DEMO_FEE_ITEM, "item_group": ITEM_GROUP, "stock_uom": "Nos",
+			"is_stock_item": 0, "is_sales_item": 1, "is_purchase_item": 0, "include_item_in_manufacturing": 0, "gst_hsn_code": SAC_EDUCATION,
+			"description": "Demo class fee", "item_defaults": [{"company": company, "income_account": acc}]}).insert(ignore_permissions=True)
+	elif not frappe.db.exists("Item Default", {"parent": DEMO_FEE_ITEM, "company": company}):
+		it = frappe.get_doc("Item", DEMO_FEE_ITEM); it.append("item_defaults", {"company": company, "income_account": acc}); it.save(ignore_permissions=True)
+	return DEMO_FEE_ITEM
 
 
 def ensure_modes_of_payment(company="TNC Nursing"):

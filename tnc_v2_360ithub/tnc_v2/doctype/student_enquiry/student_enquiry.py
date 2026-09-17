@@ -122,6 +122,7 @@ def convert_to_student(enquiry, extra=None, link_student=None):
 		"city": enq.city,
 		"course_interested": enq.course_interested,
 		"batch_interested": enq.batch_interested,
+		"customer": enq.customer if enq.customer and frappe.db.exists("Customer", enq.customer) else None,
 		"counsellor": enq.counsellor,
 		"enquiry": enq.name,
 		"status": "Enrolment Pending",
@@ -137,10 +138,13 @@ def convert_to_student(enquiry, extra=None, link_student=None):
 
 
 @frappe.whitelist()
-def schedule_demo(enquiry, batch, demo_date=None, from_time=None, to_time=None):
+def schedule_demo(enquiry, batch, demo_date=None, from_time=None, to_time=None, collect_fee=0, fee_amount=None, mode_of_payment="Cash", reference_no=None):
 	demo = frappe.get_doc({"doctype": "Demo Class", "enquiry": enquiry, "batch": batch, "demo_date": demo_date or today(),
 		"from_time": from_time, "to_time": to_time, "result": "Scheduled"})
 	demo.insert()
+	if frappe.utils.cint(collect_fee):
+		from tnc_v2_360ithub.admissions.demo_fee import collect
+		collect(demo.name, fee_amount, mode_of_payment, reference_no)
 	return demo.name
 
 
@@ -231,10 +235,9 @@ def admission_prefill(enquiry, t):
 		return {}
 	if admission_link_expired(row):
 		return {"closed": _("This link has expired. Please ask the institute for a new link.")}
-	if row.status == "Converted":
-		return {"closed": _("This enquiry is already admitted. Please contact the institute.")}
 	if frappe.db.exists("Admission Form", {"enquiry": enquiry, "status": ["!=", "Rejected"]}):
 		return {"closed": _("An admission form has already been submitted with this link. Please contact the institute if you need to correct it.")}
+	# a converted enquiry may still receive its consent form (Admit sends the link after admission)
 	return {"student_name": row.student_name, "mobile": row.mobile, "email": row.email, "gender": row.gender, "city": row.city, "course_interested": row.course_interested}
 
 

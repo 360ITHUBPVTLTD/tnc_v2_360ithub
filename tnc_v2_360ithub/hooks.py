@@ -204,6 +204,7 @@ scheduler_events = {
 		# Fee follow-ups: upcoming (3 days before due) and overdue instalments, 07:00 daily.
 		"0 7 * * *": [
 			"tnc_v2_360ithub.admissions.followups.create_fee_followups",
+			"tnc_v2_360ithub.admissions.followups.create_form_followups",
 		],
 		# Monthly Teacher Task Summary emails, 07:00 on the 1st (as in v1).
 		"0 7 1 * *": [

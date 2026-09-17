@@ -54,7 +54,7 @@ def get_student_overview(student):
 	doc = frappe.get_doc("Student", student)
 	doc.check_permission("read")
 	enrollments = frappe.get_all("Student Batch Enrollment", filters={"student": student, "docstatus": 1},
-		fields=["name", "batch", "course_name", "status", "standard_fee", "discount_amount", "net_payable", "gst_applicable", "sales_order", "enrollment_date"], order_by="enrollment_date desc")
+		fields=["name", "batch", "course_name", "status", "standard_fee", "discount_amount", "demo_fee_adjusted", "net_payable", "gst_applicable", "sales_order", "enrollment_date"], order_by="enrollment_date desc")
 	total_fee = paid_total = pending_total = 0
 	next_due = None
 	cards, rows = [], []
@@ -86,6 +86,7 @@ def get_student_overview(student):
 		  <div class="tnc-col tnc-col-fee">
 		    <div class="tnc-kv"><span>{_('Fee')}</span><span>{_money(en.standard_fee)}</span></div>
 		    {'<div class="tnc-kv"><span>' + _('Discount') + '</span><span>- ' + _money(en.discount_amount) + '</span></div>' if flt(en.discount_amount) else ''}
+		    {'<div class="tnc-kv"><span>' + _('Demo fee paid') + '</span><span>- ' + _money(en.demo_fee_adjusted) + '</span></div>' if flt(en.demo_fee_adjusted) else ''}
 		    <div class="tnc-kv"><span>{_('Total') + (' (incl. GST)' if en.gst_applicable else '')}</span><b>{_money(grand)}</b></div>
 		  </div>
 		  <div class="tnc-col tnc-col-pay">
@@ -185,7 +186,7 @@ def _paid_against_order(sales_order):
 def get_enquiry_overview(enquiry):
 	doc = frappe.get_doc("Student Enquiry", enquiry)
 	doc.check_permission("read")
-	demos = frappe.get_all("Demo Class", filters={"enquiry": enquiry}, fields=["name", "demo_date", "from_time", "to_time", "batch", "result", "counsellor_rating", "student_rating", "rated_on", "rating_sent_on"], order_by="demo_date desc")
+	demos = frappe.get_all("Demo Class", filters={"enquiry": enquiry}, fields=["name", "demo_date", "from_time", "to_time", "batch", "result", "counsellor_rating", "student_rating", "rated_on", "rating_sent_on", "demo_fee_status", "demo_fee_amount"], order_by="demo_date desc")
 	fups = frappe.get_all("Student Follow-Up", filters={"reference_type": "Student Enquiry", "reference_name": enquiry},
 		fields=["name", "follow_up_date", "followup_type", "notes", "next_follow_up_date", "status", "done_by"], order_by="follow_up_date desc")
 	kinds = {"Scheduled": "orange", "Attended": "green", "Not Attended": "red", "Cancelled": "gray"}
@@ -201,13 +202,18 @@ def get_enquiry_overview(enquiry):
 			return ""
 		stu = _stars(d.student_rating) if d.rated_on else ("<span class='text-muted small'>" + _("link sent") + "</span>" if d.rating_sent_on else "<span class='text-muted small'>" + _("not asked") + "</span>")
 		return f"<div class='small'>{_('Counsellor')}: {_stars(d.counsellor_rating)}</div><div class='small'>{_('Student')}: {stu}</div>"
-	drows = "".join(f"<tr><td><a href='/app/demo-class/{e(d.name)}'>{e(formatdate(d.demo_date))}{_slot(d)}</a></td><td>{e(d.batch)}</td><td>{_badge(d.result, kinds.get(d.result, 'gray'))}</td><td>{_rating(d)}</td></tr>" for d in demos)
+	fee_kinds = {"Paid": "green", "Adjusted": "blue", "Refunded": "gray"}
+	def _fee(d):
+		if not d.demo_fee_status or d.demo_fee_status == "Not Collected":
+			return "<span class='text-muted small'>" + _("not collected") + "</span>"
+		return _badge(f"{d.demo_fee_status} {_money(d.demo_fee_amount)}", fee_kinds.get(d.demo_fee_status, "gray"))
+	drows = "".join(f"<tr><td><a href='/app/demo-class/{e(d.name)}'>{e(formatdate(d.demo_date))}{_slot(d)}</a></td><td>{e(d.batch)}</td><td>{_badge(d.result, kinds.get(d.result, 'gray'))}</td><td>{_fee(d)}</td><td>{_rating(d)}</td></tr>" for d in demos)
 	frows = "".join(f"<tr><td><a href='/app/student-follow-up/{e(f.name)}'>{e(formatdate(f.follow_up_date))}</a></td><td>{e(f.followup_type or '')}</td><td>{e((f.notes or '')[:90])}</td><td>{e(formatdate(f.next_follow_up_date)) if f.next_follow_up_date else ''}</td><td>{_badge(f.status, 'green' if f.status == 'Closed' else 'orange')}</td></tr>" for f in fups)
 	def table(head, rows):
 		return '<table class="tnc-table"><thead><tr>' + ''.join(f'<th>{h}</th>' for h in head) + '</tr></thead><tbody>' + rows + '</tbody></table>'
 	html = STYLE + f"""<div class="tnc-enq"><div class="tnc-two">
 	<div><h6>{_('Demo classes')} ({len(demos)})</h6>
-	{table([_('When'), _('Batch'), _('Result'), _('Rating')], drows) if demos else '<div class="tnc-empty">' + _('No demo yet.') + '</div>'}</div>
+	{table([_('When'), _('Batch'), _('Result'), _('Demo fee'), _('Rating')], drows) if demos else '<div class="tnc-empty">' + _('No demo yet.') + '</div>'}</div>
 	<div><h6>{_('Follow-ups')} ({len(fups)})</h6>
 	{table([_('Date'), _('Type'), _('Notes'), _('Next'), ''], frows) if fups else '<div class="tnc-empty">' + _('No follow-up yet.') + '</div>'}</div></div></div>"""
 	return {"html": html, "demos": len(demos), "attended": sum(1 for d in demos if d.result == "Attended")}

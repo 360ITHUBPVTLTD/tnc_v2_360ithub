@@ -32,6 +32,7 @@
   "lost_note",
   "lost_on",
   "student",
+  "customer",
   "form_token",
   "form_token_sent_on",
   "invite_token",
@@ -245,6 +246,15 @@
    "read_only": 1
   },
   {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Customer",
+   "no_copy": 1,
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
    "fieldname": "form_token",
    "fieldtype": "Data",
    "hidden": 1,
@@ -345,7 +355,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-16 14:30:00.000000",
+ "modified": "2026-09-16 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Student Enquiry",

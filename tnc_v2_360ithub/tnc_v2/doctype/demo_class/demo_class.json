@@ -23,6 +23,15 @@
   "cb2",
   "result",
   "remarks",
+  "sb_fee",
+  "demo_fee_status",
+  "demo_fee_amount",
+  "demo_fee_paid_on",
+  "cb_fee",
+  "demo_fee_mode",
+  "demo_fee_invoice",
+  "demo_fee_payment",
+  "demo_fee_adjusted_in",
   "sb_rating",
   "counsellor_rating",
   "counsellor_rating_note",
@@ -127,6 +136,65 @@
    "label": "Remarks"
   },
   {
+   "fieldname": "sb_fee",
+   "fieldtype": "Section Break",
+   "label": "Demo Fee"
+  },
+  {
+   "default": "Not Collected",
+   "fieldname": "demo_fee_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Demo Fee",
+   "options": "Not Collected\nPaid\nAdjusted\nRefunded",
+   "read_only": 1
+  },
+  {
+   "fieldname": "demo_fee_amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "demo_fee_paid_on",
+   "fieldtype": "Date",
+   "label": "Paid On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_fee",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "demo_fee_mode",
+   "fieldtype": "Link",
+   "label": "Mode",
+   "options": "Mode of Payment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "demo_fee_invoice",
+   "fieldtype": "Link",
+   "label": "Receipt",
+   "options": "Sales Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "demo_fee_payment",
+   "fieldtype": "Link",
+   "label": "Payment Entry",
+   "options": "Payment Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "demo_fee_adjusted_in",
+   "fieldtype": "Link",
+   "label": "Adjusted In",
+   "options": "Student Batch Enrollment",
+   "read_only": 1
+  },
+  {
    "depends_on": "eval:doc.result=='Attended'",
    "fieldname": "sb_rating",
    "fieldtype": "Section Break",
@@ -185,7 +253,7 @@
  "is_submittable": 0,
  "istable": 0,
  "links": [],
- "modified": "2026-09-15 18:30:00.000000",
+ "modified": "2026-09-16 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Demo Class",

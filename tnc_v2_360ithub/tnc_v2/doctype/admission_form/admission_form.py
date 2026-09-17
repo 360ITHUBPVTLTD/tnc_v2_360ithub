@@ -59,8 +59,7 @@ class AdmissionForm(Document):
 			frappe.throw(_("This admission link was sent to a different mobile number. Please fill the form with the number your enquiry was made from, or ask the institute for your own link."), frappe.PermissionError)
 		if frappe.db.exists("Admission Form", {"enquiry": self.enquiry, "status": ["!=", "Rejected"]}):
 			frappe.throw(_("An admission form has already been submitted for this enquiry. Please contact the institute if you need to correct it."), frappe.DuplicateEntryError)
-		if enq_status == "Converted":
-			frappe.throw(_("This enquiry is already admitted. Please contact the institute."), frappe.PermissionError)
+		# a converted enquiry still accepts its consent form; it is applied to the student on arrival
 
 	def attach_to_enquiry(self):
 		"""Link the open enquiry this form belongs to: the one named in the link the
@@ -81,13 +80,23 @@ class AdmissionForm(Document):
 			enq.add_comment("Info", _("Admission form {0} received, consent accepted.").format(self.name))
 			if self.name_mismatch:
 				enq.add_comment("Info", _("⚠ Name on admission form {0} is <b>{1}</b>, enquiry name is <b>{2}</b>. Please check before applying.").format(self.name, self.student_name, enq.student_name))
+			# already admitted (Admit button): the form is the consent, apply it to that student straight away
+			if enq.status == "Converted" and enq.student and frappe.db.exists("Student", enq.student) and not self.name_mismatch:
+				_apply(self, enq.student)
+				frappe.get_doc("Student", enq.student).add_comment("Info", _("Admission form {0} received and applied. Consent recorded.").format(self.name))
 
 
 @frappe.whitelist()
 def apply_to_student(name, student=None):
-	"""Fill the Student from this form (create one if none matches) and record consent."""
+	"""Office action: fill the Student from this form (create one if none matches) and record consent."""
 	form = frappe.get_doc("Admission Form", name)
 	form.check_permission("write")
+	return _apply(form, student)
+
+
+def _apply(form, student=None):
+	"""Server-side apply. Runs with ignore_permissions so it also works when the trigger is a
+	Guest submitting the public form after Admit (the form itself is the student's consent)."""
 	if form.status == "Applied" and form.student:
 		return form.student
 	if not student:
@@ -127,7 +136,7 @@ def apply_to_student(name, student=None):
 			enq.insert()
 			convert_to_student(enq.name, link_student=doc.name)
 		doc.reload()
-	form.db_set({"status": "Applied", "student": doc.name, "reviewed_by": frappe.session.user})
+	form.db_set({"status": "Applied", "student": doc.name, "reviewed_by": frappe.session.user if frappe.session.user != "Guest" else None})
 	form.add_comment("Info", _("Applied to Student {0}").format(doc.name))
 	return doc.name
 

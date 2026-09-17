@@ -28,6 +28,11 @@ class Student(Document):
 	def ensure_customer(self):
 		if self.customer and frappe.db.exists("Customer", self.customer):
 			return self.customer
+		if self.enquiry:
+			c = frappe.db.get_value("Student Enquiry", self.enquiry, "customer")
+			if c and frappe.db.exists("Customer", c):
+				self.db_set("customer", c, update_modified=False)
+				return c
 		ensure_customer_group()
 		customer = frappe.get_doc({
 			"doctype": "Customer",
