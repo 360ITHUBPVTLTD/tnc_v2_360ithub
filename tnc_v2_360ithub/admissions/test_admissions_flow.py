@@ -327,6 +327,20 @@ def run_tests():
 		demo_r.reload()
 		assert abs(demo_r.student_rating - 0.8) < 1e-6 and demo_r.rated_on and demo_r.student_feedback == "Bahut accha laga", "student rating stored"
 		assert demo_rating.page_state(demo_r.name, demo_r.rating_token).get("closed"), "used rating link is closed"
+		# outgoing links follow the address the staff browser used (live domain), never a bare IP or a stale config
+		from werkzeug.test import EnvironBuilder
+		from werkzeug.wrappers import Request
+		from tnc_v2_360ithub.admissions import invites as _inv2
+		saved_req = getattr(frappe.local, "request", None)
+		try:
+			frappe.local.request = Request(EnvironBuilder(base_url="http://tncv2.360ithub.com:8000/", headers={"X-Forwarded-Proto": "https", "X-Forwarded-Host": "tncv2.360ithub.com"}).get_environ())
+			assert _inv2.site_url() == "https://tncv2.360ithub.com", _inv2.site_url()
+			frappe.local.request = Request(EnvironBuilder(base_url="https://tncv2.360ithub.com/").get_environ())
+			assert _inv2.site_url() == "https://tncv2.360ithub.com", _inv2.site_url()
+			frappe.local.request = Request(EnvironBuilder(base_url="http://192.168.1.145:8000/").get_environ())
+			assert not _inv2.site_url().startswith("http://192.168."), "a bare IP must never be sent; fall back to the configured host name"
+		finally:
+			frappe.local.request = saved_req
 		# personal enquiry link: locked to the number, one enquiry per link
 		from tnc_v2_360ithub.admissions import invites
 		tok = invites.sign("9000000077")
