@@ -9,9 +9,14 @@ on:
       - 'v1_schema_export/**'
   workflow_dispatch:
 
-# One bench, one deploy at a time. Never cancel a run mid-migrate.
+# Keyed to the BENCH, not the app. tnc_v2_360ithub and clarity_360ithub are both
+# installed on tncv2.360ithub.com, and per-app groups let them run `bench migrate`
+# and restart the same containers simultaneously. Sharing one group makes GitHub
+# queue the second behind the first. If this app is ever deployed to a second
+# bench, split this into a matrix and move concurrency to the job level.
+# Never cancel a run mid-migrate: a half-applied schema change is worse than a wait.
 concurrency:
-  group: deploy-tncv2
+  group: deploy-bench-tncv2.360ithub.com
   cancel-in-progress: false
 
 jobs:
@@ -50,4 +55,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 20m
-          script: /usr/local/bin/deploy-tnc-app.sh tnc_v2_360ithub 360ithub_master
+          script: >-
+            /usr/local/bin/deploy-bench-app.sh
+            tnc_v2_360ithub 360ithub_master
+            test-demo-erpnext-w6y5gf tncv2.360ithub.com
