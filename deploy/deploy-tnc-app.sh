@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# Pull a bench app from git inside the running tncv2 bench, migrate, restart.
+#
+# Lives in the repo so it is reviewable and versioned, but it RUNS on the Dokploy
+# host. Install it there with:
+#   sudo install -m 0755 -o root -g root deploy-tnc-app.sh /usr/local/bin/deploy-tnc-app.sh
+#
+# Invoked over SSH by .github/workflows/deploy.yml. Safe to run by hand.
+#
+# Why not Dokploy's own auto-deploy webhook: that triggers a compose redeploy, and
+# (a) the bootstrap script skips any app whose folder already exists, so it never
+# pulls, and (b) `docker compose up -d` with an unchanged compose file does not
+# recreate containers at all, so the entrypoint never re-runs. The app code lives
+# on a volume, one layer below what Dokploy manages.
+set -euo pipefail
+
+APP="${1:-tnc_v2_360ithub}"
+BRANCH="${2:-360ithub_master}"
+
+STACK=test-demo-erpnext-w6y5gf
+SITE=tncv2.360ithub.com
+WEB="$STACK-web-1"
+
+if [ "$(docker inspect -f '{{.State.Running}}' "$WEB" 2>/dev/null)" != "true" ]; then
+	echo "FATAL: container $WEB is not running" >&2
+	exit 1
+fi
+
+echo "==> $APP: pulling $BRANCH inside $WEB"
+docker exec -i "$WEB" bash -s <<EOF
+set -euo pipefail
+cd "/home/frappe/frappe-bench/apps/$APP"
+
+# developer_mode is on, so frappe exports doctype JSON straight into the app
+# folder. A dirty tree here is usually someone's unsaved work on the server -
+# refuse rather than clobber it. Commit/stash on the box, then re-run.
+if [ -n "\$(git status --porcelain)" ]; then
+	echo "FATAL: $APP has uncommitted changes on the server:" >&2
+	git status --short >&2
+	exit 1
+fi
+
+# bench get-app names the remote "upstream", not "origin". Read whatever the
+# branch actually tracks and fall back to the first remote, so this works for
+# any app in the bench regardless of how it was fetched.
+remote=\$(git config --get "branch.$BRANCH.remote" || true)
+[ -n "\$remote" ] || remote=\$(git remote | head -1)
+if [ -z "\$remote" ]; then
+	echo "FATAL: $APP has no git remote configured" >&2
+	exit 1
+fi
+echo "    remote: \$remote"
+
+before=\$(git rev-parse HEAD)
+git fetch --prune "\$remote"
+git checkout "$BRANCH"
+git pull --ff-only "\$remote" "$BRANCH"
+after=\$(git rev-parse HEAD)
+
+if [ "\$before" = "\$after" ]; then
+	echo "    already at \$(git log -1 --oneline) - nothing to pull"
+else
+	git log --oneline "\$before..\$after"
+fi
+
+cd /home/frappe/frappe-bench
+bench --site "$SITE" migrate
+bench --site "$SITE" clear-cache
+EOF
+
+# bench serve holds Python in memory, and worker/scheduler never reload at all.
+# Assets are left to the watch container, which is already running bench watch.
+echo "==> restarting web, worker, scheduler"
+docker restart "$STACK-web-1" "$STACK-worker-1" "$STACK-scheduler-1" >/dev/null
+
+echo "==> waiting for the site to answer"
+for _ in $(seq 1 30); do
+	# -S is deliberately absent: the first probes get a 502 while bench serve
+	# boots, and printing those makes a healthy deploy look like a failed one.
+	if curl -fs -o /dev/null -m 5 "https://$SITE/api/method/ping"; then
+		echo "==> deployed $APP@$BRANCH - site is up"
+		exit 0
+	fi
+	sleep 5
+done
+
+echo "FATAL: $SITE did not answer within 150s. Check: docker logs --tail 100 $WEB" >&2
+exit 1
