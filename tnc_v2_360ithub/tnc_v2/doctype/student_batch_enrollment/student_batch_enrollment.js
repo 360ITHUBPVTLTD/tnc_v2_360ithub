@@ -96,7 +96,7 @@ frappe.ui.form.on("Student Batch Enrollment", {
 		if (frm.doc.discount_type === "Percentage") disc = flt(fee * flt(frm.doc.discount_value) / 100, 2);
 		else if (frm.doc.discount_type === "Amount") disc = flt(frm.doc.discount_value, 2);
 		frm.set_value("discount_amount", disc);
-		frm.set_value("net_payable", flt(fee - disc, 2));
+		frm.set_value("net_payable", flt(fee - disc - flt(frm.doc.demo_fee_adjusted), 2));
 		if ((frm.doc.installments || []).length) {
 			frm.set_intro(__("Net Payable changed. Press Generate Instalments, or edit the rows so they add up."), "orange");
 		}

@@ -15,7 +15,11 @@
   "column_break_r1",
   "reminder_cron_note",
   "teachers_section",
-  "teacher_timesheet_approval"
+  "teacher_timesheet_approval",
+  "demo_fee_section",
+  "demo_fee_amount",
+  "cb_df",
+  "demo_fee_adjust"
  ],
  "fields": [
   {
@@ -89,12 +93,33 @@
    "fieldtype": "Table MultiSelect",
    "label": "Timesheet approvers",
    "options": "Timesheet Approver"
+  },
+  {
+   "fieldname": "demo_fee_section",
+   "fieldtype": "Section Break",
+   "label": "Demo Fee"
+  },
+  {
+   "default": "500",
+   "fieldname": "demo_fee_amount",
+   "fieldtype": "Currency",
+   "label": "Demo Fee Amount"
+  },
+  {
+   "fieldname": "cb_df",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "demo_fee_adjust",
+   "fieldtype": "Check",
+   "label": "Deduct the paid demo fee from the course fee on admission"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-09-11 11:30:00.000000",
+ "modified": "2026-09-16 21:30:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "TNC Settings",

@@ -251,6 +251,70 @@ def run_tests():
 		assert n_after == n_before + 1, "one open Demo follow-up after the demo result"
 		demo_f.result = "Not Attended"; demo_f.save(ignore_permissions=True)
 		assert frappe.db.count("Student Follow-Up", {"reference_name": enq3.name, "purpose": "Demo", "status": "Open"}) == n_after, "no duplicate follow-up"
+		# demo fee: collected at the demo, deducted on enrolment, refundable while Paid
+		from tnc_v2_360ithub.admissions import demo_fee
+		frappe.db.set_single_value("TNC Settings", {"demo_fee_amount": 500, "demo_fee_adjust": 1}); frappe.clear_cache(doctype="TNC Settings")
+		enq_f = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Fee Demo", "mobile": "9000000501", "source": "Walk-in", "counsellor": "Administrator"}).insert()
+		d1 = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_f.name, "batch": batch.name, "demo_date": today(), "result": "Attended"}).insert()
+		r1 = demo_fee.collect(d1.name, None, "Cash")
+		d1.reload(); enq_f.reload()
+		assert d1.demo_fee_status == "Paid" and flt(d1.demo_fee_amount) == 500 and enq_f.customer, "demo fee receipt + payment, customer created on the enquiry"
+		assert frappe.db.get_value("Sales Invoice", r1["invoice"], "outstanding_amount") == 0, "demo fee invoice settled"
+		d2 = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_f.name, "batch": batch.name, "demo_date": today(), "result": "Attended"}).insert()
+		demo_fee.collect(d2.name, 500, "Cash")
+		st_f = frappe.get_doc("Student", convert_to_student(enq_f.name))
+		assert st_f.customer == enq_f.customer, "student reuses the enquiry customer"
+		en_f = frappe.get_doc({"doctype": "Student Batch Enrollment", "student": st_f.name, "batch": batch.name, "enrollment_date": today(), "number_of_installments": 2, "first_due_date": today()}).insert()
+		assert flt(en_f.demo_fee_adjusted) == 1000 and flt(en_f.net_payable) == flt(en_f.standard_fee) - 1000, ("both demo fees deducted", en_f.demo_fee_adjusted, en_f.net_payable)
+		en_f.submit()
+		so_f = frappe.get_doc("Sales Order", en_f.sales_order)
+		assert flt(so_f.grand_total) == flt(en_f.net_payable) and "Demo fee" in (so_f.terms or ""), "order total after the demo fee"
+		assert frappe.db.get_value("Demo Class", d1.name, "demo_fee_status") == "Adjusted" and frappe.db.get_value("Demo Class", d2.name, "demo_fee_adjusted_in") == en_f.name
+		en_f.cancel()
+		assert frappe.db.get_value("Demo Class", d1.name, "demo_fee_status") == "Paid", "cancelling the enrolment frees the demo fee again"
+		rf = demo_fee.refund(d1.name, "Cash")
+		assert frappe.db.get_value("Demo Class", d1.name, "demo_fee_status") == "Refunded" and frappe.db.get_value("Sales Invoice", rf["credit_note"], "is_return") == 1
+		print("  - Demo fee: collect, deduct on enrolment, undo on cancel, refund ok")
+		# Admit: one call = student + submitted enrolment + order + receipt (+ demo fee deducted)
+		from tnc_v2_360ithub.admissions import admit as admit_mod
+		enq_a = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "One Click", "mobile": "9000000601", "source": "Walk-in", "counsellor": "Administrator", "batch_interested": batch.name}).insert()
+		da = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_a.name, "batch": batch.name, "demo_date": today(), "result": "Attended"}).insert()
+		demo_fee.collect(da.name, 500, "Cash")
+		pv = admit_mod.preview(enq_a.name)
+		assert pv["batch"] == batch.name and flt(pv["demo_fee_paid"]) == 500 and pv["standard_fee"] > 0
+		res = admit_mod.admit(enq_a.name, batch.name, number_of_installments=2, discount_type="Amount", discount_value=1000, discount_reason="Sibling", send_form=0)
+		st_a = frappe.get_doc("Student", res["student"])
+		assert st_a.status == "Active" and frappe.db.get_value("Student Enquiry", enq_a.name, "status") == "Converted"
+		en_a = frappe.get_doc("Student Batch Enrollment", res["enrollment"])
+		assert en_a.docstatus == 1 and flt(en_a.demo_fee_adjusted) == 500 and flt(en_a.discount_amount) == 1000 and len(en_a.installments) == 2
+		assert not res["receipt"] and flt(res["paid"]) == 0 and flt(res["pending"]) == flt(en_a.net_payable), res
+		from tnc_v2_360ithub.admissions.fees import receive_payment as _rp, get_pending as _gp
+		_rp(en_a.sales_order, 2000, "Cash")
+		assert flt(_gp(en_a.sales_order)["paid"]) == 2000, "payment received afterwards from the student side"
+		assert frappe.db.get_value("Demo Class", da.name, "demo_fee_status") == "Adjusted"
+		# consent form arriving after Admit is accepted and applied to the same student
+		send_admission_link(enq_a.name)  # the link the student uses after Admit
+		_u = frappe.session.user
+		frappe.set_user("Guest")
+		try:
+			f_after = frappe.get_doc({"doctype": "Admission Form", "enquiry": enq_a.name, "student_name": "One Click", "gender": "Male", "mobile": "9000000601", "date_of_birth": "2001-01-01",
+				"residential_address": "Patna", "emergency_contact": "9", "blood_group": "B+", "terms_accepted": 1, "guardian_consent": 1}).insert(ignore_permissions=True)
+		finally:
+			frappe.set_user(_u)
+		f_after.reload(); st_a.reload()
+		assert f_after.status == "Applied" and f_after.student == st_a.name and st_a.terms_accepted == 1 and st_a.blood_group == "B+", "form after Admit applied to the admitted student"
+		print("  - Admit in one call: student Active, enrolment submitted, demo fee adjusted, receipt for today's payment; consent form applied afterwards")
+		# admission form chase: 3 days after admission with no form -> one General follow-up; closes when the form arrives
+		from tnc_v2_360ithub.admissions.followups import create_form_followups
+		st_a.reload()
+		frappe.db.set_value("Student", st_a.name, {"terms_accepted": 0, "creation": frappe.utils.add_days(today(), -4)}, update_modified=False)
+		r_ff = create_form_followups()
+		assert frappe.db.exists("Student Follow-Up", {"reference_name": st_a.name, "purpose": "General", "status": "Open", "notes": ["like", "Admission form not submitted%"]}), "chase follow-up created"
+		create_form_followups()
+		assert frappe.db.count("Student Follow-Up", {"reference_name": st_a.name, "purpose": "General", "status": "Open", "notes": ["like", "Admission form not submitted%"]}) == 1, "never twice"
+		frappe.db.set_value("Student", st_a.name, "terms_accepted", 1, update_modified=False)
+		create_form_followups()
+		assert not frappe.db.exists("Student Follow-Up", {"reference_name": st_a.name, "purpose": "General", "status": "Open", "notes": ["like", "Admission form not submitted%"]}), "closed once the form is in"
 		# demo rating: counsellor side on the form, student side through a personal link
 		from tnc_v2_360ithub.admissions import demo_rating
 		demo_r = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq3.name, "batch": batch.name, "demo_date": today(), "result": "Attended", "counsellor_rating": 0.8}).insert(ignore_permissions=True)

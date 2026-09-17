@@ -57,7 +57,12 @@ class StudentBatchEnrollment(Document):
 			frappe.throw(_("Please give the reason for the discount"))
 		if not self.discount_type:
 			self.discount_reason = None
-		self.net_payable = flt(fee - flt(self.discount_amount), 2)
+		if self.docstatus == 0:
+			from tnc_v2_360ithub.admissions.demo_fee import adjustable_for_student
+			self.demo_fee_adjusted, _rows = adjustable_for_student(self.student) if self.student else (0, [])
+		if flt(self.discount_amount) + flt(self.demo_fee_adjusted) > fee:
+			frappe.throw(_("Discount plus demo fee adjustment cannot exceed the fee"))
+		self.net_payable = flt(fee - flt(self.discount_amount) - flt(self.demo_fee_adjusted), 2)
 
 	def generate_installments(self):
 		"""Equal split of Net Payable, `installment_gap_days` apart from `first_due_date`;
@@ -123,11 +128,16 @@ class StudentBatchEnrollment(Document):
 		if not self.sales_order:
 			so = self.make_sales_order()
 			self.db_set("sales_order", so.name)
+		if flt(self.demo_fee_adjusted):
+			from tnc_v2_360ithub.admissions.demo_fee import mark_adjusted
+			mark_adjusted(self)
 		# first paid-for enrolment ends the trial
 		if frappe.db.get_value("Student", self.student, "status") == "Enrolment Pending":
 			frappe.db.set_value("Student", self.student, "status", "Active", update_modified=False)
 
 	def on_cancel(self):
+		from tnc_v2_360ithub.admissions.demo_fee import unmark_adjusted
+		unmark_adjusted(self)
 		if self.sales_order:
 			so = frappe.get_doc("Sales Order", self.sales_order)
 			if so.docstatus == 1:
@@ -156,10 +166,16 @@ class StudentBatchEnrollment(Document):
 			"items": [{"item_code": item, "item_name": f"{course.course_name} - {batch.batch_name}", "description": f"Course fee: {course.course_name}, batch {batch.batch_name}",
 				"qty": 1, "rate": flt(self.standard_fee), "uom": "Nos", "delivery_date": batch.actual_ending_date or batch.starting_date or self.enrollment_date or nowdate()}],
 		})
-		if flt(self.discount_amount):
+		deduction = flt(self.discount_amount) + flt(self.demo_fee_adjusted)
+		if deduction:
 			so.apply_discount_on = "Net Total"
-			so.discount_amount = flt(self.discount_amount)
-			so.terms = _("Discount {0}: {1}").format(frappe.format_value(self.discount_amount, {"fieldtype": "Currency"}), self.discount_reason or "")
+			so.discount_amount = deduction
+			terms = []
+			if flt(self.discount_amount):
+				terms.append(_("Discount {0}: {1}").format(frappe.format_value(self.discount_amount, {"fieldtype": "Currency"}), self.discount_reason or ""))
+			if flt(self.demo_fee_adjusted):
+				terms.append(_("Demo fee already paid {0}, adjusted").format(frappe.format_value(self.demo_fee_adjusted, {"fieldtype": "Currency"})))
+			so.terms = "\n".join(terms)
 		if self.gst_applicable and self.taxes_and_charges:
 			so.taxes_and_charges = self.taxes_and_charges
 		so.flags.ignore_permissions = True

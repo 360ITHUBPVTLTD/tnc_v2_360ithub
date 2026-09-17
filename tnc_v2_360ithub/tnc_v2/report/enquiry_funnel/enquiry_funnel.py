@@ -27,14 +27,16 @@ def execute(filters=None):
 		select e.name, e.{group_field} as grp, e.status, e.enquiry_date, e.lost_reason, e.converted_on,
 			(select count(*) from `tabDemo Class` d where d.enquiry = e.name) as demos,
 			(select count(*) from `tabDemo Class` d where d.enquiry = e.name and d.result = 'Attended') as attended,
-			(select min(s.creation) from tabStudent s where s.enquiry = e.name) as admitted_on
+			(select min(s.creation) from tabStudent s where s.enquiry = e.name) as admitted_on,
+			(select ifnull(sum(d2.demo_fee_amount), 0) from `tabDemo Class` d2 where d2.enquiry = e.name and d2.demo_fee_status in ('Paid', 'Adjusted')) as demo_fee
 		from `tabStudent Enquiry` e where {where}""", vals, as_dict=True)
 
 	agg = {}
 	for r in rows:
 		key = r.grp or (_("Not lost") if group_field == "lost_reason" else (_("No counsellor assigned") if group_field == "counsellor" else _("Not set")))
-		a = agg.setdefault(key, {"grp": key, "enquiries": 0, "with_demo": 0, "demos": 0, "attended": 0, "converted": 0, "lost": 0, "open": 0, "days": []})
+		a = agg.setdefault(key, {"grp": key, "enquiries": 0, "with_demo": 0, "demos": 0, "attended": 0, "converted": 0, "lost": 0, "open": 0, "days": [], "demo_fee": 0})
 		a["enquiries"] += 1
+		a["demo_fee"] += flt(r.demo_fee)
 		a["demos"] += r.demos or 0
 		if r.demos:
 			a["with_demo"] += 1
@@ -57,7 +59,7 @@ def execute(filters=None):
 		n = a["enquiries"]
 		data.append({
 			"grp": a["grp"], "grp_doctype": opts if (opts and frappe.db.exists(opts, a["grp"])) else None, "enquiries": n, "with_demo": a["with_demo"], "demos": a["demos"], "attended": a["attended"],
-			"converted": a["converted"], "lost": a["lost"], "open": a["open"],
+			"converted": a["converted"], "lost": a["lost"], "open": a["open"], "demo_fee": flt(a["demo_fee"], 2),
 			"conversion_pct": flt(a["converted"] / n * 100, 1) if n else 0,
 			"demo_attend_pct": flt(a["attended"] / a["with_demo"] * 100, 1) if a["with_demo"] else 0,
 			"avg_days": flt(sum(a["days"]) / len(a["days"]), 1) if a["days"] else None,
@@ -69,6 +71,7 @@ def execute(filters=None):
 		{"fieldname": "with_demo", "label": _("Scheduled Demo"), "fieldtype": "Int", "width": 160},
 		{"fieldname": "attended", "label": _("Students Attended Demo"), "fieldtype": "Int", "width": 170},
 		{"fieldname": "demo_attend_pct", "label": _("Demo Attendance %"), "fieldtype": "Percent", "precision": 1, "width": 160},
+		{"fieldname": "demo_fee", "label": _("Demo Fee Collected"), "fieldtype": "Currency", "width": 150},
 		{"fieldname": "converted", "label": _("Admissions Taken"), "fieldtype": "Int", "width": 140},
 		{"fieldname": "conversion_pct", "label": _("Enquiry to Admission %"), "fieldtype": "Percent", "precision": 1, "width": 170},
 		{"fieldname": "lost", "label": _("Enquiries Lost"), "fieldtype": "Int", "width": 120},

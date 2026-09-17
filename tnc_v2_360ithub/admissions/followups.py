@@ -51,6 +51,31 @@ def create_fee_followups(today=None):
 	return {"created": created, "closed": closed}
 
 
+FORM_WAIT_DAYS = 3  # after admission, chase the admission form from this many days
+
+
+def create_form_followups(today=None):
+	"""Daily. An Active student whose admission form has not come back FORM_WAIT_DAYS after
+	admission gets one General follow-up for the counsellor. Never twice; closes when the form arrives."""
+	today = getdate(today or nowdate())
+	created = closed = 0
+	for st in frappe.get_all("Student", filters={"status": "Active", "terms_accepted": 0, "creation": ["<=", add_days(today, -FORM_WAIT_DAYS)]},
+			fields=["name", "student_name", "mobile", "counsellor", "enquiry"]):
+		if frappe.db.exists("Student Follow-Up", {"reference_type": "Student", "reference_name": st.name, "purpose": "General", "status": "Open", "notes": ["like", "Admission form not submitted%"]}):
+			continue
+		frappe.get_doc({"doctype": "Student Follow-Up", "reference_type": "Student", "reference_name": st.name, "purpose": "General",
+			"student_name": st.student_name, "mobile": st.mobile, "follow_up_date": today, "next_follow_up_date": today, "followup_type": "Call", "status": "Open",
+			"assigned_to": st.counsellor, "notes": _("Admission form not submitted. Student has not filled the form sent on WhatsApp, details are missing. Ask them to fill it, or send it again from enquiry {0}.").format(st.enquiry or "")}).insert(ignore_permissions=True)
+		created += 1
+	# form arrived: close the chase
+	for f in frappe.get_all("Student Follow-Up", filters={"reference_type": "Student", "purpose": "General", "status": "Open", "notes": ["like", "Admission form not submitted%"]}, fields=["name", "reference_name"]):
+		if frappe.db.get_value("Student", f.reference_name, "terms_accepted"):
+			frappe.db.set_value("Student Follow-Up", f.name, "status", "Closed", update_modified=False); closed += 1
+	if not frappe.flags.in_test:
+		frappe.db.commit()
+	return {"created": created, "closed": closed}
+
+
 def close_paid_followups(sales_order):
 	"""After a receipt: close fee follow-ups whose instalment is now settled."""
 	for ps in frappe.get_all("Payment Schedule", filters={"parent": sales_order, "parenttype": "Sales Order"}, fields=["payment_term", "outstanding", "payment_amount", "paid_amount"]):
