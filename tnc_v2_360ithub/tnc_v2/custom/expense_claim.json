@@ -109,7 +109,7 @@
    "name": "Expense Claim-custom_expense_for",
    "no_copy": 0,
    "non_negative": 0,
-   "options": "\nOnline gggg\nOffline",
+   "options": "\nOnline\nOffline",
    "owner": "Administrator",
    "permlevel": 0,
    "placeholder": null,
