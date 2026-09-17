@@ -1,0 +1,51 @@
+on:
+  push:
+    branches: [360ithub_master]
+    paths-ignore:
+      - '**.md'
+      - 'license.txt'
+      - 'v1_schema_export/**'
+  workflow_dispatch:
+
+# One bench, one deploy at a time. Never cancel a run mid-migrate.
+concurrency:
+  group: deploy-tncv2
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Syntax and undefined names
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'   # matches PYENV_VERSION 3.12.14 on the bench
+
+      - name: Compile every module
+        run: python -m compileall -q tnc_v2_360ithub
+
+      # Deliberately NOT the full pyproject ruff config: the repo currently has
+      # ~375 style findings, and gating deploys on those would mean a permanently
+      # red pipeline. These rules are the ones that mean "this will actually break
+      # at runtime" - syntax errors and undefined names - and they pass today.
+      # Widen the select list as the backlog gets cleaned up.
+      - name: Ruff (breakage-only rules)
+        run: |
+          pip install --quiet ruff==0.8.1
+          ruff check --select=E9,F821,F632,F702 --no-cache .
+
+  deploy:
+    name: Deploy to tncv2.360ithub.com
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull, migrate and restart on the bench
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 20m
+          script: /usr/local/bin/deploy-tnc-app.sh tnc_v2_360ithub 360ithub_master
