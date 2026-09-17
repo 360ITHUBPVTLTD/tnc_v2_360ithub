@@ -1,0 +1,51 @@
+# TEMPLATE - copy to .github/workflows/deploy.yml in a new app's repo.
+# Replace every __PLACEHOLDER__ below. See SETUP-CICD-FOR-NEW-APP.md Part 2.
+#
+#   __APP_NAME__  the python package name, e.g. my_new_app
+#   __BRANCH__    the branch to deploy from, e.g. 360ithub_master
+name: Deploy to tncv2 bench
+
+on:
+  push:
+    branches: [__BRANCH__]
+    paths-ignore:
+      - '**.md'
+      - 'license.txt'
+  workflow_dispatch:
+
+# One bench, one deploy at a time. Never cancel a run mid-migrate.
+concurrency:
+  group: deploy-tncv2-__APP_NAME__
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Syntax and undefined names
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'   # matches PYENV_VERSION on the bench
+      - name: Compile every module
+        run: python -m compileall -q __APP_NAME__
+      # Not the full pyproject ruff config on purpose: an existing app reports
+      # hundreds of style findings, and gating deploys on those means a
+      # permanently red pipeline. These rules mean "this breaks at runtime".
+      - name: Ruff (breakage-only rules)
+        run: |
+          pip install --quiet ruff==0.8.1
+          ruff check --select=E9,F821,F632,F702 --no-cache .
+
+  deploy:
+    name: Deploy to the bench
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 20m
+          script: /usr/local/bin/deploy-tnc-app.sh __APP_NAME__ __BRANCH__
