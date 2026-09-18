@@ -14,11 +14,30 @@ def _seconds(t):
 
 class DemoClass(Document):
 	def validate(self):
+		self.block_duplicate()
 		if self.result == "Attended" and not self.demo_date:
 			frappe.throw("Demo Date is required")
-		if self.from_time and self.to_time and self.to_time <= self.from_time:
-			frappe.throw("To Time must be after From Time")
+		if self.from_time and self.to_time:
+			a, b = _seconds(self.from_time), _seconds(self.to_time)
+			if a == b:
+				# Frappe stamps empty Time fields with the current clock at save; equal times mean "no slot given"
+				self.from_time = self.to_time = None
+			elif b < a:
+				frappe.throw(_("To Time must be after From Time"))
 		self.duration = _seconds(self.to_time) - _seconds(self.from_time) if self.from_time and self.to_time else 0
+
+	def block_duplicate(self):
+		"""One open demo per enquiry, and never the same slot twice (a double-click must not book twice)."""
+		if not self.enquiry or self.result == "Cancelled":
+			return
+		if self.result == "Scheduled":
+			other = frappe.db.get_value("Demo Class", {"enquiry": self.enquiry, "result": "Scheduled", "name": ["!=", self.name or ""]}, ["name", "demo_date"], as_dict=True)
+			if other:
+				frappe.throw(_("A demo is already scheduled for this enquiry on {0} ({1}). Mark it Attended, Not Attended or Cancelled before scheduling another.").format(
+					frappe.format_value(other.demo_date, {"fieldtype": "Date"}), other.name), frappe.DuplicateEntryError)
+		same = frappe.db.get_value("Demo Class", {"enquiry": self.enquiry, "demo_date": self.demo_date, "from_time": self.from_time or None, "result": ["!=", "Cancelled"], "name": ["!=", self.name or ""]}, "name")
+		if same:
+			frappe.throw(_("This demo slot is already booked for this enquiry ({0}).").format(same), frappe.DuplicateEntryError)
 
 	def on_update(self):
 		self.sync_enquiry_status()

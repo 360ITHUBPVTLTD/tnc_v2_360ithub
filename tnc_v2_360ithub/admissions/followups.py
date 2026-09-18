@@ -23,9 +23,9 @@ def create_fee_followups(today=None):
 	today = getdate(today or nowdate())
 	created = closed = 0
 	rows = frappe.db.sql("""
-		select so.name as sales_order, so.student, so.student_batch, ps.payment_term, ps.due_date, ps.payment_amount, ps.paid_amount, ps.outstanding
+		select so.name as sales_order, so.custom_student as student, so.custom_student_batch as student_batch, ps.payment_term, ps.due_date, ps.payment_amount, ps.paid_amount, ps.outstanding
 		from `tabSales Order` so join `tabPayment Schedule` ps on ps.parent = so.name and ps.parenttype = 'Sales Order'
-		where so.docstatus = 1 and so.status not in ('Closed', 'Completed') and ifnull(so.student, '') != ''""", as_dict=True)
+		where so.docstatus = 1 and so.status not in ('Closed', 'Completed') and ifnull(so.custom_student, '') != ''""", as_dict=True)
 	for r in rows:
 		out = flt(r.outstanding) if r.outstanding is not None else flt(r.payment_amount) - flt(r.paid_amount)
 		open_ones = frappe.get_all("Student Follow-Up", filters={"purpose": "Fee", "sales_order": r.sales_order, "payment_term": r.payment_term, "status": "Open"}, fields=["name", "fee_kind"])
@@ -187,7 +187,7 @@ def get_reference_followups(reference_type, reference_name):
 	if reference_type == "Student":
 		nxt = frappe.db.sql("""select ps.payment_term, ps.due_date, (ps.payment_amount - ifnull(ps.paid_amount, 0)) pending
 			from `tabPayment Schedule` ps join `tabSales Order` so on so.name = ps.parent
-			where so.student = %s and so.docstatus = 1 and (ps.payment_amount - ifnull(ps.paid_amount, 0)) > 0.5
+			where so.custom_student = %s and so.docstatus = 1 and (ps.payment_amount - ifnull(ps.paid_amount, 0)) > 0.5
 			order by ps.due_date limit 1""", reference_name, as_dict=True)
 		if nxt:
 			n = nxt[0]

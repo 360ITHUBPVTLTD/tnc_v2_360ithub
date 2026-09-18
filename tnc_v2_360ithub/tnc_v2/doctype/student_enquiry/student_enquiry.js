@@ -135,7 +135,7 @@ frappe.ui.form.on("Student Enquiry", {
 				{ fieldname: "to_time", fieldtype: "Time", label: __("To Time"), reqd: 1, onchange: () => show_duration() },
 				{ fieldname: "duration_html", fieldtype: "HTML" },
 				{ fieldname: "sb_fee", fieldtype: "Section Break", label: __("Demo fee") },
-				{ fieldname: "collect_fee", fieldtype: "Check", label: __("Collect demo fee now"), default: 0 },
+				{ fieldname: "collect_fee", fieldtype: "Check", label: __("Collect demo fee now"), default: (frm.__demo_fee_amount || 500) > 0 ? 1 : 0 },
 				{ fieldname: "fee_amount", fieldtype: "Currency", label: __("Amount"), depends_on: "collect_fee", default: frm.__demo_fee_amount || 500 },
 				{ fieldname: "cb_fee", fieldtype: "Column Break" },
 				{ fieldname: "mode_of_payment", fieldtype: "Link", label: __("Mode"), options: "Mode of Payment", default: "Cash", depends_on: "collect_fee", get_query: () => ({ filters: { enabled: 1 } }) },
@@ -144,9 +144,19 @@ frappe.ui.form.on("Student Enquiry", {
 			primary_action_label: __("Schedule"),
 			primary_action(values) {
 				if (values.collect_fee && values.mode_of_payment !== "Cash" && !values.reference_no) { frappe.msgprint(__("Reference number is required for {0}", [values.mode_of_payment])); return; }
+				if (d.__busy) return;
+				if (values.collect_fee && !d.__fee_confirmed) {
+					frappe.confirm(__("Have you received the demo fee of {0} by {1}?", [`<b>${format_currency(values.fee_amount, "INR")}</b>`, values.mode_of_payment || "Cash"]),
+						() => { d.__fee_confirmed = true; d.get_primary_btn().click(); },
+						() => { d.set_value("collect_fee", 0); frappe.show_alert({ message: __("Demo fee not collected. You can collect it later from the Demo Class."), indicator: "orange" }); });
+					return;
+				}
+				d.__busy = true; d.get_primary_btn().prop("disabled", true);
 				frappe.call({
 					method: "tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry.schedule_demo",
 					args: { enquiry: frm.doc.name, ...values },
+					freeze: true, freeze_message: __("Scheduling..."),
+					error: () => { d.__busy = false; d.get_primary_btn().prop("disabled", false); },
 					callback: () => { d.hide(); frm.reload_doc(); frappe.show_alert({ message: __("Demo scheduled"), indicator: "green" }); },
 				});
 			},

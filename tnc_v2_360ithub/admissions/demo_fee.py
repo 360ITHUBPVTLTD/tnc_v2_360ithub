@@ -57,7 +57,7 @@ def collect(demo, amount=None, mode_of_payment="Cash", reference_no=None, postin
 	item = ensure_demo_fee_item(company)
 	posting_date = posting_date or nowdate()
 	si = frappe.get_doc({"doctype": "Sales Invoice", "customer": customer, "company": company, "posting_date": posting_date, "set_posting_time": 1, "due_date": posting_date,
-		"student": enq.student, "remarks": _("Demo fee for demo class {0} on {1}").format(doc.name, frappe.format_value(doc.demo_date, {"fieldtype": "Date"})),
+		"custom_student": enq.student, "remarks": _("Demo fee for demo class {0} on {1}").format(doc.name, frappe.format_value(doc.demo_date, {"fieldtype": "Date"})),
 		"items": [{"item_code": item, "item_name": _("Demo Fee"), "description": _("Demo class fee — {0}, {1}").format(doc.batch or "", frappe.format_value(doc.demo_date, {"fieldtype": "Date"})), "qty": 1, "rate": amount, "uom": "Nos"}]})
 	si.flags.ignore_permissions = True
 	si.run_method("set_missing_values"); si.run_method("calculate_taxes_and_totals")
@@ -128,7 +128,7 @@ def refund(demo, mode_of_payment="Cash", reference_no=None, mark_lost=0, lost_re
 	pe.flags.ignore_permissions = True
 	pe.setup_party_account_field(); pe.set_missing_values()
 	pe.insert(); pe.submit()
-	doc.db_set({"demo_fee_status": "Refunded"})
+	doc.db_set({"demo_fee_status": "Refunded", "demo_fee_credit_note": cn.name, "demo_fee_refund_payment": pe.name, "demo_fee_refunded_on": nowdate()})
 	doc.add_comment("Info", _("Demo fee refunded by {0}: credit note {1}, payment {2}").format(mode_of_payment, cn.name, pe.name))
 	lost = None
 	if frappe.utils.cint(mark_lost) and doc.enquiry and frappe.db.get_value("Student Enquiry", doc.enquiry, "status") not in ("Converted", "Lost"):

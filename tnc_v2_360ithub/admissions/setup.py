@@ -286,7 +286,7 @@ def stamp_payment_terms_on_orders():
 	the terms existed (dev site only; new orders get them at creation)."""
 	ensure_payment_terms()
 	n = 0
-	for so in frappe.get_all("Sales Order", filters={"student_batch_enrollment": ["is", "set"]}, pluck="name"):
+	for so in frappe.get_all("Sales Order", filters={"custom_student_batch_enrollment": ["is", "set"]}, pluck="name"):
 		rows = frappe.get_all("Payment Schedule", filters={"parent": so, "parenttype": "Sales Order"}, fields=["name", "idx", "payment_term"], order_by="idx")
 		for r in rows:
 			if not r.payment_term:
@@ -298,7 +298,7 @@ def stamp_payment_terms_on_orders():
 def fix_enrolment_orders_delivery_flag():
 	"""Dev-site repair: enrolment Sales Orders made before skip_delivery_note was set.
 	Sets the flag and recomputes the status (To Bill / Completed)."""
-	for name in frappe.get_all("Sales Order", filters={"student_batch_enrollment": ["is", "set"], "docstatus": 1, "skip_delivery_note": 0}, pluck="name"):
+	for name in frappe.get_all("Sales Order", filters={"custom_student_batch_enrollment": ["is", "set"], "docstatus": 1, "skip_delivery_note": 0}, pluck="name"):
 		frappe.db.set_value("Sales Order", name, "skip_delivery_note", 1, update_modified=False)
 		so = frappe.get_doc("Sales Order", name)
 		so.set_status(update=True)

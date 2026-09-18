@@ -44,7 +44,7 @@ frappe.ui.form.on("Demo Class", {
 			const amt = format_currency(frm.doc.demo_fee_amount, "INR");
 			const msg = { Paid: __("Demo fee {0} paid on {1}", [amt, frappe.datetime.str_to_user(frm.doc.demo_fee_paid_on)]),
 				Adjusted: __("Demo fee {0} adjusted in enrolment {1}", [amt, frm.doc.demo_fee_adjusted_in]),
-				Refunded: __("Demo fee {0} refunded", [amt]) }[st];
+				Refunded: __("Demo fee {0} refunded on {1}", [amt, frappe.datetime.str_to_user(frm.doc.demo_fee_refunded_on)]) + (frm.doc.demo_fee_refund_payment ? ` · <a href="/app/payment-entry/${frm.doc.demo_fee_refund_payment}">${__("refund payment")}</a> · <a href="/app/sales-invoice/${frm.doc.demo_fee_credit_note}">${__("credit note")}</a>` : "") }[st];
 			frm.dashboard.set_headline(`<span class="indicator-pill ${st === "Refunded" ? "gray" : "green"} no-indicator-dot">${st}</span> ${msg}`);
 			if (frm.doc.demo_fee_invoice) frm.add_custom_button(__("Print Receipt"), () => window.open(`/printview?doctype=Sales%20Invoice&name=${encodeURIComponent(frm.doc.demo_fee_invoice)}&format=Fee%20Receipt&no_letterhead=0`, "_blank"));
 		}

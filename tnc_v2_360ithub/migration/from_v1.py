@@ -699,8 +699,11 @@ def step_naming_rules():
 	doctypes that exist here, with live counters, so new records continue the
 	same sequences."""
 	s = "naming_rules"
+	# v1's admission doctypes share names with v2's redesigned ones but number differently (STU-ENQ- vs ENQ-);
+	# v2's own naming series rule these, so v1's rules must not be copied for them
+	V2_OWN = {"Student", "Student Enquiry", "Student Follow-Up", "Course", "Student Batch", "Demo Class", "Admission Form", "Student Batch Enrollment", "WhatsApp Message Log"}
 	for r in v1_list("Document Naming Rule", fields=("name", "document_type", "prefix", "prefix_digits", "counter", "disabled", "priority", "creation", "modified", "owner", "modified_by")):
-		if not frappe.db.exists("DocType", r["document_type"]) or r["document_type"] == "WhatsApp Message Log":
+		if not frappe.db.exists("DocType", r["document_type"]) or r["document_type"] in V2_OWN:
 			# v2's WhatsApp Message Log is a new autoincrement doctype, not v1's WA-Log- table
 			_count(s, "skipped_no_doctype")
 			continue
@@ -773,6 +776,39 @@ def step_accounts():
 		v2.add(r["name"])
 
 
+def step_sales_orders():
+	"""v1's Sales Orders (history: one cancelled order). Inserted with v1's items and dates,
+	then given v1's docstatus, so the list looks the same on v2. Items unknown to v2 are created
+	as plain service items."""
+	s = "sales_orders"
+	items = v1_children("Sales Order Item", "Sales Order", "items")
+	taxes = v1_children("Sales Taxes and Charges", "Sales Order", "taxes")
+	for r in v1_list("Sales Order"):
+		if frappe.db.exists("Sales Order", r["name"]):
+			_count(s, "skipped_exists"); continue
+		if not frappe.db.exists("Customer", r.get("customer")):
+			_count(s, "skipped_no_customer"); continue
+		rows = _child_rows(items.get(r["name"]), drop=("sales_order_item", "prevdoc_docname", "quotation_item"))
+		for it in rows:
+			if it.get("item_code") and not frappe.db.exists("Item", it["item_code"]):
+				from tnc_v2_360ithub.admissions.setup import ITEM_GROUP, ensure_item_group
+				ensure_item_group()
+				frappe.get_doc({"doctype": "Item", "item_code": it["item_code"], "item_name": it.get("item_name") or it["item_code"], "item_group": ITEM_GROUP, "stock_uom": "Nos", "is_stock_item": 0}).insert(ignore_permissions=True)
+				_count(s, "item_created")
+		data = _clean(r, drop=("items", "taxes", "payment_schedule", "sales_team", "packed_items", "pricing_rules", "amended_from", "fee_schedule", "custom_batch_enrollment_id", "custom_tax_type", "custom_sndfbvlnkwef"))
+		data["items"] = rows
+		data["taxes"] = _child_rows(taxes.get(r["name"]))
+		data["skip_delivery_note"] = 1
+		target = cint(r.get("docstatus"))
+		doc = insert_doc(s, "Sales Order", r, data, docstatus=1 if target else None, ignore_links=True)
+		if doc and target == 2:
+			try:
+				doc.reload(); doc.flags.ignore_permissions = True; doc.cancel()
+			except Exception:
+				frappe.db.set_value("Sales Order", doc.name, {"docstatus": 2, "status": "Cancelled"}, update_modified=False)
+			_count(s, "cancelled_like_v1")
+
+
 def step_fix_teacher_suppliers():
 	"""Point every Teacher at the Supplier v1 links it to (after step_masters has
 	created them), and drop the differently named Suppliers v2's Teacher hook made
@@ -795,7 +831,7 @@ def step_fix_teacher_suppliers():
 			_count(s, "removed_v2_only_supplier")
 
 
-def step_user_permissions():
+def step_user_permissions(prune=False):
 	"""Copy v1's User Permission rows (Company, Employee, Teacher) where user and
 	target exist on v2. Replaces the heuristic back-fill in setup_helpers."""
 	s = "user_permissions"
@@ -811,10 +847,11 @@ def step_user_permissions():
 	# rows v2 grew that v1 never had (heuristic back-fill, hooks); keep rows of users unknown to v1 (local test users)
 	v1keys = {(r["user"], r["allow"], r["for_value"]) for r in v1_list("User Permission", fields=("name", "user", "allow", "for_value"))}
 	v1users = {r["name"] for r in v1_list("User", fields=("name",))}
-	for row in frappe.get_all("User Permission", fields=["name", "user", "allow", "for_value"]):
-		if row.user in v1users and (row.user, row.allow, row.for_value) not in v1keys:
-			frappe.delete_doc("User Permission", row.name, force=True, ignore_permissions=True)
-			_count(s, "removed_v2_only")
+	if prune:
+		for row in frappe.get_all("User Permission", fields=["name", "user", "allow", "for_value"]):
+			if row.user in v1users and (row.user, row.allow, row.for_value) not in v1keys:
+				frappe.delete_doc("User Permission", row.name, force=True, ignore_permissions=True)
+				_count(s, "removed_v2_only")
 
 
 def step_fix_contacts():
@@ -850,19 +887,20 @@ def step_notification_logs():
 		insert_doc(s, "Notification Log", r, data, ignore_links=True)
 
 
-def step_expense_types():
+def step_expense_types(prune=False):
 	"""v1 has five Expense Claim Types; drop ERPNext's unused defaults on v2 so the
 	master matches. Types referenced by a claim are kept."""
 	s = "expense_types"
 	v1 = {r["name"] for r in v1_list("Expense Claim Type", fields=("name",))}
-	for name in frappe.get_all("Expense Claim Type", pluck="name"):
-		if name in v1:
-			continue
-		if frappe.db.exists("Expense Claim Detail", {"expense_type": name}):
-			_count(s, "kept_in_use")
-			continue
-		frappe.delete_doc("Expense Claim Type", name, force=True, ignore_permissions=True)
-		_count(s, "removed_default")
+	if prune:
+		for name in frappe.get_all("Expense Claim Type", pluck="name"):
+			if name in v1:
+				continue
+			if frappe.db.exists("Expense Claim Detail", {"expense_type": name}):
+				_count(s, "kept_in_use")
+				continue
+			frappe.delete_doc("Expense Claim Type", name, force=True, ignore_permissions=True)
+			_count(s, "removed_default")
 
 
 def step_accounting():
@@ -961,6 +999,64 @@ def cleanup_test_data(commit=True):
 	print(f"removed {removed} test document(s)")
 
 
+# doctypes where v2 must hold exactly v1's records: whatever v1 no longer has is removed here too.
+# Names v2 needs for its own modules are kept (fee items and accounts the admission module created).
+MIRROR_DOCTYPES = ["Sales Invoice", "Sales Order", "User Permission", "Employee Checkin", "Leave Allocation", "Expense Claim", "Payment Entry", "Purchase Invoice", "Journal Entry",
+	"Employee", "Teacher", "Supplier", "Customer", "Contact", "Mode of Payment", "Account", "Item", "User"]
+MIRROR_KEEP = {
+	"User": {"Administrator", "Guest"},
+	"Mode of Payment": {"Cash", "UPI", "Card", "Bank Transfer", "Cheque"},  # fee collection modes the admission module sets up
+	"Account": {"Demo Fee Income - IND"},
+	"Item": {"Demo Fee"},
+}
+
+
+def _mirror_delete(dt, name, s):
+	"""Cancel + delete one v2 record, clearing what blocks the delete the way an admin would."""
+	try:
+		doc = frappe.get_doc(dt, name)
+	except frappe.DoesNotExistError:
+		return
+	try:
+		if getattr(doc, "docstatus", 0) == 1:
+			doc.flags.ignore_permissions = True
+			doc.flags.ignore_links = True
+			doc.cancel()
+	except Exception:
+		frappe.db.set_value(dt, name, "docstatus", 2, update_modified=False)
+		for ledger in ("GL Entry", "Payment Ledger Entry"):
+			frappe.db.sql(f"delete from `tab{ledger}` where voucher_type=%s and voucher_no=%s", (dt, name))
+	frappe.flags.ignore_links = True
+	try:
+		frappe.delete_doc(dt, name, force=True, ignore_permissions=True, ignore_missing=True, ignore_on_trash=True, delete_permanently=True)
+		_count(s, "removed")
+	except frappe.LinkExistsError as e:
+		_count(s, "kept_linked")
+		frappe.log_error(title=f"mirror v1: {dt} {name} still linked", message=str(e)[:500])
+	finally:
+		frappe.flags.ignore_links = False
+
+
+def mirror_v1(doctypes=None, commit=True):
+	"""Remove v2 records that v1 does not have (v1 is the source of truth until cutover).
+	Fee items / accounts the admission module created are kept; test data goes."""
+	s = "mirror_v1"
+	for dt in doctypes or MIRROR_DOCTYPES:
+		v1names = {r["name"] for r in v1_list(dt, fields=("name",))}
+		keep = MIRROR_KEEP.get(dt, set())
+		extra = [n for n in frappe.get_all(dt, pluck="name") if n not in v1names and n not in keep]
+		if dt == "Account":  # only leaf accounts without entries can go; groups and ledgers with entries stay
+			extra = [n for n in extra if not frappe.db.get_value("Account", n, "is_group") and not frappe.db.exists("GL Entry", {"account": n})]
+		if dt == "Item":
+			extra = [n for n in extra if not n.startswith("Fee - ")]
+		for n in extra:
+			_mirror_delete(dt, n, s)
+			print(f"removed {dt} {n}")
+	if commit:
+		frappe.db.commit()
+	print(json.dumps(_stats.get(s, {}), indent=1))
+
+
 STEPS = [
 	("reference", step_reference),
 	("naming_rules", step_naming_rules),
@@ -986,6 +1082,7 @@ STEPS = [
 	("checkins", step_checkins),
 	("notification_logs", step_notification_logs),
 	("accounting", step_accounting),
+	("sales_orders", step_sales_orders),
 ]
 
 
@@ -1036,7 +1133,7 @@ COMPARE_ALL = [
 	# transactions
 	"Task", "Recurring Task", "Comment", "File", "Teachers Timesheet", "Purchase Invoice", "Payment Entry",
 	"Purchase Order", "Journal Entry", "Expense Claim", "Leave Application", "Attendance", "Attendance Request",
-	"Employee Checkin", "Notification Log", "Event", "Lead", "Student",
+	"Employee Checkin", "Notification Log", "Event", "Lead", "Student", "Sales Order", "Sales Invoice",
 ]
 
 

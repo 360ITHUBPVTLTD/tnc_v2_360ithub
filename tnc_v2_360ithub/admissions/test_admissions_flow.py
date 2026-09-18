@@ -107,7 +107,7 @@ def run_tests():
 		assert en.sales_order, "submit must create the Sales Order"
 		assert frappe.db.get_value("Student", student.name, "status") == "Active", "first enrolment makes the student Active"
 		so = frappe.get_doc("Sales Order", en.sales_order)
-		assert so.docstatus == 1 and so.customer == student.customer and so.student == student.name and so.student_batch_enrollment == en.name
+		assert so.docstatus == 1 and so.customer == student.customer and so.custom_student == student.name and so.custom_student_batch_enrollment == en.name
 		assert len(so.items) == 1 and so.items[0].item_code == course.fee_item and flt(so.items[0].rate) == 28000
 		assert flt(so.discount_amount) == 2800 and flt(so.net_total) == 25200, f"net {so.net_total}"
 		assert so.taxes and flt(so.grand_total) > 25200, "GST applied"
@@ -153,9 +153,9 @@ def run_tests():
 		assert flt(so.payment_schedule[0].paid_amount) == inst1 and flt(so.payment_schedule[1].paid_amount) == 0, "first instalment paid, second untouched"
 		si1 = frappe.get_doc("Sales Invoice", r1["sales_invoice"])
 		assert si1.docstatus == 1 and abs(flt(si1.grand_total) - inst1) < 0.05 and flt(si1.outstanding_amount) < 0.05, f"receipt equals amount and is settled: {si1.grand_total} / {si1.outstanding_amount}"
-		assert si1.student == student.name and si1.items[0].sales_order == so.name and si1.taxes, "receipt linked to order, GST at receipt"
+		assert si1.custom_student == student.name and si1.items[0].sales_order == so.name and si1.taxes, "receipt linked to order, GST at receipt"
 		pe1 = frappe.get_doc("Payment Entry", r1["payment_entry"])
-		assert pe1.docstatus == 1 and pe1.mode_of_payment == "Cash" and pe1.student == student.name
+		assert pe1.docstatus == 1 and pe1.mode_of_payment == "Cash" and pe1.custom_student == student.name
 		assert pe1.references[0].reference_name in (so.name, si1.name), "payment stays linked to the order or its receipt"
 		r2 = receive_payment(so.name, 3000, "UPI", reference_no="UPI-TEST-1", posting_date=today())
 		so.reload()
@@ -251,6 +251,14 @@ def run_tests():
 		assert n_after == n_before + 1, "one open Demo follow-up after the demo result"
 		demo_f.result = "Not Attended"; demo_f.save(ignore_permissions=True)
 		assert frappe.db.count("Student Follow-Up", {"reference_name": enq3.name, "purpose": "Demo", "status": "Open"}) == n_after, "no duplicate follow-up"
+		# a second open demo for the same enquiry is refused (double-click safety)
+		enq_d = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Double Click", "mobile": "9000000701", "source": "Walk-in", "counsellor": "Administrator"}).insert()
+		frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_d.name, "batch": batch.name, "demo_date": today(), "from_time": "11:00:00", "to_time": "12:00:00", "result": "Scheduled"}).insert()
+		try:
+			frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_d.name, "batch": batch.name, "demo_date": today(), "from_time": "11:00:00", "to_time": "12:00:00", "result": "Scheduled"}).insert()
+			raise AssertionError("second scheduled demo must be refused")
+		except frappe.DuplicateEntryError:
+			pass
 		# demo fee: collected at the demo, deducted on enrolment, refundable while Paid
 		from tnc_v2_360ithub.admissions import demo_fee
 		frappe.db.set_single_value("TNC Settings", {"demo_fee_amount": 500, "demo_fee_adjust": 1}); frappe.clear_cache(doctype="TNC Settings")

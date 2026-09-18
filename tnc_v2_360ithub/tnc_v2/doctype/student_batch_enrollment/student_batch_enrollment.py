@@ -160,9 +160,9 @@ class StudentBatchEnrollment(Document):
 			"delivery_date": batch.actual_ending_date or batch.starting_date or self.enrollment_date or nowdate(),
 			"company": frappe.defaults.get_global_default("company") or frappe.db.get_single_value("Global Defaults", "default_company"),
 			"skip_delivery_note": 1,  # a fee is not delivered; order goes To Bill -> Completed as receipts come in
-			"student": self.student,
-			"student_batch_enrollment": self.name,
-			"student_batch": self.batch,
+			"custom_student": self.student,
+			"custom_student_batch_enrollment": self.name,
+			"custom_student_batch": self.batch,
 			"items": [{"item_code": item, "item_name": f"{course.course_name} - {batch.batch_name}", "description": f"Course fee: {course.course_name}, batch {batch.batch_name}",
 				"qty": 1, "rate": flt(self.standard_fee), "uom": "Nos", "delivery_date": batch.actual_ending_date or batch.starting_date or self.enrollment_date or nowdate()}],
 		})
