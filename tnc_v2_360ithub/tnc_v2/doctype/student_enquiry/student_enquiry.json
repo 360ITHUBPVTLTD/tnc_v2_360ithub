@@ -110,6 +110,7 @@
    "options": "Student Batch"
   },
   {
+   "depends_on": "eval:doc.batch_interested",
    "fetch_from": "batch_interested.course",
    "fetch_if_empty": 1,
    "fieldname": "course_interested",
@@ -118,16 +119,17 @@
    "in_standard_filter": 1,
    "label": "Course Interested",
    "options": "Course",
-   "read_only_depends_on": "eval:doc.batch_interested"
+   "read_only": 1
   },
   {
+   "depends_on": "eval:doc.batch_interested",
    "fetch_from": "batch_interested.mode",
    "fetch_if_empty": 1,
    "fieldname": "preferred_mode",
    "fieldtype": "Select",
    "label": "Preferred Mode",
    "options": "\nOffline\nOnline",
-   "read_only_depends_on": "eval:doc.batch_interested"
+   "read_only": 1
   },
   {
    "fieldname": "source",
@@ -355,7 +357,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-16 17:00:00.000000",
+ "modified": "2026-09-18 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Student Enquiry",

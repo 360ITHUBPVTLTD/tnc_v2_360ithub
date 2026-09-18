@@ -186,9 +186,9 @@ def _paid_against_order(sales_order):
 def get_enquiry_overview(enquiry):
 	doc = frappe.get_doc("Student Enquiry", enquiry)
 	doc.check_permission("read")
-	demos = frappe.get_all("Demo Class", filters={"enquiry": enquiry}, fields=["name", "demo_date", "from_time", "to_time", "batch", "result", "counsellor_rating", "student_rating", "rated_on", "rating_sent_on", "demo_fee_status", "demo_fee_amount"], order_by="demo_date desc")
+	demos = frappe.get_all("Demo Class", filters={"enquiry": enquiry}, fields=["name", "demo_date", "from_time", "to_time", "batch", "result", "counsellor_rating", "student_rating", "rated_on", "rating_sent_on", "demo_fee_status", "demo_fee_amount"], order_by="demo_date desc, from_time desc, creation desc")
 	fups = frappe.get_all("Student Follow-Up", filters={"reference_type": "Student Enquiry", "reference_name": enquiry},
-		fields=["name", "follow_up_date", "followup_type", "notes", "next_follow_up_date", "status", "done_by"], order_by="follow_up_date desc")
+		fields=["name", "follow_up_date", "followup_type", "notes", "next_follow_up_date", "status", "done_by"], order_by="follow_up_date desc, creation desc")
 	kinds = {"Scheduled": "orange", "Attended": "green", "Not Attended": "red", "Cancelled": "gray"}
 	def _slot(d):
 		if not d.from_time:

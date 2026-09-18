@@ -54,7 +54,7 @@ def receive_payment(sales_order, amount, mode_of_payment, reference_no=None, ref
 	close_paid_followups(so.name)
 	pending_after, paid_after = pending_on_order(so)
 	return {"payment_entry": pe.name, "sales_invoice": si.name, "paid": paid_after, "pending": pending_after,
-		"student": so.get("student"), "enrollment": so.get("student_batch_enrollment")}
+		"student": so.get("custom_student"), "enrollment": so.get("custom_student_batch_enrollment")}
 
 
 def _make_payment_entry(so, amount, mode, reference_no, reference_date, posting_date, remarks):
@@ -72,7 +72,7 @@ def _make_payment_entry(so, amount, mode, reference_no, reference_date, posting_
 	pe.reference_no = reference_no or f"{mode} {posting_date}"
 	pe.reference_date = reference_date
 	pe.remarks = remarks or _("Fee received against {0}").format(so.name)
-	pe.student = so.get("student")
+	pe.custom_student = so.get("custom_student")
 	# one reference row per instalment, earliest due first, so ERPNext marks the schedule rows paid
 	pe.set("references", [])
 	remaining = flt(amount)
@@ -106,7 +106,7 @@ def _make_receipt_invoice(so, amount, pe, posting_date, remarks):
 		"plc_conversion_rate": so.plc_conversion_rate, "conversion_rate": so.conversion_rate, "ignore_pricing_rule": 1,
 		"taxes_and_charges": so.taxes_and_charges, "tax_category": so.tax_category, "place_of_supply": so.get("place_of_supply"),
 		"customer_address": so.customer_address, "shipping_address_name": so.shipping_address_name, "contact_person": so.contact_person,
-		"cost_center": so.get("cost_center"), "student": so.get("student"),
+		"cost_center": so.get("cost_center"), "custom_student": so.get("custom_student"),
 		"remarks": _("Towards {0}").format(", ".join(r.payment_term for r in pe.references if r.payment_term) or so.name) + (f" — {remarks}" if remarks else ""),
 		"update_stock": 0, "allocate_advances_automatically": 0,
 	})

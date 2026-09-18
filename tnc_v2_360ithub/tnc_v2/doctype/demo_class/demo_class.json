@@ -31,6 +31,9 @@
   "demo_fee_mode",
   "demo_fee_invoice",
   "demo_fee_payment",
+  "demo_fee_credit_note",
+  "demo_fee_refund_payment",
+  "demo_fee_refunded_on",
   "demo_fee_adjusted_in",
   "sb_rating",
   "counsellor_rating",
@@ -176,15 +179,38 @@
   {
    "fieldname": "demo_fee_invoice",
    "fieldtype": "Link",
-   "label": "Receipt",
+   "label": "Fee Receipt (Sales Invoice)",
    "options": "Sales Invoice",
    "read_only": 1
   },
   {
    "fieldname": "demo_fee_payment",
    "fieldtype": "Link",
-   "label": "Payment Entry",
+   "label": "Fee Received (Payment Entry)",
    "options": "Payment Entry",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.demo_fee_credit_note",
+   "fieldname": "demo_fee_credit_note",
+   "fieldtype": "Link",
+   "label": "Refund Credit Note (Sales Invoice)",
+   "options": "Sales Invoice",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.demo_fee_refund_payment",
+   "fieldname": "demo_fee_refund_payment",
+   "fieldtype": "Link",
+   "label": "Refund Paid (Payment Entry)",
+   "options": "Payment Entry",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.demo_fee_refunded_on",
+   "fieldname": "demo_fee_refunded_on",
+   "fieldtype": "Date",
+   "label": "Refunded On",
    "read_only": 1
   },
   {
@@ -253,7 +279,7 @@
  "is_submittable": 0,
  "istable": 0,
  "links": [],
- "modified": "2026-09-16 17:00:00.000000",
+ "modified": "2026-09-18 11:30:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Demo Class",
