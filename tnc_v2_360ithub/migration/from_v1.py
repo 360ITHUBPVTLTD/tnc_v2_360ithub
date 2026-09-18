@@ -776,6 +776,79 @@ def step_accounts():
 		v2.add(r["name"])
 
 
+# records v1 edited after they were first copied: refresh them field by field, keeping v1's modified stamp
+REFRESH_DOCTYPES = {
+	# doctype: (child tables to replace, fields never overwritten)
+	"Task": ({"other_assignees": "User Multiselect Clarity"}, ()),
+	"Recurring Task": ({}, ()),
+	"Teachers Timesheet": ({}, ()),
+	"Teacher": ({"teachers_activity_type": "Teachers Activity Type"}, ()),
+	"Employee": ({}, ()),
+	"User": ({}, ("api_key", "api_secret", "password", "last_login", "last_active", "login_after", "login_before", "user_image", "roles", "form_navigation_buttons")),
+	"Customer": ({}, ()),
+	"Supplier": ({}, ()),
+	"Contact": ({"email_ids": "Contact Email", "phone_nos": "Contact Phone", "links": "Dynamic Link"}, ()),
+	"Comment": ({}, ()),
+	"Expense Claim": ({}, ()),
+	"Purchase Invoice": ({}, ()),
+	"Journal Entry": ({}, ("ineligibility_reason",)),
+	"Payment Entry": ({}, ("paid_from_account_type", "paid_to_account_type")),
+	"Leave Type": ({}, ()),
+	"Shift Type": ({}, ()),
+	"Holiday List": ({}, ()),
+	"Letter Head": ({}, ()),
+	"Company": ({}, ()),
+	"Item": ({}, ()),
+	"Department": ({}, ("lft", "rgt", "old_parent")),
+	"Designation": ({}, ()),
+	"Account": ({}, ("lft", "rgt", "old_parent")),
+	"Cost Center": ({}, ("lft", "rgt", "old_parent")),
+}
+
+
+def step_refresh_changed():
+	"""Every v1 row of REFRESH_DOCTYPES is compared field by field with v2's copy and overwritten
+	where anything differs (status, names, dates, subject, ...). "Exists" never means "same":
+	a v2-made record that took the same number as a later v1 record is replaced by v1's."""
+	s = "refresh"
+	for dt, (children, skip) in REFRESH_DOCTYPES.items():
+		meta = frappe.get_meta(dt)
+		valid = [df.fieldname for df in meta.fields if df.fieldtype not in ("Table", "Table MultiSelect", "Section Break", "Column Break", "Tab Break", "HTML", "Button")
+			and df.fieldname not in skip and frappe.db.has_column(dt, df.fieldname)]
+		v2rows = {r["name"]: r for r in frappe.db.get_all(dt, fields=["name", "modified", "modified_by", "owner", "creation"] + valid, limit=0, as_list=False)}
+		if not v2rows:
+			continue
+		child_rows = {cf: v1_children(cdt, dt, cf) for cf, cdt in children.items()}
+		for r in v1_list(dt):
+			cur = v2rows.get(r["name"])
+			if not cur:
+				continue
+			values = {}
+			for f in valid:
+				x, y = r.get(f), cur.get(f)
+				if x in (None, "") and y in (None, "", 0) and f != "docstatus":
+					continue
+				if x is None:
+					continue  # v1 has nothing here; never write NULL into v2
+				if str(x)[:19] != str(y if y is not None else "")[:19]:
+					values[f] = x
+			stamp_differs = str(r.get("modified") or "")[:19] != str(cur.get("modified") or "")[:19]
+			if not values and not stamp_differs:
+				continue
+			try:
+				if values:
+					frappe.db.set_value(dt, r["name"], values, update_modified=False)
+				for cf, cdt in children.items():
+					frappe.db.delete(cdt, {"parent": r["name"], "parentfield": cf})
+					for idx, row in enumerate(_child_rows(child_rows[cf].get(r["name"])), 1):
+						frappe.get_doc({"doctype": cdt, "parent": r["name"], "parenttype": dt, "parentfield": cf, "idx": idx, **row}).db_insert()
+				_stamp(dt, r["name"], r)
+				_count(s, f"{dt}_refreshed")
+			except Exception as e:
+				_count(s, f"{dt}_failed")
+				frappe.log_error(title=f"v1 refresh: {dt} {r['name']} failed", message=str(e)[:800])
+
+
 def step_sales_orders():
 	"""v1's Sales Orders (history: one cancelled order). Inserted with v1's items and dates,
 	then given v1's docstatus, so the list looks the same on v2. Items unknown to v2 are created
@@ -1001,7 +1074,7 @@ def cleanup_test_data(commit=True):
 
 # doctypes where v2 must hold exactly v1's records: whatever v1 no longer has is removed here too.
 # Names v2 needs for its own modules are kept (fee items and accounts the admission module created).
-MIRROR_DOCTYPES = ["Sales Invoice", "Sales Order", "User Permission", "Employee Checkin", "Leave Allocation", "Expense Claim", "Payment Entry", "Purchase Invoice", "Journal Entry",
+MIRROR_DOCTYPES = ["Sales Invoice", "Sales Order", "WhatsApp Instance", "User Permission", "Employee Checkin", "Leave Allocation", "Expense Claim", "Payment Entry", "Purchase Invoice", "Journal Entry",
 	"Employee", "Teacher", "Supplier", "Customer", "Contact", "Mode of Payment", "Account", "Item", "User"]
 MIRROR_KEEP = {
 	"User": {"Administrator", "Guest"},
@@ -1083,6 +1156,7 @@ STEPS = [
 	("notification_logs", step_notification_logs),
 	("accounting", step_accounting),
 	("sales_orders", step_sales_orders),
+	("refresh", step_refresh_changed),
 ]
 
 
@@ -1282,3 +1356,36 @@ def fix_naming_series(commit=True):
 		frappe.db.commit()
 	print(json.dumps(report, indent=1))
 	return report
+
+
+def compare_fields(doctypes=None, sample=3):
+	"""For each doctype: rows whose fields differ between v1 and v2 (system columns ignored).
+	Prints the count per doctype and a few examples. Returns {doctype: n_differing_rows}."""
+	ignore = set(SYSTEM_KEYS) | {"modified", "modified_by", "creation", "owner", "idx", "_user_tags", "_comments", "_assign", "_liked_by", "docstatus",
+		"lft", "rgt", "old_parent", "is_custom", "form_navigation_buttons", "posting_time", "ineligibility_reason", "paid_from_account_type", "paid_to_account_type",
+		"skip_delivery_note", "api_key", "api_secret", "last_login", "last_active", "last_ip", "login_after", "login_before", "user_image", "gst_hsn_code", "parent_item_group"}
+	out = {}
+	for dt in doctypes or [d for d in COMPARE_ALL if d not in ("File", "Notification Log", "Student")]:
+		if not frappe.db.exists("DocType", dt):
+			continue
+		meta = frappe.get_meta(dt)
+		valid = [df.fieldname for df in meta.fields if df.fieldtype not in ("Table", "Table MultiSelect", "Section Break", "Column Break", "Tab Break", "HTML", "Button")
+			and df.fieldname not in ignore and frappe.db.has_column(dt, df.fieldname)]
+		v2rows = {r["name"]: r for r in frappe.db.get_all(dt, fields=["name"] + valid, limit=0)}
+		bad = []
+		for r in v1_list(dt):
+			cur = v2rows.get(r["name"])
+			if not cur:
+				continue
+			for f in valid:
+				x, y = r.get(f), cur.get(f)
+				if x in (None, "", 0) and y in (None, "", 0):
+					continue
+				if x is None:
+					continue  # v1 empty, v2 filled by a default: not a data difference
+				if str(x)[:19] != str(y if y is not None else "")[:19]:
+					bad.append((r["name"], f, str(x)[:30], str(y)[:30]))
+					break
+		out[dt] = len(bad)
+		print(f"{dt:24} rows differing: {len(bad)}" + (f"   e.g. {bad[:sample]}" if bad else ""))
+	return out

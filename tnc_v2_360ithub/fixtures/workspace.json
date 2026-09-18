@@ -1,7 +1,7 @@
 [
  {
   "charts": [],
-  "content": "[{\"id\":\"gj7NP_T_w4\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">TNC Task</span>\",\"col\":12}},{\"id\":\"gON-aQRr3D\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Overdue Tasks\",\"col\":3}},{\"id\":\"5dmxK7HFOY\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Tasks\",\"col\":3}},{\"id\":\"V8_SIPA1ID\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending for Review Tasks\",\"col\":3}},{\"id\":\"pRD98zirnc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Completed Tasks\",\"col\":3}},{\"id\":\"Bo4icX0Q_N\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Task Dashboard\",\"col\":3}},{\"id\":\"brMqX-2kDG\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"User\",\"col\":3}},{\"id\":\"NhSy28KhUj\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee\",\"col\":3}},{\"id\":\"SAfYsCNy9C\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Teachers Timesheet\",\"col\":3}},{\"id\":\"ww2ZbAVM0b\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Teacher\",\"col\":3}},{\"id\":\"EFGxDQYqEi\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Recurring Task\",\"col\":3}},{\"id\":\"qRU80OI86Q\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WhatsApp Instance\",\"col\":3}}]",
+  "content": "[{\"id\": \"gj7NP_T_w4\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">TNC Task</span>\", \"col\": 12}}, {\"id\": \"gON-aQRr3D\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Overdue Tasks\", \"col\": 3}}, {\"id\": \"5dmxK7HFOY\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending Tasks\", \"col\": 3}}, {\"id\": \"V8_SIPA1ID\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending for Review Tasks\", \"col\": 3}}, {\"id\": \"pRD98zirnc\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Completed Tasks\", \"col\": 3}}, {\"id\": \"Bo4icX0Q_N\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Task Dashboard\", \"col\": 3}}, {\"id\": \"brMqX-2kDG\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"User\", \"col\": 3}}, {\"id\": \"NhSy28KhUj\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Employee\", \"col\": 3}}, {\"id\": \"SAfYsCNy9C\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Teachers Timesheet\", \"col\": 3}}, {\"id\": \"expclm001\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Expense Claim\", \"col\": 3}}, {\"id\": \"ww2ZbAVM0b\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Teacher\", \"col\": 3}}, {\"id\": \"EFGxDQYqEi\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Recurring Task\", \"col\": 3}}, {\"id\": \"qRU80OI86Q\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WhatsApp Instance\", \"col\": 3}}]",
   "custom_blocks": [],
   "docstatus": 0,
   "doctype": "Workspace",
@@ -189,6 +189,13 @@
     "stats_filter": "[]",
     "type": "DocType",
     "url": null
+   },
+   {
+    "color": "Grey",
+    "doc_view": "",
+    "label": "Expense Claim",
+    "link_to": "Expense Claim",
+    "type": "DocType"
    }
   ],
   "title": "TNC Task"
