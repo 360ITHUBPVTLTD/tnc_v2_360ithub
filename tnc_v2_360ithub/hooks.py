@@ -49,7 +49,8 @@ app_include_js = "/assets/tnc_v2_360ithub/js/tnc_admissions.js"
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-doctype_js = {"Sales Order": "admissions/sales_order.js", "Expense Claim": "hr/expense_claim.js"}
+doctype_js = {"Sales Order": "admissions/sales_order.js", "Expense Claim": "hr/expense_claim.js", "Payment Entry": "hr/payment_entry.js"}
+doctype_list_js = {"Expense Claim": "hr/expense_claim_list.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
