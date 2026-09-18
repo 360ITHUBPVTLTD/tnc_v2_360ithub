@@ -1171,6 +1171,12 @@ def mirror_v1(doctypes=None, commit=True):
 	Fee items / accounts the admission module created are kept; test data goes."""
 	s = "mirror_v1"
 	for dt in doctypes or MIRROR_DOCTYPES:
+		if dt == "User Permission":  # random names on both sides: compare by content
+			v1keys = {(r["user"], r["allow"], r["for_value"]) for r in v1_list(dt, fields=("user", "allow", "for_value"))}
+			for r in frappe.get_all(dt, fields=["name", "user", "allow", "for_value"]):
+				if (r.user, r.allow, r.for_value) not in v1keys:
+					_mirror_delete(dt, r.name, s); print(f"removed {dt} {r.user} {r.allow} {r.for_value}")
+			continue
 		v1names = {r["name"] for r in v1_list(dt, fields=("name",))}
 		keep = MIRROR_KEEP.get(dt, set())
 		extra = [n for n in frappe.get_all(dt, pluck="name") if n not in v1names and n not in keep]

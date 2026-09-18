@@ -7,11 +7,23 @@ app posts the claim without one, so the field stayed empty and the claim could
 not be submitted. Fill it server-side from Employee.expense_approver when missing.
 """
 import frappe
+from frappe import _
 
 
 def set_defaults(doc, method=None):
 	if doc.employee and not doc.expense_approver:
 		doc.expense_approver = frappe.db.get_value("Employee", doc.employee, "expense_approver")
+	require_decision_comment(doc)
+
+
+def require_decision_comment(doc):
+	"""Client meeting 17 Sep: approving or rejecting a claim needs a comment, on the web and in the app."""
+	if doc.approval_status not in ("Approved", "Rejected"):
+		return
+	before = doc.get_doc_before_save() if not doc.is_new() else None
+	changed = not before or before.approval_status != doc.approval_status
+	if changed and not (doc.get("custom_approval_comment") or "").strip():
+		frappe.throw(_("Please add a comment for the {0} of this expense claim.").format(_("approval") if doc.approval_status == "Approved" else _("rejection")))
 
 
 def guard_payment_reference(doc, method=None):

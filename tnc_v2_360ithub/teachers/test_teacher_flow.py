@@ -91,6 +91,16 @@ def run_tests():
 		print("  - approve / reject through update_timesheet_status")
 		from tnc_v2_360ithub.tnc_v2.doctype.teacher import teacher as teacher_api
 
+		# approvers come from TNC Settings; a comment is mandatory; others are refused
+		saved_user = frappe.session.user
+		frappe.set_user("Guest")
+		try:
+			teacher_api.update_timesheet_status(ts.name, "Approved", reason="x")
+			raise AssertionError("non-approver must not approve")
+		except frappe.PermissionError:
+			pass
+		finally:
+			frappe.set_user(saved_user)
 		teacher_api.update_timesheet_status(ts.name, "Approved")
 		ts.reload()
 		assert ts.status == "Approved" and ts.approved_by == frappe.session.user and ts.approved_on, (ts.status, ts.approved_by)

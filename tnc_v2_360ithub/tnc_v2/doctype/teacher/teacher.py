@@ -1591,7 +1591,20 @@ from frappe import _
 from frappe.utils import now_datetime
 
 @frappe.whitelist()
+def timesheet_approvers():
+    """Users allowed to approve / reject Teachers Timesheets: the table in TNC Settings, plus Administrator."""
+    users = set(frappe.get_all("Timesheet Approver", filters={"parent": "TNC Settings"}, pluck="user"))
+    users.add("Administrator")
+    return users
+
+
 def update_timesheet_status(name, target_status, reason=None):
+    # 0. Only the approvers listed in TNC Settings may decide (web button and mobile app alike)
+    if target_status in ("Approved", "Rejected"):
+        if frappe.session.user not in timesheet_approvers():
+            frappe.throw(_("Only the timesheet approvers set in TNC Settings can approve or reject timesheets."), frappe.PermissionError)
+        if target_status == "Rejected" and not (reason or "").strip():
+            frappe.throw(_("Please provide a reason for rejection."))
     # 1. Fetch the Timesheet
     ts = frappe.get_doc("Teachers Timesheet", name)
     
