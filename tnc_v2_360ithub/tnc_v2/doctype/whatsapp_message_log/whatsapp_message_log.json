@@ -4,36 +4,153 @@
  "creation": "2026-09-11 11:30:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["channel", "status", "provider", "column_break_1", "recipient_user", "mobile", "sent_on", "reference_section", "reference_doctype", "reference_name", "message_section", "message", "response_section", "response", "error"],
+ "field_order": [
+  "channel",
+  "status",
+  "provider",
+  "column_break_1",
+  "recipient_user",
+  "mobile",
+  "sent_on",
+  "reference_section",
+  "reference_doctype",
+  "reference_name",
+  "message_section",
+  "message",
+  "response_section",
+  "response",
+  "error"
+ ],
  "fields": [
-  {"fieldname": "channel", "fieldtype": "Select", "label": "Channel", "options": "WhatsApp\nFCM", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
-  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Sent\nFailed\nSkipped", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
-  {"fieldname": "provider", "fieldtype": "Data", "label": "Provider", "read_only": 1},
-  {"fieldname": "column_break_1", "fieldtype": "Column Break"},
-  {"fieldname": "recipient_user", "fieldtype": "Link", "label": "Recipient User", "options": "User", "in_list_view": 1, "in_standard_filter": 1},
-  {"fieldname": "mobile", "fieldtype": "Data", "label": "Mobile"},
-  {"fieldname": "sent_on", "fieldtype": "Datetime", "label": "Sent On"},
-  {"fieldname": "reference_section", "fieldtype": "Section Break", "label": "Reference"},
-  {"fieldname": "reference_doctype", "fieldtype": "Link", "label": "Reference DocType", "options": "DocType", "in_standard_filter": 1},
-  {"fieldname": "reference_name", "fieldtype": "Dynamic Link", "label": "Reference Name", "options": "reference_doctype", "in_list_view": 1},
-  {"fieldname": "message_section", "fieldtype": "Section Break", "label": "Message"},
-  {"fieldname": "message", "fieldtype": "Long Text", "label": "Message"},
-  {"fieldname": "response_section", "fieldtype": "Section Break", "label": "Result"},
-  {"fieldname": "response", "fieldtype": "Small Text", "label": "Provider response"},
-  {"fieldname": "error", "fieldtype": "Small Text", "label": "Error"}
+  {
+   "fieldname": "channel",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Channel",
+   "options": "WhatsApp\nFCM",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Sent\nFailed\nSkipped",
+   "reqd": 1
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Data",
+   "label": "Provider",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "recipient_user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Recipient User",
+   "options": "User"
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile"
+  },
+  {
+   "fieldname": "sent_on",
+   "fieldtype": "Datetime",
+   "label": "Sent On"
+  },
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Reference DocType",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Reference Name",
+   "options": "reference_doctype"
+  },
+  {
+   "fieldname": "message_section",
+   "fieldtype": "Section Break",
+   "label": "Message"
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Long Text",
+   "label": "Message"
+  },
+  {
+   "fieldname": "response_section",
+   "fieldtype": "Section Break",
+   "label": "Result"
+  },
+  {
+   "fieldname": "response",
+   "fieldtype": "Small Text",
+   "label": "Provider response"
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error"
+  }
  ],
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-11 11:30:00.000000",
+ "modified": "2026-09-18 14:48:17.646935",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "WhatsApp Message Log",
  "owner": "Administrator",
  "permissions": [
-  {"delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager"},
-  {"export": 1, "print": 1, "read": 1, "report": 1, "role": "TNC Super Admin"},
-  {"read": 1, "report": 1, "role": "TNC Manager"}
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "select": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager"
+  }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
