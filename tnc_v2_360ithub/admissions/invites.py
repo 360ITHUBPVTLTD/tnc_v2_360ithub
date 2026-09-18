@@ -16,9 +16,11 @@ def _key():
 
 
 def site_url():
-	"""Base address for links we send out. The address the staff member's browser used to reach the
-	server wins (https://tncv2.360ithub.com on live), so a stale host_name in the site config can never
-	leak a dev address or a port into a WhatsApp message. Outside a request, Frappe's host_name applies."""
+	"""Base address for links we send out. Nothing is fixed here: the address the staff member's
+	browser used to reach the server wins, whatever the site's domain is today or later, so a stale
+	host_name in the site config can never leak a wrong address or a port into a WhatsApp message.
+	Bare IP addresses are not used because WhatsApp does not make them clickable; then, and outside
+	a request (scheduled jobs), Frappe's configured host_name applies."""
 	import re
 	req = getattr(frappe.local, "request", None)
 	if req is not None:

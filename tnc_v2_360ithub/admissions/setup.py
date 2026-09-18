@@ -28,24 +28,25 @@ def ensure_expense_claim_account():
 
 
 EXPENSE_CLAIM_TYPES = {
-	# type name -> expense account name (without the company suffix). Agreed with Pankaj 16 Sep 2026.
-	"Travel (Ola / Auto / Bus / Train)": "TNC Travelling -EXP",
-	"Ola / Cab": "TNC Ola -EXP",
-	"Porter / Courier": "TNC Porter -EXP",
-	"Food & Refreshment": "TNC Food -EXP",
-	"Water": "TNC Water -EXP",
-	"Stationery & Printing": "TNC Stationery - EXP",
-	"Internet & Mobile Recharge": "TNC Internet -EXP",
-	"Electricity": "TNC Electricity -EXP",
-	"Medical": "TNC Medical -EXP",
+	# type name -> expense account name (without the company suffix). Standard ERPNext accounts:
+	# v1 removed its TNC-specific expense accounts on 16 Sep 2026 and maps its types to these.
+	"Travel (Ola / Auto / Bus / Train)": "Travel Expenses",
+	"Ola / Cab": "Travel Expenses",
+	"Porter / Courier": "Postal Expenses",
+	"Food & Refreshment": "Food Expenses",
+	"Water": "Utility Expenses",
+	"Stationery & Printing": "Print and Stationary",
+	"Internet & Mobile Recharge": "Telephone Expenses",
+	"Electricity": "Utility Expenses",
+	"Medical": "Medical Expenses",
 	"Marketing & Events": "Marketing Expenses",
 	"Repairs & Maintenance": "Office Maintenance Expenses",
 	"Other": "TNC Other -EXP",
-	# v1 names kept so old claims keep their type; accounts corrected from "Other"
-	"Travel & Accommodation": "TNC Travelling -EXP",
+	# v1's own five types, mapped exactly as v1 maps them today
+	"Travel & Accommodation": "Travel Expenses",
 	"Marketing & Program Expenses": "Marketing Expenses",
-	"Office & Administration Expenses": "Administrative Expenses",
-	"Staff Welfare Expenses": "TNC Refreshment -EXP",
+	"Office & Administration Expenses": "Office Maintenance Expenses",
+	"Staff Welfare Expenses": "Staff Welfare Expenses",
 }
 
 

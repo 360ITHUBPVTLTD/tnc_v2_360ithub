@@ -803,10 +803,50 @@ REFRESH_DOCTYPES = {
 	"Designation": ({}, ()),
 	"Account": ({}, ("lft", "rgt", "old_parent")),
 	"Cost Center": ({}, ("lft", "rgt", "old_parent")),
+	"Holiday List": ({"holidays": "Holiday"}, ()),
+	"Leave Allocation": ({}, ()),
+	"Employment Type": ({}, ()),
+	"Role Profile": ({"roles": "Has Role"}, ()),
 }
+
+# v1 Student fields -> v2 Student fields (the schema changed; everything else is not on v1)
+STUDENT_MAP = {"student_name": "student_name", "mobile_number": "mobile", "email": "email", "gender": "gender", "date_of_birth": "date_of_birth",
+	"category": "category", "aadhar_number": "aadhar_number", "state": "state", "district": "district", "nationality": "nationality", "religion": "religion",
+	"residential_address": "address", "permanent_address": "permanent_address", "fathers_name": "fathers_name", "father_occupation": "father_occupation",
+	"father_mobile_no": "father_mobile_no", "mothers_name": "mothers_name", "mother_occupation": "mother_occupation", "mother_mobile_no": "mother_mobile_no",
+	"guardian_name": "guardian_name", "customer_id": "customer"}
+
+
+def refresh_students():
+	"""v1 Student edits since the copy (name, mobile, parents, ...) applied to v2's Student."""
+	s = "refresh"
+	gender = {"Male": "Male", "Female": "Female", "others": "Other", "Others": "Other"}
+	for r in v1_list("Student"):
+		if not frappe.db.exists("Student", r["name"]):
+			continue
+		cur = frappe.db.get_value("Student", r["name"], list(set(STUDENT_MAP.values())), as_dict=True)
+		values = {}
+		for v1f, v2f in STUDENT_MAP.items():
+			x = r.get(v1f)
+			if v1f == "gender":
+				x = gender.get(x or "", x)
+			if v1f == "customer_id" and x and not frappe.db.exists("Customer", x):
+				continue
+			if x in (None, "") or str(x) == str(cur.get(v2f) or ""):
+				continue
+			values[v2f] = x
+		if values:
+			frappe.db.set_value("Student", r["name"], values, update_modified=False)
+			_count(s, "Student_refreshed")
+
 
 
 def step_refresh_changed():
+	refresh_students()
+	_refresh_main()
+
+
+def _refresh_main():
 	"""Every v1 row of REFRESH_DOCTYPES is compared field by field with v2's copy and overwritten
 	where anything differs (status, names, dates, subject, ...). "Exists" never means "same":
 	a v2-made record that took the same number as a later v1 record is replaced by v1's."""
@@ -833,7 +873,23 @@ def step_refresh_changed():
 				if str(x)[:19] != str(y if y is not None else "")[:19]:
 					values[f] = x
 			stamp_differs = str(r.get("modified") or "")[:19] != str(cur.get("modified") or "")[:19]
-			if not values and not stamp_differs:
+			kids_differ = False
+			for cf, cdt in children.items():
+				theirs = sorted(child_rows[cf].get(r["name"]) or [], key=lambda x: x.get("idx") or 0)
+				mine = frappe.db.get_all(cdt, filters={"parent": r["name"], "parentfield": cf}, fields=["*"], order_by="idx asc", limit=0)
+				if len(theirs) != len(mine):
+					kids_differ = True; break
+				for a, b in zip(theirs, mine):
+					for k, x in _clean(a).items():
+						if k in ("name", "parent", "parenttype", "parentfield", "idx") or x in (None, ""):
+							continue
+						if str(x)[:19] != str(b.get(k) if b.get(k) is not None else "")[:19]:
+							kids_differ = True; break
+					if kids_differ:
+						break
+				if kids_differ:
+					break
+			if not values and not stamp_differs and not kids_differ:
 				continue
 			try:
 				if values:
@@ -1386,6 +1442,25 @@ def compare_fields(doctypes=None, sample=3):
 				if str(x)[:19] != str(y if y is not None else "")[:19]:
 					bad.append((r["name"], f, str(x)[:30], str(y)[:30]))
 					break
+		# child rows: same parent, same position, same values
+		for cf, cdt in (REFRESH_DOCTYPES.get(dt, ({}, ()))[0] or {}).items():
+			cmeta = frappe.get_meta(cdt)
+			cvalid = [df.fieldname for df in cmeta.fields if df.fieldtype not in ("Table", "Section Break", "Column Break", "HTML") and frappe.db.has_column(cdt, df.fieldname)]
+			v1kids = v1_children(cdt, dt, cf)
+			for parent, rows in v1kids.items():
+				if parent not in v2rows:
+					continue
+				mine = frappe.db.get_all(cdt, filters={"parent": parent, "parentfield": cf}, fields=cvalid, order_by="idx asc", limit=0)
+				theirs = sorted(rows, key=lambda x: x.get("idx") or 0)
+				if len(mine) != len(theirs):
+					bad.append((parent, f"{cf} rows", len(theirs), len(mine))); continue
+				for a, b in zip(theirs, mine):
+					for f in cvalid:
+						if f in ignore or f in ("name", "parent", "parenttype", "parentfield"): continue
+						x, y = a.get(f), b.get(f)
+						if x in (None, "", 0) and y in (None, "", 0): continue
+						if x is not None and str(x)[:19] != str(y if y is not None else "")[:19]:
+							bad.append((parent, f"{cf}.{f}", str(x)[:30], str(y)[:30])); break
 		out[dt] = len(bad)
 		print(f"{dt:24} rows differing: {len(bad)}" + (f"   e.g. {bad[:sample]}" if bad else ""))
 	return out
