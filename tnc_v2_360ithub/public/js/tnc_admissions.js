@@ -42,17 +42,3 @@ tnc.admissions.receive_payment = function ({ sales_order, amount, label, on_done
 	});
 	d.show();
 };
-
-// Copyright (c) 2026, 360ITHub and contributors
-
-
-// Workspace number cards: tint the box with the card's colour (Frappe 15.94, which v1 runs, did this; 15.120 shows plain white)
-(function tnc_tint_cards() {
-	const tint = () => document.querySelectorAll(".widget.number-widget-box").forEach((box) => {
-		const num = box.querySelector(".widget-content .number"); if (!num) return;
-		const c = num.style.color || getComputedStyle(num).color; if (!c || box.dataset.tinted === c) return;
-		box.dataset.tinted = c; box.style.background = c.replace("rgb(", "rgba(").replace(")", ", 0.08)"); box.style.borderColor = c.replace("rgb(", "rgba(").replace(")", ", 0.25)");
-	});
-	$(document).on("page-change", () => setTimeout(tint, 400));
-	new MutationObserver(() => tint()).observe(document.body, { childList: true, subtree: true });
-})();

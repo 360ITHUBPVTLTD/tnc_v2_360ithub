@@ -31,7 +31,7 @@ required_apps = ["frappe/erpnext", "frappe/hrms", "india_compliance"]
 # include js, css files in header of desk.html
 # app_include_css = "/assets/tnc_v2_360ithub/css/tnc_v2_360ithub.css"
 # app_include_js = "/assets/tnc_v2_360ithub/js/tnc_v2_360ithub.js"
-app_include_js = "/assets/tnc_v2_360ithub/js/tnc_admissions.js"
+app_include_js = "/assets/tnc_v2_360ithub/js/tnc_admissions.js?v=20260921"  # version tag so browsers do not keep an old copy
 
 # include js, css files in header of web template
 # web_include_css = "/assets/tnc_v2_360ithub/css/tnc_v2_360ithub.css"
