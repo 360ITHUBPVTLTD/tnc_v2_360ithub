@@ -59,7 +59,8 @@ def create_form_followups(today=None):
 	admission gets one General follow-up for the counsellor. Never twice; closes when the form arrives."""
 	today = getdate(today or nowdate())
 	created = closed = 0
-	for st in frappe.get_all("Student", filters={"status": "Active", "terms_accepted": 0, "creation": ["<=", add_days(today, -FORM_WAIT_DAYS)]},
+	# only students admitted through v2 (linked to an enquiry) were ever sent a form; v1 students are never chased
+	for st in frappe.get_all("Student", filters={"status": "Active", "terms_accepted": 0, "enquiry": ["is", "set"], "creation": ["<=", add_days(today, -FORM_WAIT_DAYS)]},
 			fields=["name", "student_name", "mobile", "counsellor", "enquiry"]):
 		if frappe.db.exists("Student Follow-Up", {"reference_type": "Student", "reference_name": st.name, "purpose": "General", "status": "Open", "notes": ["like", "Admission form not submitted%"]}):
 			continue
