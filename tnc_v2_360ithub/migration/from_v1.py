@@ -774,6 +774,21 @@ def step_accounts():
 			"account_number": r.get("account_number") or None, "tax_rate": r.get("tax_rate") or 0}
 		insert_doc(s, "Account", r, data)
 		v2.add(r["name"])
+	# Modes of Payment with their default accounts (v1 adds bank-wise modes such as "KOTAK BANK@TNC Edutech")
+	mop_accounts = v1_children("Mode of Payment Account", "Mode of Payment", "accounts")
+	for r in v1_list("Mode of Payment"):
+		rows = [{"company": COMPANY, "default_account": x.get("default_account")} for x in mop_accounts.get(r["name"], []) if frappe.db.exists("Account", x.get("default_account") or "")]
+		data = {"mode_of_payment": r.get("mode_of_payment") or r["name"], "type": r.get("type"), "enabled": cint(r.get("enabled")), "accounts": rows}
+		if frappe.db.exists("Mode of Payment", r["name"]):
+			doc = frappe.get_doc("Mode of Payment", r["name"])
+			have = [(x.company, x.default_account) for x in doc.accounts]
+			if doc.type != data["type"] or cint(doc.enabled) != data["enabled"] or have != [(x["company"], x["default_account"]) for x in rows]:
+				doc.update({"type": data["type"], "enabled": data["enabled"]}); doc.set("accounts", rows)
+				doc.flags.ignore_permissions = True; doc.save(ignore_permissions=True); _stamp("Mode of Payment", doc.name, r); _count(s, "mop_refreshed")
+			else:
+				_count(s, "skipped_exists")
+			continue
+		insert_doc(s, "Mode of Payment", r, data)
 
 
 # records v1 edited after they were first copied: refresh them field by field, keeping v1's modified stamp
@@ -1192,6 +1207,23 @@ def mirror_v1(doctypes=None, commit=True):
 	print(json.dumps(_stats.get(s, {}), indent=1))
 
 
+def step_user_roles():
+	"""Last: make every user's roles exactly v1's. Saving a User re-applies its Role Profile and drops
+	roles added by hand (TNC Teachers on teacher logins, approver roles on accounts), so this runs after refresh."""
+	s = "user_roles"
+	v1 = {(r["parent"], r["role"]) for r in v1_list("Has Role", fields=("parent", "role"), filters=[["parenttype", "=", "User"]], parent="User")}
+	v2 = {tuple(r) for r in frappe.db.sql("select parent, role from `tabHas Role` where parenttype='User'")}
+	for user, role in v1 - v2:
+		if frappe.db.exists("User", user) and frappe.db.exists("Role", role):
+			frappe.get_doc({"doctype": "Has Role", "parent": user, "parenttype": "User", "parentfield": "roles", "role": role}).db_insert()
+			_count(s, "role_added")
+	for user, role in v2 - v1:
+		if user not in ("Administrator", "Guest") and frappe.db.exists("User", {"name": user}) and user in {u for u, _ in v1}:
+			frappe.db.delete("Has Role", {"parent": user, "parenttype": "User", "role": role})
+			_count(s, "role_removed")
+	frappe.clear_cache()
+
+
 STEPS = [
 	("reference", step_reference),
 	("naming_rules", step_naming_rules),
@@ -1219,6 +1251,7 @@ STEPS = [
 	("accounting", step_accounting),
 	("sales_orders", step_sales_orders),
 	("refresh", step_refresh_changed),
+	("user_roles", step_user_roles),
 ]
 
 
