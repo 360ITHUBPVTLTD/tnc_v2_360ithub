@@ -31,8 +31,8 @@ def _assignees(doc):
 	if doc.get("task_owner"):
 		users.add(doc.task_owner)
 	for row in doc.get("other_assignees") or []:
-		if row.get("user"):
-			users.add(row.user)
+		if row.get("user"):  # rows arrive as child documents from the desk and as plain dicts from the mobile app
+			users.add(row.get("user"))
 	return users
 
 
@@ -89,8 +89,8 @@ def on_update(doc, method=None):
 	newly_assigned = set()
 	if old.get("task_owner") != doc.get("task_owner") and doc.get("task_owner"):
 		newly_assigned.add(doc.task_owner)
-	old_users = {r.user for r in old.get("other_assignees") or [] if r.get("user")}
-	new_users = {r.user for r in doc.get("other_assignees") or [] if r.get("user")}
+	old_users = {r.get("user") for r in old.get("other_assignees") or [] if r.get("user")}
+	new_users = {r.get("user") for r in doc.get("other_assignees") or [] if r.get("user")}
 	newly_assigned |= new_users - old_users
 
 	if newly_assigned:
