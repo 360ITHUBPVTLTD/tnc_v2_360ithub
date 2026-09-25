@@ -789,6 +789,17 @@ def step_accounts():
 				_count(s, "skipped_exists")
 			continue
 		insert_doc(s, "Mode of Payment", r, data)
+	# Bank and Bank Account masters (bank-wise accounts TNC added in Sep 2026)
+	for r in v1_list("Bank"):
+		if not frappe.db.exists("Bank", r["name"]):
+			insert_doc(s, "Bank", r, {"bank_name": r.get("bank_name") or r["name"], "swift_number": r.get("swift_number")})
+	for r in v1_list("Bank Account"):
+		if not frappe.db.exists("Bank Account", r["name"]):
+			data = _clean(r)
+			data["company"] = COMPANY if r.get("company") else None
+			if data.get("account") and not frappe.db.exists("Account", data["account"]):
+				data["account"] = None
+			insert_doc(s, "Bank Account", r, data)
 
 
 # records v1 edited after they were first copied: refresh them field by field, keeping v1's modified stamp
@@ -1072,6 +1083,9 @@ def step_accounting():
 			if dt == "Payment Entry":
 				data["references"] = [x for x in data["references"] if frappe.db.exists(x.get("reference_doctype") or "", x.get("reference_name") or "")]
 			ds = cint(r.get("docstatus"))
+			if frappe.db.exists(dt, r["name"]) and ds == 0 and cint(frappe.db.get_value(dt, r["name"], "docstatus")) == 1:
+				# submitted locally while testing; v1 never submitted it: drop and re-copy as draft
+				_drop_submitted(dt, r["name"]); _count(s, "resubmitted_locally_reverted")
 			doc = insert_doc(s, dt, r, data, docstatus=1 if ds else 0)
 			if doc and ds == 2 and doc.docstatus == 1:
 				try:
@@ -1146,7 +1160,8 @@ def cleanup_test_data(commit=True):
 # doctypes where v2 must hold exactly v1's records: whatever v1 no longer has is removed here too.
 # Names v2 needs for its own modules are kept (fee items and accounts the admission module created).
 MIRROR_DOCTYPES = ["Sales Invoice", "Sales Order", "WhatsApp Instance", "User Permission", "Employee Checkin", "Leave Allocation", "Expense Claim", "Payment Entry", "Purchase Invoice", "Journal Entry",
-	"Employee", "Teacher", "Supplier", "Customer", "Contact", "Mode of Payment", "Account", "Item", "User"]
+	"Employee", "Teacher", "Supplier", "Customer", "Contact", "Mode of Payment", "Account", "Item", "User",
+	"Task", "Comment", "Notification Log", "Bank", "Bank Account"]  # Task: the local scheduler used to generate tasks under v1 numbers
 MIRROR_KEEP = {
 	"User": {"Administrator", "Guest"},
 	"Mode of Payment": {"Cash", "UPI", "Card", "Bank Transfer", "Cheque"},  # fee collection modes the admission module sets up
@@ -1224,6 +1239,43 @@ def step_user_roles():
 	frappe.clear_cache()
 
 
+def _drop_submitted(dt, name):
+	"""Remove a locally submitted copy (and its ledger rows) so v1's version can be copied afresh."""
+	frappe.db.delete("GL Entry", {"voucher_no": name}); frappe.db.delete("Payment Ledger Entry", {"voucher_no": name})
+	frappe.db.set_value(dt, name, "docstatus", 2, update_modified=False)
+	frappe.delete_doc(dt, name, force=True, ignore_permissions=True, delete_permanently=True)
+
+
+LEDGERS = ("GL Entry", "Payment Ledger Entry")
+
+
+def step_ledgers():
+	"""General Ledger and Payment Ledger exactly as v1: every row v1 has, none it does not.
+	v2 re-posts documents when copying them, which leaves duplicate or orphan ledger rows behind
+	(deleted test documents, re-submitted copies), so the ledger tables are rebuilt from v1's rows."""
+	s = "ledgers"
+	for dt in LEDGERS:
+		cols = set(frappe.db.get_table_columns(dt))
+		rows = v1_list(dt)
+		frappe.db.delete(dt)
+		for r in rows:
+			data = {k: v for k, v in r.items() if k in cols}
+			if data.get("company"):
+				data["company"] = COMPANY
+			doc = frappe.get_doc(dict(data, doctype=dt))
+			doc.db_insert()
+			_count(s, f"{dt}_rows")
+	frappe.db.commit()
+
+
+def step_purge_side_effects():
+	"""Task hooks fire while tasks are copied and log Skipped WhatsApp attempts; v1's own WhatsApp log
+	table is not carried over, so before cutover v2's log must be empty."""
+	n = frappe.db.count("WhatsApp Message Log")
+	frappe.db.delete("WhatsApp Message Log")
+	_count("purge_side_effects", "whatsapp_log_rows_removed", n)
+
+
 STEPS = [
 	("reference", step_reference),
 	("naming_rules", step_naming_rules),
@@ -1252,6 +1304,8 @@ STEPS = [
 	("sales_orders", step_sales_orders),
 	("refresh", step_refresh_changed),
 	("user_roles", step_user_roles),
+	("ledgers", step_ledgers),
+	("purge_side_effects", step_purge_side_effects),
 ]
 
 
@@ -1303,6 +1357,7 @@ COMPARE_ALL = [
 	"Task", "Recurring Task", "Comment", "File", "Teachers Timesheet", "Purchase Invoice", "Payment Entry",
 	"Purchase Order", "Journal Entry", "Expense Claim", "Leave Application", "Attendance", "Attendance Request",
 	"Employee Checkin", "Notification Log", "Event", "Lead", "Student", "Sales Order", "Sales Invoice",
+	"GL Entry", "Payment Ledger Entry", "Bank", "Bank Account", "Mode of Payment",
 ]
 
 
@@ -1458,7 +1513,7 @@ def compare_fields(doctypes=None, sample=3):
 	Prints the count per doctype and a few examples. Returns {doctype: n_differing_rows}."""
 	ignore = set(SYSTEM_KEYS) | {"modified", "modified_by", "creation", "owner", "idx", "_user_tags", "_comments", "_assign", "_liked_by", "docstatus",
 		"lft", "rgt", "old_parent", "is_custom", "form_navigation_buttons", "posting_time", "ineligibility_reason", "paid_from_account_type", "paid_to_account_type",
-		"skip_delivery_note", "api_key", "api_secret", "last_login", "last_active", "last_ip", "login_after", "login_before", "user_image", "gst_hsn_code", "parent_item_group"}
+		"skip_delivery_note", "api_key", "api_secret", "last_known_versions", "last_login", "last_active", "last_ip", "login_after", "login_before", "user_image", "gst_hsn_code", "parent_item_group"}
 	out = {}
 	for dt in doctypes or [d for d in COMPARE_ALL if d not in ("File", "Notification Log", "Student")]:
 		if not frappe.db.exists("DocType", dt):
@@ -1466,12 +1521,14 @@ def compare_fields(doctypes=None, sample=3):
 		meta = frappe.get_meta(dt)
 		valid = [df.fieldname for df in meta.fields if df.fieldtype not in ("Table", "Table MultiSelect", "Section Break", "Column Break", "Tab Break", "HTML", "Button")
 			and df.fieldname not in ignore and frappe.db.has_column(dt, df.fieldname)]
-		v2rows = {r["name"]: r for r in frappe.db.get_all(dt, fields=["name"] + valid, limit=0)}
+		v2rows = {r["name"]: r for r in frappe.db.get_all(dt, fields=["name", "docstatus"] + valid, limit=0)}
 		bad = []
 		for r in v1_list(dt):
 			cur = v2rows.get(r["name"])
 			if not cur:
 				continue
+			if cint(r.get("docstatus")) != cint(cur.get("docstatus")):
+				bad.append((r["name"], "docstatus", r.get("docstatus"), cur.get("docstatus"))); continue
 			for f in valid:
 				x, y = r.get(f), cur.get(f)
 				if x in (None, "", 0) and y in (None, "", 0):
