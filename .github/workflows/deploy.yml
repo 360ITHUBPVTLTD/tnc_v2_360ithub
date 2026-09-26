@@ -10,13 +10,13 @@ on:
   workflow_dispatch:
 
 # Keyed to the BENCH, not the app. tnc_v2_360ithub and clarity_360ithub are both
-# installed on tncv2.360ithub.com, and per-app groups let them run `bench migrate`
+# installed on tnc.360ithub.com, and per-app groups let them run `bench migrate`
 # and restart the same containers simultaneously. Sharing one group makes GitHub
 # queue the second behind the first. If this app is ever deployed to a second
 # bench, split this into a matrix and move concurrency to the job level.
 # Never cancel a run mid-migrate: a half-applied schema change is worse than a wait.
 concurrency:
-  group: deploy-bench-tncv2.360ithub.com
+  group: deploy-bench-tnc.360ithub.com
   cancel-in-progress: false
 
 jobs:
@@ -44,7 +44,7 @@ jobs:
           ruff check --select=E9,F821,F632,F702 --no-cache .
 
   deploy:
-    name: Deploy to tncv2.360ithub.com
+    name: Deploy to tnc.360ithub.com
     needs: check
     runs-on: ubuntu-latest
     steps:
@@ -58,4 +58,4 @@ jobs:
           script: >-
             /usr/local/bin/deploy-bench-app.sh
             tnc_v2_360ithub 360ithub_master
-            test-demo-erpnext-w6y5gf tncv2.360ithub.com
+            test-demo-erpnext-w6y5gf tnc.360ithub.com
