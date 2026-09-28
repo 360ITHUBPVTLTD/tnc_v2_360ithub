@@ -218,8 +218,7 @@ def send_fcm(user, title, body, ref_doctype=None, ref_name=None):
 			body=body,
 			doctype=ref_doctype,
 			task_id=ref_name,
-			user_doctype="Employee",
-			user=user,
+			member_id=emp.name,
 			notification_type="Task Notification",
 		)
 		_log("FCM", "Sent", user=user, message=body, ref_doctype=ref_doctype, ref_name=ref_name, provider="fcm_360ithub")
