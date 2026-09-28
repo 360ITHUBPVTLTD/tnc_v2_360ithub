@@ -1,12 +1,16 @@
 // Copyright (c) 2026, 360ITHub and contributors
 frappe.ui.form.on("Demo Class", {
+	setup(frm) {
+		frm.set_query("batch", () => ({ filters: { status: ["in", ["Upcoming", "Ongoing"]] } }));
+	},
 	refresh(frm) {
 		if (frm.is_new()) return;
 		frm.trigger("demo_fee_buttons");
 		if (frm.doc.result !== "Attended") return;
 		if (frm.doc.rated_on) {
 			frm.dashboard.clear_headline();
-			frm.dashboard.set_headline(`<span class="indicator-pill green no-indicator-dot">${__("Student rated {0}/5", [Math.round((frm.doc.student_rating || 0) * 5)])}</span> ${frappe.utils.escape_html(frm.doc.student_feedback || "")}`);
+			const st = (v) => Math.round((v || 0) * 5);
+			frm.dashboard.set_headline(`<span class="indicator-pill green no-indicator-dot">${__("Demo {0}/5", [st(frm.doc.student_rating)])}</span> ${frappe.utils.escape_html(frm.doc.student_feedback || "")} <span class="indicator-pill blue no-indicator-dot">${__("Counsellor {0}/5", [st(frm.doc.student_counsellor_rating)])}</span> ${frappe.utils.escape_html(frm.doc.student_counsellor_feedback || "")}`);
 			return;
 		}
 		frm.add_custom_button(__("Send Rating Link"), () => {

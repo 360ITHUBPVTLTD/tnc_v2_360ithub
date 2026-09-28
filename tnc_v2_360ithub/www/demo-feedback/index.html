@@ -16,6 +16,7 @@ body{background:#f4f5f7;font-family:"Noto Sans","Noto Sans Devanagari",system-ui
 h1{font-family:Manrope,sans-serif;font-weight:800;font-size:22px;margin:0 0 6px}
 .sub{color:var(--ink2);font-size:14.5px;margin-bottom:18px;line-height:1.5}
 .stars{display:flex;gap:8px;justify-content:center;margin:10px 0 6px}
+.q h1{font-size:19px}.q{margin-bottom:6px}hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 .stars button{font-size:42px;line-height:1;background:none;border:0;color:#d4d7dd;cursor:pointer;padding:4px;transition:transform .1s,color .1s}
 .stars button.on{color:#f5b301;transform:scale(1.08)}
 .stars button:focus-visible{outline:3px solid rgba(216,31,38,.3);border-radius:8px}
@@ -46,20 +47,27 @@ textarea:focus{border-color:var(--r);box-shadow:0 0 0 3px rgba(216,31,38,.14);ou
     const v = r.message || {};
     if (v.closed) { notice(v.closed); return; }
     const words = ["", "Poor", "Fair", "Good", "Very good", "Excellent"], hindi = ["", "खराब", "ठीक-ठाक", "अच्छा", "बहुत अच्छा", "उत्कृष्ट"];
-    let stars = 0;
-    box.innerHTML = `<h1>How was your demo class?</h1>
-      <div class="sub">${v.student_name ? "Namaste " + v.student_name + "! " : ""}Demo on ${v.demo_date}${v.batch ? " · " + v.batch : ""}.<br>डेमो क्लास कैसी लगी? कृपया स्टार देकर बताएं।</div>
+    const esc = (x) => String(x || "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const who = v.counsellor_name ? " (" + esc(v.counsellor_name) + ")" : "";
+    const block = (k, h1, sub, ph) => `<div class="q" data-q="${k}"><h1>${h1}</h1><div class="sub">${sub}</div>
       <div class="stars">${[1,2,3,4,5].map(i => `<button type="button" data-i="${i}" aria-label="${i} star">★</button>`).join("")}</div>
-      <div class="lbl" id="lbl">Tap a star</div>
-      <textarea id="fb" placeholder="Anything you want to tell us? (optional) / कुछ कहना चाहें तो लिखें"></textarea>
-      <button class="btn-go" id="go" disabled>Submit rating</button>`;
-    const btns = [...box.querySelectorAll(".stars button")], go = document.getElementById("go"), lbl = document.getElementById("lbl");
-    const paint = (n) => btns.forEach(b => b.classList.toggle("on", +b.dataset.i <= n));
-    btns.forEach(b => { b.onmouseenter = () => paint(+b.dataset.i); b.onmouseleave = () => paint(stars); b.onclick = () => { stars = +b.dataset.i; paint(stars); lbl.textContent = words[stars] + " · " + hindi[stars]; go.disabled = false; }; });
+      <div class="lbl">Tap a star</div>
+      <textarea id="fb_${k}" placeholder="${ph}"></textarea></div>`;
+    box.innerHTML = `<div class="sub">${v.student_name ? "Namaste " + esc(v.student_name) + "! " : ""}Demo on ${esc(v.demo_date)}${v.batch ? " · " + esc(v.batch) : ""}. Two quick questions.</div>
+      ${block("demo", "1. How was your demo class?", "डेमो क्लास कैसी लगी? कृपया स्टार देकर बताएं।", "About the class or the teacher (optional) / क्लास के बारे में कुछ कहना चाहें तो लिखें")}
+      <hr>
+      ${block("counsellor", "2. How was your counsellor" + who + "?", "Did the counsellor guide you well from your enquiry to the demo?<br>काउंसलर ने पूछताछ से डेमो तक आपकी कितनी मदद की? कृपया स्टार देकर बताएं।", "About the counsellor (optional) / काउंसलर के बारे में कुछ कहना चाहें तो लिखें")}
+      <button class="btn-go" id="go" disabled>Submit ratings</button>`;
+    const picked = { demo: 0, counsellor: 0 }, go = document.getElementById("go");
+    box.querySelectorAll(".q").forEach((q) => {
+      const k = q.dataset.q, btns = [...q.querySelectorAll(".stars button")], lbl = q.querySelector(".lbl");
+      const paint = (n) => btns.forEach(b => b.classList.toggle("on", +b.dataset.i <= n));
+      btns.forEach(b => { b.onmouseenter = () => paint(+b.dataset.i); b.onmouseleave = () => paint(picked[k]); b.onclick = () => { picked[k] = +b.dataset.i; paint(picked[k]); lbl.textContent = words[picked[k]] + " · " + hindi[picked[k]]; go.disabled = !(picked.demo && picked.counsellor); }; });
+    });
     go.onclick = () => { go.disabled = true; go.textContent = "Sending…";
-      call("tnc_v2_360ithub.admissions.demo_rating.submit", {d, t, rating: stars, feedback: document.getElementById("fb").value}).then(r => {
-        if (r.message && r.message.ok) { box.className = "card done"; box.innerHTML = `<div class="big">${"★".repeat(stars)}</div><h2>Thank you!</h2><div class="sub">Your rating has been recorded. Our counsellor will be in touch.<br>धन्यवाद! आपकी रेटिंग दर्ज हो गई है।</div>`; }
-        else { go.disabled = false; go.textContent = "Submit rating"; notice((r._server_messages && JSON.parse(JSON.parse(r._server_messages)[0]).message) || "Could not save. Please try again."); }
+      call("tnc_v2_360ithub.admissions.demo_rating.submit", {d, t, rating: picked.demo, feedback: document.getElementById("fb_demo").value, counsellor_rating: picked.counsellor, counsellor_feedback: document.getElementById("fb_counsellor").value}).then(r => {
+        if (r.message && r.message.ok) { box.className = "card done"; box.innerHTML = `<div class="big">${"★".repeat(picked.demo)}</div><h2>Thank you!</h2><div class="sub">Your ratings have been recorded. Our counsellor will be in touch.<br>धन्यवाद! आपकी रेटिंग दर्ज हो गई है।</div>`; }
+        else { go.disabled = false; go.textContent = "Submit ratings"; notice((r._server_messages && JSON.parse(JSON.parse(r._server_messages)[0]).message) || "Could not save. Please try again."); }
       });
     };
   });

@@ -323,17 +323,23 @@ def run_tests():
 		frappe.db.set_value("Student", st_a.name, "terms_accepted", 1, update_modified=False)
 		create_form_followups()
 		assert not frappe.db.exists("Student Follow-Up", {"reference_name": st_a.name, "purpose": "General", "status": "Open", "notes": ["like", "Admission form not submitted%"]}), "closed once the form is in"
-		# demo rating: counsellor side on the form, student side through a personal link
+		# demo rating: the student rates the demo and the counsellor through a personal link
 		from tnc_v2_360ithub.admissions import demo_rating
-		demo_r = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq3.name, "batch": batch.name, "demo_date": today(), "result": "Attended", "counsellor_rating": 0.8}).insert(ignore_permissions=True)
+		demo_r = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq3.name, "batch": batch.name, "demo_date": today(), "result": "Attended"}).insert(ignore_permissions=True)
 		sent_r = demo_rating.send_rating_link(demo_r.name)
 		demo_r.reload()
 		assert demo_r.rating_token and demo_r.rating_token in sent_r["link"], "rating link carries a token"
 		assert demo_rating.page_state(demo_r.name, "bad").get("closed"), "wrong token is refused"
 		assert demo_rating.page_state(demo_r.name, demo_r.rating_token).get("student_name") is not None or True
-		demo_rating.submit(demo_r.name, demo_r.rating_token, 4, "Bahut accha laga")
+		try:
+			demo_rating.submit(demo_r.name, demo_r.rating_token, 4, "Bahut accha laga")
+			raise AssertionError("counsellor rating is required")
+		except frappe.ValidationError:
+			pass
+		demo_rating.submit(demo_r.name, demo_r.rating_token, 4, "Bahut accha laga", 5, "Very helpful")
 		demo_r.reload()
 		assert abs(demo_r.student_rating - 0.8) < 1e-6 and demo_r.rated_on and demo_r.student_feedback == "Bahut accha laga", "student rating stored"
+		assert abs(demo_r.student_counsellor_rating - 1.0) < 1e-6 and demo_r.student_counsellor_feedback == "Very helpful", "student's counsellor rating stored"
 		assert demo_rating.page_state(demo_r.name, demo_r.rating_token).get("closed"), "used rating link is closed"
 		# outgoing links follow the address the staff browser used (live domain), never a bare IP or a stale config
 		from werkzeug.test import EnvironBuilder

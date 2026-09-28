@@ -186,7 +186,7 @@ def _paid_against_order(sales_order):
 def get_enquiry_overview(enquiry):
 	doc = frappe.get_doc("Student Enquiry", enquiry)
 	doc.check_permission("read")
-	demos = frappe.get_all("Demo Class", filters={"enquiry": enquiry}, fields=["name", "demo_date", "from_time", "to_time", "batch", "result", "counsellor_rating", "student_rating", "rated_on", "rating_sent_on", "demo_fee_status", "demo_fee_amount"], order_by="demo_date desc, from_time desc, creation desc")
+	demos = frappe.get_all("Demo Class", filters={"enquiry": enquiry}, fields=["name", "demo_date", "from_time", "to_time", "batch", "result", "student_rating", "student_counsellor_rating", "rated_on", "rating_sent_on", "demo_fee_status", "demo_fee_amount"], order_by="demo_date desc, from_time desc, creation desc")
 	fups = frappe.get_all("Student Follow-Up", filters={"reference_type": "Student Enquiry", "reference_name": enquiry},
 		fields=["name", "follow_up_date", "followup_type", "notes", "next_follow_up_date", "status", "done_by"], order_by="follow_up_date desc, creation desc")
 	kinds = {"Scheduled": "orange", "Attended": "green", "Not Attended": "red", "Cancelled": "gray"}
@@ -200,8 +200,10 @@ def get_enquiry_overview(enquiry):
 	def _rating(d):
 		if d.result != "Attended":
 			return ""
-		stu = _stars(d.student_rating) if d.rated_on else ("<span class='text-muted small'>" + _("link sent") + "</span>" if d.rating_sent_on else "<span class='text-muted small'>" + _("not asked") + "</span>")
-		return f"<div class='small'>{_('Counsellor')}: {_stars(d.counsellor_rating)}</div><div class='small'>{_('Student')}: {stu}</div>"
+		waiting = "<span class='text-muted small'>" + (_("link sent") if d.rating_sent_on else _("not asked")) + "</span>"
+		stu = _stars(d.student_rating) if d.rated_on else waiting
+		stu_c = _stars(d.student_counsellor_rating) if d.rated_on else waiting
+		return f"<div class='small'>{_('Demo')}: {stu}</div><div class='small'>{_('Counsellor')}: {stu_c}</div>"
 	fee_kinds = {"Paid": "green", "Adjusted": "blue", "Refunded": "gray"}
 	def _fee(d):
 		if not d.demo_fee_status or d.demo_fee_status == "Not Collected":

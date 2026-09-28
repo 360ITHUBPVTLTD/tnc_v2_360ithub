@@ -36,11 +36,11 @@
   "demo_fee_refunded_on",
   "demo_fee_adjusted_in",
   "sb_rating",
-  "counsellor_rating",
-  "counsellor_rating_note",
-  "cb_rating",
   "student_rating",
   "student_feedback",
+  "cb_rating",
+  "student_counsellor_rating",
+  "student_counsellor_feedback",
   "rated_on",
   "rating_token",
   "rating_sent_on"
@@ -224,22 +224,7 @@
    "depends_on": "eval:doc.result=='Attended'",
    "fieldname": "sb_rating",
    "fieldtype": "Section Break",
-   "label": "Ratings (out of 5)"
-  },
-  {
-   "description": "How likely is this student to join? 5 = very likely.",
-   "fieldname": "counsellor_rating",
-   "fieldtype": "Rating",
-   "label": "Counsellor's rating of the student"
-  },
-  {
-   "fieldname": "counsellor_rating_note",
-   "fieldtype": "Small Text",
-   "label": "Counsellor's note"
-  },
-  {
-   "fieldname": "cb_rating",
-   "fieldtype": "Column Break"
+   "label": "Student's ratings (out of 5)"
   },
   {
    "fieldname": "student_rating",
@@ -250,7 +235,23 @@
   {
    "fieldname": "student_feedback",
    "fieldtype": "Small Text",
-   "label": "Student's feedback",
+   "label": "Student's feedback on the demo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_rating",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "student_counsellor_rating",
+   "fieldtype": "Rating",
+   "label": "Student's rating of the counsellor",
+   "read_only": 1
+  },
+  {
+   "fieldname": "student_counsellor_feedback",
+   "fieldtype": "Small Text",
+   "label": "Student's feedback on the counsellor",
    "read_only": 1
   },
   {
