@@ -31,6 +31,9 @@ def ensure_custom_fields():
 			frappe.db.sql(f"update `tab{dt}` set `{new}` = `{old}` where ifnull(`{new}`, '') = '' and ifnull(`{old}`, '') != ''")
 		if frappe.db.exists("Custom Field", f"{dt}-{old}"):
 			frappe.delete_doc("Custom Field", f"{dt}-{old}", force=1, ignore_permissions=True)
+	# 2026-09-26: Expense For options renamed from Online/Offline to "... coaching classes"
+	if "custom_expense_for" in frappe.db.get_table_columns("Expense Claim"):
+		frappe.db.sql("update `tabExpense Claim` set custom_expense_for = concat(custom_expense_for, ' coaching classes') where custom_expense_for in ('Online', 'Offline')")
 	frappe.db.sql("update `tabCustom Field` set is_system_generated = 0 where module = 'TNC v2' and is_system_generated = 1")
 	frappe.db.commit()
 	frappe.clear_cache()

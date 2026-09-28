@@ -1,8 +1,9 @@
-"""Demo class rating, two sides.
+"""Demo class rating.
 
-The counsellor rates the student on the Demo Class (Rating field). The student gets a personal
-WhatsApp link to rate the demo out of 5 with a comment; the page is /demo-feedback and the
-result lands on the same Demo Class. Links are per demo, single use, and expire after 7 days.
+The student gets a personal WhatsApp link and gives two ratings out of 5, each with an optional
+comment: one for the demo class and one for the counsellor who handled them. The page is
+/demo-feedback and both land on the same Demo Class. Links are per demo, single use, and expire
+after 7 days. Nothing is rated from the office side.
 """
 
 import frappe
@@ -43,7 +44,7 @@ def send_rating_link(demo, mobile=None):
 		frappe.throw(_("Please enter a valid 10-digit mobile number."))
 	to = digits[-10:]
 	link = _link(doc)
-	msg = _("Namaste {0}, thank you for attending the demo class at Team Nursing Classes. Please take 30 seconds to rate your experience (1 to 5 stars):").format(doc.student_name or "") + "\n\n" + link
+	msg = _("Namaste {0}, thank you for attending the demo class at Team Nursing Classes. Please take 30 seconds to rate the demo class and your counsellor (1 to 5 stars each):").format(doc.student_name or "") + "\n\n" + link
 	result = notifications.send_whatsapp_to_mobile(to, msg, ref_doctype="Demo Class", ref_name=doc.name)
 	ok = bool(result.get("status")) if isinstance(result, dict) else bool(result)
 	reason = (result.get("msg") or result.get("message") or result.get("error")) if isinstance(result, dict) else None
@@ -54,25 +55,39 @@ def send_rating_link(demo, mobile=None):
 
 @frappe.whitelist(allow_guest=True)
 def page_state(d, t):
-	demo = frappe.db.get_value("Demo Class", d, ["name", "student_name", "demo_date", "batch", "rating_token", "rated_on", "rating_sent_on"], as_dict=True)
+	demo = frappe.db.get_value("Demo Class", d, ["name", "student_name", "demo_date", "batch", "enquiry", "rating_token", "rated_on", "rating_sent_on"], as_dict=True)
 	closed = _state(demo, t)
 	if closed:
 		return {"closed": closed}
-	return {"student_name": demo.student_name, "demo_date": frappe.format_value(demo.demo_date, {"fieldtype": "Date"}), "batch": demo.batch}
+	return {"student_name": demo.student_name, "demo_date": frappe.format_value(demo.demo_date, {"fieldtype": "Date"}), "batch": demo.batch, "counsellor_name": _counsellor_name(demo.enquiry)}
+
+
+def _counsellor_name(enquiry):
+	"""First name of the counsellor on the enquiry, for the page; empty when nobody is set."""
+	user = frappe.db.get_value("Student Enquiry", enquiry, "counsellor") if enquiry else None
+	full = frappe.db.get_value("User", user, "full_name") if user else None
+	return (full or "").split(" ")[0]
 
 
 @frappe.whitelist(allow_guest=True)
-def submit(d, t, rating, feedback=None):
+def submit(d, t, rating, feedback=None, counsellor_rating=None, counsellor_feedback=None):
+	"""Both ratings are required; the two comments are optional."""
 	frappe.rate_limit = None
 	demo = frappe.get_doc("Demo Class", d) if frappe.db.exists("Demo Class", d) else None
 	closed = _state(demo, t)
 	if closed:
 		frappe.throw(closed, frappe.PermissionError)
 	stars = int(rating or 0)
+	cstars = int(counsellor_rating or 0)
 	if stars < 1 or stars > 5:
-		frappe.throw(_("Please choose 1 to 5 stars."))
-	demo.db_set({"student_rating": stars / 5.0, "student_feedback": (feedback or "").strip()[:1000], "rated_on": now_datetime()}, update_modified=False)
-	demo.add_comment("Info", _("Student rated the demo {0}/5").format(stars) + (f": {frappe.utils.escape_html((feedback or '').strip()[:200])}" if feedback else ""))
+		frappe.throw(_("Please choose 1 to 5 stars for the demo class."))
+	if cstars < 1 or cstars > 5:
+		frappe.throw(_("Please choose 1 to 5 stars for the counsellor."))
+	fb = (feedback or "").strip()[:1000]
+	cfb = (counsellor_feedback or "").strip()[:1000]
+	demo.db_set({"student_rating": stars / 5.0, "student_feedback": fb, "student_counsellor_rating": cstars / 5.0, "student_counsellor_feedback": cfb, "rated_on": now_datetime()}, update_modified=False)
+	esc = frappe.utils.escape_html
+	demo.add_comment("Info", _("Student rated the demo {0}/5").format(stars) + (f": {esc(fb[:200])}" if fb else "") + "<br>" + _("Student rated the counsellor {0}/5").format(cstars) + (f": {esc(cfb[:200])}" if cfb else ""))
 	if demo.enquiry:
-		frappe.get_doc("Student Enquiry", demo.enquiry).add_comment("Info", _("Demo {0} rated {1}/5 by the student").format(demo.name, stars))
+		frappe.get_doc("Student Enquiry", demo.enquiry).add_comment("Info", _("Demo {0}: student rated the demo {1}/5 and the counsellor {2}/5").format(demo.name, stars, cstars))
 	return {"ok": True}

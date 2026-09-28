@@ -1,5 +1,9 @@
 // Copyright (c) 2026, 360ITHub and contributors
 frappe.ui.form.on("Student Enquiry", {
+	setup(frm) {
+		// only batches a student can still join; completed batches are never offered
+		frm.set_query("batch_interested", () => ({ filters: Object.assign({ status: ["in", ["Upcoming", "Ongoing"]] }, frm.doc.course_interested ? { course: frm.doc.course_interested } : {}) }));
+	},
 	refresh(frm) {
 		if (frm.__demo_fee_amount === undefined) frappe.db.get_single_value("TNC Settings", "demo_fee_amount").then((v) => { frm.__demo_fee_amount = flt(v) || 500; });
 		frm.trigger("render_overview");
