@@ -1,0 +1,2 @@
+# Binary; do not try to diff or merge it. Regenerate with docs/md2docx.py.
+docs/*.docx binary
