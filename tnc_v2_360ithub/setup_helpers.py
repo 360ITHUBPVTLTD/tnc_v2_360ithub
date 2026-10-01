@@ -308,3 +308,31 @@ def ensure_teacher_user_permissions(commit=True):
 	if commit:
 		frappe.db.commit()
 	print(f"created {created} Teacher user permissions; {skipped} manager/super-admin teachers left unrestricted; {len(rows)} linked teacher users")
+
+
+def sync_role_profile_users(commit=True):
+	"""after_migrate: keep each user's TNC roles in step with their Role Profile.
+
+	The Role Profile fixtures are re-imported on each migrate; Frappe then pushes the roles to the
+	profile's users through a background job, which may not run (or ran with a wrong profile, as on
+	28 Sep 2026 when TNC Teacher still carried TNC Manager and teachers lost Create Timesheet).
+	Only the TNC roles are governed here: a profile decides whether a user is TNC Teachers /
+	TNC Employees / TNC Manager / TNC Super Admin. Roles granted by hand for a job (Expense
+	Approver, Leave Approver, Supplier) and the HRMS-managed Employee roles are left untouched."""
+	governed = {"TNC Teachers", "TNC Employees", "TNC Manager", "TNC Super Admin"}
+	fixed = 0
+	for prof in frappe.get_all("Role Profile", pluck="name"):
+		want = set(frappe.get_all("Has Role", filters={"parent": prof, "parenttype": "Role Profile"}, pluck="role")) & governed
+		for u in frappe.get_all("User", filters={"role_profile_name": prof, "enabled": 1}, pluck="name"):
+			have = set(frappe.get_all("Has Role", filters={"parent": u, "parenttype": "User"}, pluck="role"))
+			if (have & governed) == want:
+				continue
+			doc = frappe.get_doc("User", u)
+			doc.set("roles", [{"role": r} for r in sorted((have - governed) | want)])
+			doc.flags.ignore_permissions = True
+			doc.save()
+			fixed += 1
+	if commit:
+		frappe.db.commit()
+	print(f"role profile users synced: {fixed} corrected")
+	return fixed
