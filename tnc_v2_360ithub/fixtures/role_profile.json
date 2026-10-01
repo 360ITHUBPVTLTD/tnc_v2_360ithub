@@ -118,34 +118,39 @@
   "role_profile": "TNC Teacher",
   "roles": [
    {
+    "idx": 1,
     "parent": "TNC Teacher",
     "parentfield": "roles",
     "parenttype": "Role Profile",
-    "role": "Employee"
+    "role": "TNC Teachers"
    },
    {
-    "parent": "TNC Teacher",
-    "parentfield": "roles",
-    "parenttype": "Role Profile",
-    "role": "Employee Self Service"
-   },
-   {
-    "parent": "TNC Teacher",
-    "parentfield": "roles",
-    "parenttype": "Role Profile",
-    "role": "Supplier"
-   },
-   {
+    "idx": 2,
     "parent": "TNC Teacher",
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "TNC Employees"
    },
    {
+    "idx": 3,
     "parent": "TNC Teacher",
     "parentfield": "roles",
     "parenttype": "Role Profile",
-    "role": "TNC Manager"
+    "role": "Supplier"
+   },
+   {
+    "idx": 4,
+    "parent": "TNC Teacher",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee"
+   },
+   {
+    "idx": 5,
+    "parent": "TNC Teacher",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee Self Service"
    }
   ]
  }

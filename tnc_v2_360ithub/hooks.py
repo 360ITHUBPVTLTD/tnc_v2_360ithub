@@ -91,7 +91,7 @@ doctype_list_js = {"Expense Claim": "hr/expense_claim_list.js"}
 
 # before_install = "tnc_v2_360ithub.install.before_install"
 # after_install = "tnc_v2_360ithub.install.after_install"
-after_migrate = ["tnc_v2_360ithub.admissions.setup.ensure_defaults", "tnc_v2_360ithub.admissions.custom_fields.ensure_custom_fields"]
+after_migrate = ["tnc_v2_360ithub.admissions.setup.ensure_defaults", "tnc_v2_360ithub.admissions.custom_fields.ensure_custom_fields", "tnc_v2_360ithub.setup_helpers.sync_role_profile_users"]
 
 # Uninstallation
 # ------------
