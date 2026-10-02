@@ -220,3 +220,19 @@ def update_uom_in_related_docs(doc, method):
         """, (doc.uom, tuple(ts_names), doc.name))
         
     frappe.msgprint(f"Updated UOM to {doc.uom} in related Teachers and Pending Timesheets.")
+
+
+def my_teacher(user=None):
+    """The Teacher record behind the logged-in user, tried in order: the User Permission on Teacher
+    (how v1 ties a login to a teacher), Teacher.email, then the Employee's Teacher field."""
+    user = user or frappe.session.user
+    return (frappe.db.get_value("User Permission", {"user": user, "allow": "Teacher"}, "for_value")
+        or frappe.db.get_value("Teacher", {"email": user}, "name")
+        or frappe.db.get_value("Employee", {"user_id": user, "custom_teacher": ["is", "set"]}, "custom_teacher"))
+
+
+@frappe.whitelist()
+def my_teacher_id():
+    """App: which Teacher is the logged-in user. Works for teachers with or without an Employee record."""
+    t = my_teacher()
+    return {"teacher": t, "teacher_name": frappe.db.get_value("Teacher", t, "full_name") if t else None}
