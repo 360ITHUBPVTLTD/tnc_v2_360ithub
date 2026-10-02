@@ -223,27 +223,27 @@ def ensure_expense_claim_accounts(company="TNC Nursing", account_name="TNC Other
 
 
 def link_employees_to_teachers(commit=True):
-	"""Fill Employee.custom_teacher for migrated teachers. The field did not exist
-	on v2 during the first trial migration, so v1's values were dropped; a
-	cutover re-run carries them. Until then, match Teacher.email to the
-	Employee's user_id or personal_email (create_teacher_from_employee sets both
-	to the same address). The mobile app shows its Timesheet tile only when this
-	link is set."""
-	linked = skipped = 0
-	for t in frappe.get_all("Teacher", fields=["name", "email"], filters={"email": ["!=", ""]}):
-		emp = frappe.db.get_value("Employee", {"user_id": t.email}, ["name", "custom_teacher"], as_dict=True) \
-			or frappe.db.get_value("Employee", {"personal_email": t.email}, ["name", "custom_teacher"], as_dict=True)
-		if not emp:
-			skipped += 1
-			print(f"no employee for {t.name} ({t.email})")
+	"""Fill Employee.custom_teacher for teachers who also have an Employee record.
+
+	The mobile app reads the teacher id from the logged-in user's Employee, so without this link
+	a teacher cannot create a timesheet from the phone ("Teacher ID is missing in user profile").
+	Two ways to find the teacher behind an employee, in order: the User Permission on Teacher
+	(how v1 ties a login to its teacher), then Teacher.email equal to the employee's user_id or
+	personal_email. Idempotent; runs after every migrate and never overwrites a link already set."""
+	linked = 0
+	for emp in frappe.get_all("Employee", filters={"status": "Active"}, fields=["name", "user_id", "personal_email", "custom_teacher"]):
+		if emp.custom_teacher or not emp.user_id:
 			continue
-		if emp.custom_teacher == t.name:
-			continue
-		frappe.db.set_value("Employee", emp.name, "custom_teacher", t.name, update_modified=False)
-		linked += 1
+		teacher = (frappe.db.get_value("User Permission", {"user": emp.user_id, "allow": "Teacher"}, "for_value")
+			or frappe.db.get_value("Teacher", {"email": emp.user_id}, "name")
+			or (emp.personal_email and frappe.db.get_value("Teacher", {"email": emp.personal_email}, "name")))
+		if teacher:
+			frappe.db.set_value("Employee", emp.name, "custom_teacher", teacher, update_modified=False)
+			linked += 1
 	if commit:
 		frappe.db.commit()
-	print(f"linked {linked}, no employee for {skipped}, teachers total {frappe.db.count('Teacher')}")
+	print(f"employees linked to teachers: {linked}")
+	return linked
 
 
 # Grants v1's export does not contain but the mobile app needs to behave as users
@@ -283,31 +283,34 @@ def apply_v2_role_permissions(commit=True):
 def ensure_teacher_user_permissions(commit=True):
 	"""Restrict teachers to their own Teacher record, as v1 did.
 
-	v1 never used role permissions for this: create_teacher_from_employee adds a
-	User Permission (Allow = Teacher, For Value = the teacher) and Frappe then
-	filters every doctype linking Teacher, Teachers Timesheet included. The trial
-	migration copied no User Permissions, so on v2 every teacher saw every
-	timesheet. Creates the missing rows for users whose Employee is linked to a
-	Teacher, except TNC Super Admins and users on the TNC Manager profile, who
-	are meant to see all."""
-	created = skipped = 0
-	rows = frappe.db.sql("""
-		select e.user_id, e.custom_teacher, u.role_profile_name
-		from tabEmployee e join tabUser u on u.name = e.user_id
-		where ifnull(e.custom_teacher, '') != '' and u.enabled = 1""", as_dict=True)
-	for r in rows:
-		roles = set(frappe.get_roles(r.user_id))
-		if "TNC Super Admin" in roles or r.role_profile_name == "TNC Manager":
+	v1 did this with a User Permission (Allow = Teacher, For Value = the teacher); Frappe then
+	filters every doctype that links Teacher: timesheets, penalties, settlements. Every enabled
+	login with the TNC Teachers role that maps to a Teacher gets the row, whether or not an
+	Employee record exists (most teachers have none). The mapping is the same one the app uses:
+	Teacher.email, then the Employee's Teacher field. TNC Super Admins and users on the TNC Manager
+	profile are left unrestricted, they are meant to see all. Runs after every migrate."""
+	created = skipped = unlinked = 0
+	users = frappe.get_all("User", filters={"enabled": 1, "name": ["in", [r.parent for r in frappe.get_all("Has Role", filters={"role": "TNC Teachers", "parenttype": "User"}, fields=["parent"])]]},
+		fields=["name", "role_profile_name"])
+	for u in users:
+		roles = set(frappe.get_roles(u.name))
+		if "TNC Super Admin" in roles or u.role_profile_name == "TNC Manager" or "TNC Manager" in roles:
 			skipped += 1
 			continue
-		if frappe.db.exists("User Permission", {"user": r.user_id, "allow": "Teacher", "for_value": r.custom_teacher}):
+		if frappe.db.exists("User Permission", {"user": u.name, "allow": "Teacher"}):
 			continue
-		frappe.get_doc({"doctype": "User Permission", "user": r.user_id, "allow": "Teacher",
-			"for_value": r.custom_teacher, "is_default": 1}).insert(ignore_permissions=True)
+		teacher = (frappe.db.get_value("Teacher", {"email": u.name}, "name")
+			or frappe.db.get_value("Employee", {"user_id": u.name, "custom_teacher": ["is", "set"]}, "custom_teacher"))
+		if not teacher:
+			unlinked += 1
+			print(f"no Teacher record for login {u.name}")
+			continue
+		frappe.get_doc({"doctype": "User Permission", "user": u.name, "allow": "Teacher", "for_value": teacher, "is_default": 1}).insert(ignore_permissions=True)
 		created += 1
 	if commit:
 		frappe.db.commit()
-	print(f"created {created} Teacher user permissions; {skipped} manager/super-admin teachers left unrestricted; {len(rows)} linked teacher users")
+	print(f"teacher user permissions: {created} created, {skipped} managers left open, {unlinked} logins without a Teacher record")
+	return created
 
 
 def sync_role_profile_users(commit=True):
