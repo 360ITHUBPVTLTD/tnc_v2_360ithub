@@ -16,6 +16,15 @@
   "reminder_cron_note",
   "teachers_section",
   "teacher_timesheet_approval",
+  "penalty_imposers",
+  "penalty_approvers",
+  "penalty_account",
+  "document_institute_name",
+  "send_weekly_report_card",
+  "send_payment_receipt",
+  "settlement_start_date",
+  "accounts_section",
+  "invoice_approvers",
   "demo_fee_section",
   "demo_fee_amount",
   "cb_df",
@@ -93,6 +102,65 @@
    "fieldtype": "Table MultiSelect",
    "label": "Timesheet approvers",
    "options": "Timesheet Approver"
+  },
+  {
+   "fieldname": "penalty_imposers",
+   "fieldtype": "Table MultiSelect",
+   "label": "Penalty imposers",
+   "options": "Timesheet Approver",
+   "description": "Users who can create and submit teacher penalties. Administrator always can. Leave empty to allow every TNC Manager."
+  },
+  {
+   "fieldname": "penalty_approvers",
+   "fieldtype": "Table MultiSelect",
+   "label": "Penalty approvers",
+   "options": "Timesheet Approver",
+   "description": "Users who approve or reject teacher penalties, on the web and in the app. Administrator always can. The person who imposed a penalty cannot approve it, except Administrator."
+  },
+  {
+   "fieldname": "penalty_account",
+   "fieldtype": "Link",
+   "label": "Penalty recovery account",
+   "options": "Account",
+   "description": "Income account that receives recovered teacher penalties (for example an 'Indirect Income' account named by TNC Finance). Required before a payment can deduct a penalty."
+  },
+  {
+   "fieldname": "document_institute_name",
+   "fieldtype": "Data",
+   "label": "Institute name on teacher documents",
+   "description": "Printed at the top of the payment receipt and weekly statement. Logo, address, phone and email come from the Company and its address."
+  },
+  {
+   "fieldname": "send_weekly_report_card",
+   "fieldtype": "Check",
+   "label": "Send weekly report card to teachers on WhatsApp (Saturday)",
+   "default": "0",
+   "description": "Every Saturday the week's settlement (Saturday to Friday) is generated for each teacher. Tick this to also WhatsApp the summary to the teacher's mobile."
+  },
+  {
+   "fieldname": "send_payment_receipt",
+   "fieldtype": "Check",
+   "default": "0",
+   "label": "Send payment receipt to teacher on WhatsApp",
+   "description": "When a teacher is paid, a PDF receipt goes to the mobile number on the Teacher record."
+  },
+  {
+   "fieldname": "settlement_start_date",
+   "fieldtype": "Date",
+   "label": "Settlement start date",
+   "description": "Weekly settlements count timesheets, penalties and payments from this date. Set it to the day teacher payouts start going through the system, so old timesheets paid outside it are not shown as owed."
+  },
+  {
+   "fieldname": "accounts_section",
+   "fieldtype": "Section Break",
+   "label": "Accounts"
+  },
+  {
+   "fieldname": "invoice_approvers",
+   "fieldtype": "Table MultiSelect",
+   "label": "Purchase Invoice approvers",
+   "options": "Timesheet Approver",
+   "description": "Bills entered by hand (supplier bills, salary, rent...) must be approved by one of these users before they can be submitted. Administrator always can. Teacher payout invoices made from approved timesheets skip this. Leave empty to switch approval off."
   },
   {
    "fieldname": "demo_fee_section",

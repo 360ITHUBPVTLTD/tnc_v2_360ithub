@@ -48,7 +48,7 @@ def collect(demo, amount=None, mode_of_payment="Cash", reference_no=None, postin
 	default_amount, _adj = settings()
 	amount = flt(amount if amount not in (None, "") else default_amount, 2)
 	if amount <= 0:
-		frappe.throw(_("Demo fee amount must be more than zero. Set it in TNC Settings."))
+		frappe.throw(_("Demo fee amount is not set. Please contact the administrator."))
 	if mode_of_payment in BANK_MODES and not reference_no:
 		frappe.throw(_("Reference number is required for {0}").format(mode_of_payment))
 	enq = frappe.get_doc("Student Enquiry", doc.enquiry)

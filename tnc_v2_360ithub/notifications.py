@@ -25,6 +25,9 @@ from frappe.utils import now_datetime
 WEBTOOLEX_SEND = (
 	"webtoolex_whatsapp.webtoolex_whatsapp.doctype.whatsapp_instance.whatsapp_instance.send_custom_whatsapp_message"
 )
+WEBTOOLEX_SEND_FILE = (
+	"webtoolex_whatsapp.webtoolex_whatsapp.doctype.whatsapp_instance.whatsapp_instance.send_custom_whatsapp_message_with_file"
+)
 WEBTOOLEX_VALIDATE = (
 	"webtoolex_whatsapp.webtoolex_whatsapp.doctype.whatsapp_instance.whatsapp_instance.validate_whatsapp_instance"
 )
@@ -169,6 +172,28 @@ def send_whatsapp_to_mobile(mobile, message, instance_name=None, ref_doctype=Non
 		resp = frappe.get_attr(WEBTOOLEX_SEND)(mobile, message, instance_name or s.whatsapp_instance or None)
 		sent = bool(resp and (resp.get("status") if isinstance(resp, dict) else True))
 		_log("WhatsApp", "Sent" if sent else "Failed", mobile=mobile, message=message, ref_doctype=ref_doctype, ref_name=ref_name, provider="Webtoolex", response=resp, error=None if sent else "Provider reported failure")
+		return resp if isinstance(resp, dict) else {"status": sent}
+	except Exception as e:
+		_log("WhatsApp", "Failed", mobile=mobile, message=message, ref_doctype=ref_doctype, ref_name=ref_name, provider="Webtoolex", error=e)
+		return {"status": False, "msg": str(e)}
+
+
+def send_whatsapp_file_to_mobile(mobile, message, file_link, instance_name=None, ref_doctype=None, ref_name=None):
+	"""Like send_whatsapp_to_mobile, with a document: the provider fetches `file_link` (a public
+	URL) and sends it with `message` as the caption."""
+	mobile = (mobile or "").strip()
+	if not mobile:
+		_log("WhatsApp", "Skipped", message=message, ref_doctype=ref_doctype, ref_name=ref_name, error="Empty mobile number")
+		return {"status": False, "msg": "Empty mobile number"}
+	ok, reason = whatsapp_available()
+	if not ok:
+		_log("WhatsApp", "Skipped", mobile=mobile, message=message, ref_doctype=ref_doctype, ref_name=ref_name, error=reason)
+		return {"status": False, "msg": reason}
+	s = settings()
+	try:
+		resp = frappe.get_attr(WEBTOOLEX_SEND_FILE)(mobile, message, file_link, instance_name or s.whatsapp_instance or None)
+		sent = bool(resp and (resp.get("status") if isinstance(resp, dict) else True))
+		_log("WhatsApp", "Sent" if sent else "Failed", mobile=mobile, message=f"{message}\n[file] {file_link}", ref_doctype=ref_doctype, ref_name=ref_name, provider="Webtoolex", response=resp, error=None if sent else "Provider reported failure")
 		return resp if isinstance(resp, dict) else {"status": sent}
 	except Exception as e:
 		_log("WhatsApp", "Failed", mobile=mobile, message=message, ref_doctype=ref_doctype, ref_name=ref_name, provider="Webtoolex", error=e)

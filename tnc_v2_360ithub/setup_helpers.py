@@ -254,6 +254,25 @@ V2_ROLE_PERMISSIONS = [
 	("Comment", "TNC Employees", 0, {"read": 1, "write": 1, "create": 1, "delete": 1, "if_owner": 1, "select": 1}),
 	("Comment", "TNC Manager", 0, {"read": 1, "write": 1, "create": 1, "delete": 1, "select": 1}),
 	("Comment", "TNC Super Admin", 0, {"read": 1, "write": 1, "create": 1, "delete": 1, "select": 1}),
+	# ERPNext's Purchase Invoice / Payment Entry forms read these settings pages on open;
+	# without read permission the form shows "No permission for Buying Settings" to managers.
+	("Buying Settings", "TNC Manager", 0, {"read": 1}),
+	("Accounts Settings", "TNC Manager", 0, {"read": 1}),
+	# masters the Purchase Invoice / Payment Entry forms look up while a manager raises a bill
+	("Contact", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Address", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Cost Center", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Currency", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("UOM", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Mode of Payment", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Payment Terms Template", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Purchase Taxes and Charges Template", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Terms and Conditions", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Item Group", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Supplier Group", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Tax Category", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Price List", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Bank Account", "TNC Manager", 0, {"read": 1, "select": 1}),
 ]
 
 
@@ -319,16 +338,19 @@ def sync_role_profile_users(commit=True):
 	The Role Profile fixtures are re-imported on each migrate; Frappe then pushes the roles to the
 	profile's users through a background job, which may not run (or ran with a wrong profile, as on
 	28 Sep 2026 when TNC Teacher still carried TNC Manager and teachers lost Create Timesheet).
-	Only the TNC roles are governed here: a profile decides whether a user is TNC Teachers /
-	TNC Employees / TNC Manager / TNC Super Admin. Roles granted by hand for a job (Expense
-	Approver, Leave Approver, Supplier) and the HRMS-managed Employee roles are left untouched."""
+	Only the four TNC roles are governed here. Employee / Employee Self Service come from the profile
+	too, but ERPNext itself removes them on save from any user without an Employee record
+	(validate_employee_role), so staff keep them and pure teachers lose them with no extra code.
+	Roles granted by hand for a job (Expense Approver, Leave Approver, Supplier) are left untouched."""
 	governed = {"TNC Teachers", "TNC Employees", "TNC Manager", "TNC Super Admin"}
 	fixed = 0
 	for prof in frappe.get_all("Role Profile", pluck="name"):
 		want = set(frappe.get_all("Has Role", filters={"parent": prof, "parenttype": "Role Profile"}, pluck="role")) & governed
 		for u in frappe.get_all("User", filters={"role_profile_name": prof, "enabled": 1}, pluck="name"):
 			have = set(frappe.get_all("Has Role", filters={"parent": u, "parenttype": "User"}, pluck="role"))
-			if (have & governed) == want:
+			# a save also lets ERPNext drop Employee / Employee Self Service from a login with no Employee record
+			stale_employee_roles = bool(have & {"Employee", "Employee Self Service"}) and not frappe.db.exists("Employee", {"user_id": u})
+			if (have & governed) == want and not stale_employee_roles:
 				continue
 			doc = frappe.get_doc("User", u)
 			doc.set("roles", [{"role": r} for r in sorted((have - governed) | want)])

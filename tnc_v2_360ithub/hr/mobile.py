@@ -25,6 +25,10 @@ def set_value(doctype, name, fieldname, value=None):
 		and frappe.session.user not in ("Guest", "Administrator")
 		and frappe.db.get_value("Employee", name, "user_id") == frappe.session.user
 	):
+		if fieldname == "custom_fcm_token" and value:
+			# one phone, one person: a device token moves to whoever logged in last on that phone,
+			# otherwise every earlier login on the same phone keeps receiving (duplicate) pushes
+			frappe.db.sql("update `tabEmployee` set custom_fcm_token = NULL where custom_fcm_token = %s and name != %s", (value, name))
 		frappe.db.set_value("Employee", name, fieldname, value, update_modified=False)
 		return frappe.db.get_value("Employee", name, ["name", fieldname], as_dict=True)
 	return _frappe_set_value(doctype, name, fieldname, value)

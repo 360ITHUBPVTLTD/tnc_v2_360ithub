@@ -1,0 +1,141 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:subject_name",
+ "creation": "2026-09-30 11:00:00.000000",
+ "description": "One subject of the TNC syllabus with its chapters in teaching order. Teachers pick a subject and chapter on each timesheet class; the Syllabus Progress report reads those.",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "subject_name",
+  "teacher",
+  "teacher_name",
+  "cb1",
+  "sort_order",
+  "chapter_count",
+  "disabled",
+  "sb_chapters",
+  "chapters"
+ ],
+ "fields": [
+  {
+   "fieldname": "subject_name",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "teacher",
+   "fieldtype": "Link",
+   "label": "Teacher",
+   "options": "Teacher",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "The teacher who normally takes this subject. Any teacher can still log a class on it; the subject list is not restricted per teacher.",
+   "ignore_user_permissions": 1
+  },
+  {
+   "fieldname": "teacher_name",
+   "fieldtype": "Data",
+   "label": "Teacher Name",
+   "fetch_from": "teacher.full_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sort_order",
+   "fieldtype": "Int",
+   "label": "Sort Order",
+   "description": "Order of subjects in pickers and reports."
+  },
+  {
+   "fieldname": "chapter_count",
+   "fieldtype": "Int",
+   "label": "Chapters",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled",
+   "default": "0"
+  },
+  {
+   "fieldname": "sb_chapters",
+   "fieldtype": "Section Break",
+   "label": "Chapters (in teaching order)"
+  },
+  {
+   "fieldname": "chapters",
+   "fieldtype": "Table",
+   "label": "Chapters",
+   "options": "Subject Chapter"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-01 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "Subject",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "select": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "TNC Employees",
+   "select": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "TNC Teachers",
+   "select": 1
+  }
+ ],
+ "sort_field": "sort_order",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

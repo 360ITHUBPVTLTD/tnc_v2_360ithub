@@ -126,7 +126,7 @@ def run_tests():
 		assert out2 and out2[0], "payable report returned no columns"
 		payable_rows = out2[1] or []
 		mine = [r for r in payable_rows if isinstance(r, dict) and r.get("teacher_name") == "Parity Test Teacher"]
-		assert mine and mine[0].get("total_payable") == 1000 and mine[0].get("balance_amount") == 1000, f"payable report row wrong: {payable_rows[:2]}"
+		assert mine and mine[0].get("approved_payable") == 1000 and mine[0].get("closing_balance") == 1000, f"payable report row wrong: {mine or payable_rows[:2]}"
 
 		print("\nAll Teacher module verification checks PASSED successfully!")
 	except Exception:

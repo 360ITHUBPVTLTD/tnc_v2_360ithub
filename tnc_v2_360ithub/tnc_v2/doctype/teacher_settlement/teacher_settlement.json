@@ -1,0 +1,223 @@
+{
+ "actions": [],
+ "autoname": "format:TS-{teacher}-{week_start}",
+ "creation": "2026-09-30 19:00:00.000000",
+ "description": "One teacher's week, Saturday to Friday: what was owed at the start, what they earned, penalties, what was paid, and what is owed at the end. Generated every Saturday; regenerating a week refreshes the same record.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "teacher",
+  "teacher_name",
+  "cb0",
+  "week_start",
+  "week_end",
+  "status",
+  "sb_sum",
+  "opening_balance",
+  "approved_payable",
+  "penalties",
+  "cb1",
+  "payments",
+  "adjustments",
+  "refunds",
+  "closing_balance",
+  "sb_lines",
+  "lines",
+  "sb_send",
+  "sent_on",
+  "sent_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "teacher",
+   "fieldtype": "Link",
+   "label": "Teacher",
+   "options": "Teacher",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "teacher_name",
+   "fieldtype": "Data",
+   "label": "Teacher Name",
+   "fetch_from": "teacher.full_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "week_start",
+   "fieldtype": "Date",
+   "label": "Week From (Saturday)",
+   "reqd": 1,
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "week_end",
+   "fieldtype": "Date",
+   "label": "Week To (Friday)",
+   "reqd": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Generated\nSent",
+   "default": "Generated",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sb_sum",
+   "fieldtype": "Section Break",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "opening_balance",
+   "fieldtype": "Currency",
+   "label": "Opening Balance (owed to teacher)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_payable",
+   "fieldtype": "Currency",
+   "label": "Approved Timesheets This Week",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "penalties",
+   "fieldtype": "Currency",
+   "label": "Penalties Approved This Week",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payments",
+   "fieldtype": "Currency",
+   "label": "Paid This Week",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "adjustments",
+   "fieldtype": "Currency",
+   "label": "Penalties Waived",
+   "read_only": 1,
+   "hidden": 1,
+   "description": "Only for penalties waived or refunded before approval became final."
+  },
+  {
+   "fieldname": "refunds",
+   "fieldtype": "Currency",
+   "label": "Penalties Refunded",
+   "read_only": 1,
+   "hidden": 1,
+   "description": "Only for penalties waived or refunded before approval became final."
+  },
+  {
+   "fieldname": "closing_balance",
+   "fieldtype": "Currency",
+   "label": "Closing Balance (owed to teacher)",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "sb_lines",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "lines",
+   "fieldtype": "Table",
+   "label": "Lines",
+   "options": "Teacher Settlement Line",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_send",
+   "fieldtype": "Section Break",
+   "label": "Report Card"
+  },
+  {
+   "fieldname": "sent_on",
+   "fieldtype": "Datetime",
+   "label": "Sent On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sent_status",
+   "fieldtype": "Data",
+   "label": "Send Result",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-07 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "Teacher Settlement",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "TNC Employees"
+  },
+  {
+   "read": 1,
+   "print": 1,
+   "role": "TNC Teachers"
+  }
+ ],
+ "sort_field": "week_start",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "teacher_name",
+ "track_changes": 0
+}

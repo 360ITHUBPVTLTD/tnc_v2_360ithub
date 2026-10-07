@@ -1151,13 +1151,19 @@ def create_invoice_from_timesheets(teacher_name, timesheets, start_date, end_dat
         frappe.throw("No unpaid activities found in the selected timesheets.")
 
     # 3. Generate and Submit Purchase Invoice
+    # who and which period this invoice pays for, visible on the invoice itself
+    ts_dates = [getdate(x) for x in frappe.get_all("Teachers Timesheet", filters={"name": ["in", timesheets]}, pluck="date")]
     invoice = frappe.get_doc({
         "doctype": "Purchase Invoice",
         "supplier": teacher.supplier_id,
         "posting_date": today(),
         "due_date": today(),
         "items": items,
-        "credit_to": "TNC Teachers Salary Paid A/c - IND"
+        "credit_to": "TNC Teachers Salary Paid A/c - IND",
+        "custom_teacher": teacher.name,
+        "custom_period_from": min(ts_dates) if ts_dates else None,
+        "custom_period_to": max(ts_dates) if ts_dates else None,
+        "custom_timesheet_ids": ", ".join(timesheets),
     })
     
     invoice.insert()
@@ -1243,6 +1249,11 @@ def create_payment_for_invoices_v2(teacher_id, supplier_name, total_paid, refere
 
     paid_amount = flt(total_paid)
 
+    # Teacher penalties: whatever is outstanding comes off this payment as a deduction, oldest first.
+    # The invoices stay fully allocated; only the money handed over shrinks (SOW: invoices untouched).
+    from tnc_v2_360ithub.tnc_v2.doctype.teacher_penalty.teacher_penalty import plan_deduction, penalty_account
+    deduction, plan = plan_deduction(teacher_id, paid_amount)
+
     # 1. Initialize Payment Entry
     pe = frappe.new_doc("Payment Entry")
     pe.payment_type = "Pay"
@@ -1270,10 +1281,28 @@ def create_payment_for_invoices_v2(teacher_id, supplier_name, total_paid, refere
             "allocated_amount": flt(ref.get("allocated_amount"))
         })
 
+    if deduction > 0:
+        company = frappe.db.get_value("Purchase Invoice", references[0].get("reference_name"), "company") if references else None
+        pe.append("deductions", {"account": penalty_account(), "cost_center": frappe.get_cached_value("Company", company, "cost_center") if company else None,
+            "amount": -deduction,  # ERPNext: on a Pay entry a deduction that reduces the money handed over is negative
+            "description": "Teacher penalty recovery: " + ", ".join(f"{x['penalty']} ₹{x['amount']:.0f}" for x in plan)})
+        pe.paid_amount = paid_amount - deduction
+        pe.received_amount = pe.paid_amount
+        pe.custom_penalty_deduction = deduction
+        pe.custom_penalty_allocations = json.dumps(plan)
+
     pe.insert(ignore_permissions=True)
     
     # We leave it as Draft so the Accounts head can review/Submit
     return pe.name
+
+
+@frappe.whitelist()
+def get_penalty_deduction(teacher_id, amount):
+    """For the Create Payment dialog: how much of `amount` will go to penalties, and which."""
+    from tnc_v2_360ithub.tnc_v2.doctype.teacher_penalty.teacher_penalty import plan_deduction
+    deduction, plan = plan_deduction(teacher_id, flt(amount))
+    return {"deduction": deduction, "net": flt(amount) - deduction, "plan": plan}
 
 
 import frappe
@@ -1323,6 +1352,15 @@ def on_payment_entry_update(doc, method=None):
     Triggered on Payment Entry submit/cancel.
     Identifies linked Invoices to recalculate Teacher status.
     """
+    # Teacher penalties deducted on this payment: write them on submit, take them back on cancel
+    if doc.get("custom_penalty_allocations"):
+        from tnc_v2_360ithub.tnc_v2.doctype.teacher_penalty.teacher_penalty import apply_entry, undo_reference
+        if doc.docstatus == 1:
+            for x in json.loads(doc.custom_penalty_allocations):
+                apply_entry(x["penalty"], "Recovery", x["amount"], "Payment Entry", doc.name, "Deducted from payment")
+        elif doc.docstatus == 2:
+            undo_reference("Payment Entry", doc.name)
+
     # Look for Purchase Invoices in the 'references' table of the Payment Entry
     pi_list = []
     if hasattr(doc, "references"):
@@ -1590,7 +1628,6 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
-@frappe.whitelist()
 def timesheet_approvers():
     """Users allowed to approve / reject Teachers Timesheets: the table in TNC Settings, plus Administrator."""
     users = set(frappe.get_all("Timesheet Approver", filters={"parent": "TNC Settings"}, pluck="user"))
@@ -1598,11 +1635,12 @@ def timesheet_approvers():
     return users
 
 
+@frappe.whitelist()
 def update_timesheet_status(name, target_status, reason=None):
     # 0. Only the approvers listed in TNC Settings may decide (web button and mobile app alike)
     if target_status in ("Approved", "Rejected"):
         if frappe.session.user not in timesheet_approvers():
-            frappe.throw(_("Only the timesheet approvers set in TNC Settings can approve or reject timesheets."), frappe.PermissionError)
+            frappe.throw(_("You are not allowed to approve or reject timesheets."), frappe.PermissionError)
         if target_status == "Rejected" and not (reason or "").strip():
             frappe.throw(_("Please provide a reason for rejection."))
     # 1. Fetch the Timesheet

@@ -569,7 +569,11 @@ function show_outstanding_invoice_dialog(frm) {
                         fieldname: "total_outstanding",
                         fieldtype: "Currency",
                         read_only: 1
-                    }
+                    },
+                    { fieldname: "sb_pen", fieldtype: "Section Break", label: __("Step 3: Penalties") },
+                    { label: __("Penalty deducted"), fieldname: "penalty_deduction", fieldtype: "Currency", read_only: 1, description: __("Approved penalties still outstanding, oldest first.") },
+                    { label: __("Teacher receives"), fieldname: "net_payment", fieldtype: "Currency", read_only: 1 },
+                    { fieldname: "pen_html", fieldtype: "HTML" }
                 ],
                 primary_action_label: __("Create Payment Entry"),
                 primary_action: function () {
@@ -627,9 +631,22 @@ function show_outstanding_invoice_dialog(frm) {
             });
 
             // Triggered when user manually types the "Payment Amount"
+            const refresh_penalties = () => {
+                const amt = flt(dialog.get_value("paid_amount"));
+                frappe.call({ method: "tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.get_penalty_deduction", args: { teacher_id: frm.doc.name, amount: amt } }).then((r) => {
+                    const m = r.message || { deduction: 0, net: amt, plan: [] };
+                    dialog.set_value("penalty_deduction", m.deduction);
+                    dialog.set_value("net_payment", m.net);
+                    dialog.fields_dict.pen_html.$wrapper.html(m.plan.length
+                        ? "<ul class='small'>" + m.plan.map((p) => `<li><a href="/app/teacher-penalty/${p.penalty}">${p.penalty}</a> · ${frappe.utils.escape_html(p.penalty_type)} · ${frappe.datetime.str_to_user(p.penalty_date)} · ₹${flt(p.amount).toLocaleString("en-IN")}</li>`).join("") + "</ul>"
+                        : "<span class='text-muted small'>" + __("No outstanding penalties.") + "</span>");
+                });
+            };
             dialog.fields_dict.paid_amount.df.onchange = () => {
                 update_row_previews(dialog, invoices);
+                refresh_penalties();
             };
+            refresh_penalties();
 
             dialog.show();
         }
