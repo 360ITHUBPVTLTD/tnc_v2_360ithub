@@ -11,7 +11,7 @@ class TeachersTimesheet(Document):
     import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, getdate, today
+from frappe.utils import cint, flt, getdate, today
 
 class TeachersTimesheet(Document):
     def before_insert(self):
@@ -24,6 +24,30 @@ class TeachersTimesheet(Document):
         self.calculate_totals()
         self.validate_single_activity()
         self.validate_unique_activities()
+        self.validate_enabled_activities()
+        self.resolve_chapters()
+
+    def resolve_chapters(self):
+        """Syllabus tracking: a row that names a subject and chapter must use a chapter of that
+        subject; its number is stored so the Syllabus Progress report can count and order it."""
+        for row in self.activity_type:
+            row.chapter = (row.chapter or "").strip()
+            if not row.subject and row.chapter:
+                frappe.throw(_("Row {0}: choose the Subject before the Chapter.").format(row.idx))
+            if not row.subject or not row.chapter:
+                row.chapter_seq = None
+                row.chapter_completed = 0
+                row.chapter_status = None
+                continue
+            # Chapter Status (In progress / Completed) is what people pick; chapter_completed is
+            # the flag the report reads. An older app sends only the flag, so either one counts.
+            done = row.chapter_status == "Completed" or cint(row.chapter_completed)
+            row.chapter_status = "Completed" if done else "In progress"
+            row.chapter_completed = 1 if done else 0
+            seq = frappe.db.get_value("Subject Chapter", {"parent": row.subject, "chapter_name": row.chapter}, "seq")
+            if not seq:
+                frappe.throw(_("Row {0}: '{1}' is not a chapter of {2}. Pick one from the list or add it to the subject first.").format(row.idx, row.chapter, row.subject))
+            row.chapter_seq = seq
 
     def calculate_totals(self):
         """Calculates row amount based on Hourly rate and total sum"""
@@ -54,6 +78,15 @@ class TeachersTimesheet(Document):
         activity_names = [activity.activity_name for activity in self.activity_type]
         if len(activity_names) != len(set(activity_names)):
             frappe.throw(_("Duplicate Activity Names are not allowed in the Timesheet."))
+
+    def validate_enabled_activities(self):
+        """A switched-off activity cannot be picked on a new line (the app may still offer it until
+        it refreshes); timesheets saved before it was switched off keep it."""
+        for row in self.activity_type:
+            if not row.activity_name or not row.is_new() and frappe.db.get_value("Activities", row.name, "activity_name") == row.activity_name:
+                continue
+            if not frappe.db.get_value("Activity", row.activity_name, "enable"):
+                frappe.throw(_("'{0}' is no longer used. Please pick another activity.").format(row.activity_name))
 
     def get_rate_helper(self, teacher_id, activity_name):
         """Helper to get rate if not set by client script"""
@@ -222,6 +255,12 @@ def update_uom_in_related_docs(doc, method):
     frappe.msgprint(f"Updated UOM to {doc.uom} in related Teachers and Pending Timesheets.")
 
 
+@frappe.whitelist()
+def get_chapters(subject):
+    """Chapter names of a subject, in teaching order, for the timesheet picker (web and app)."""
+    return [r.chapter_name for r in frappe.get_all("Subject Chapter", filters={"parent": subject}, fields=["chapter_name"], order_by="seq asc")]
+
+
 def my_teacher(user=None):
     """The Teacher record behind the logged-in user, tried in order: the User Permission on Teacher
     (how v1 ties a login to a teacher), Teacher.email, then the Employee's Teacher field."""
@@ -236,3 +275,24 @@ def my_teacher_id():
     """App: which Teacher is the logged-in user. Works for teachers with or without an Employee record."""
     t = my_teacher()
     return {"teacher": t, "teacher_name": frappe.db.get_value("Teacher", t, "full_name") if t else None}
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def subject_query(doctype, txt, searchfield, start, page_len, filters):
+    """Subject picker: the logged-in teacher's own subjects first, then every other active subject.
+    Works for the desk link field and for the app (same ordering)."""
+    teacher = my_teacher()
+    return frappe.db.sql("""
+        select name, teacher_name from `tabSubject`
+        where disabled = 0 and (name like %(txt)s or ifnull(teacher_name, '') like %(txt)s)
+        order by if(teacher = %(teacher)s, 0, 1), sort_order, name
+        limit %(start)s, %(page_len)s""", {"txt": f"%{txt}%", "teacher": teacher or "", "start": start, "page_len": page_len})
+
+
+@frappe.whitelist()
+def subjects_for_me():
+    """App: active subjects with the logged-in teacher's own first; `mine` marks them."""
+    teacher = my_teacher()
+    rows = frappe.get_all("Subject", filters={"disabled": 0}, fields=["name", "teacher", "teacher_name"], order_by="sort_order asc, name asc")
+    return sorted(({"name": r.name, "teacher_name": r.teacher_name, "mine": int(r.teacher == teacher)} for r in rows), key=lambda x: -x["mine"])

@@ -49,7 +49,7 @@ app_include_js = "/assets/tnc_v2_360ithub/js/tnc_admissions.js?v=20260921"  # ve
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-doctype_js = {"Sales Order": "admissions/sales_order.js", "Expense Claim": "hr/expense_claim.js", "Payment Entry": "hr/payment_entry.js"}
+doctype_js = {"Sales Order": "admissions/sales_order.js", "Expense Claim": "hr/expense_claim.js", "Payment Entry": "hr/payment_entry.js", "Purchase Invoice": "hr/purchase_invoice.js"}
 doctype_list_js = {"Expense Claim": "hr/expense_claim_list.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -81,6 +81,13 @@ doctype_list_js = {"Expense Claim": "hr/expense_claim_list.js"}
 # ----------
 
 # add methods and filters to jinja environment
+jinja = {
+	"methods": [
+		"tnc_v2_360ithub.teachers.teacher_documents.tnc_letterhead",
+		"tnc_v2_360ithub.teachers.teacher_documents.tnc_statement_view",
+		"tnc_v2_360ithub.teachers.teacher_documents.tnc_payment_view",
+	],
+}
 # jinja = {
 # 	"methods": "tnc_v2_360ithub.utils.jinja_methods",
 # 	"filters": "tnc_v2_360ithub.utils.jinja_filters"
@@ -91,8 +98,6 @@ doctype_list_js = {"Expense Claim": "hr/expense_claim_list.js"}
 
 # before_install = "tnc_v2_360ithub.install.before_install"
 # after_install = "tnc_v2_360ithub.install.after_install"
-# reconcile_custom_fields must stay LAST: it reads is_system_generated, and
-# ensure_custom_fields above flips that flag to 0 for our "TNC v2" fields.
 # Installation
 # ------------
 
@@ -100,7 +105,8 @@ doctype_list_js = {"Expense Claim": "hr/expense_claim_list.js"}
 # after_install = "tnc_v2_360ithub.install.after_install"
 # reconcile_custom_fields must stay LAST: it reads is_system_generated, and
 # ensure_custom_fields above flips that flag to 0 for our "TNC v2" fields.
-after_migrate = ["tnc_v2_360ithub.admissions.setup.ensure_defaults", "tnc_v2_360ithub.admissions.custom_fields.ensure_custom_fields", "tnc_v2_360ithub.setup_helpers.sync_role_profile_users", "tnc_v2_360ithub.setup_helpers.link_employees_to_teachers", "tnc_v2_360ithub.setup_helpers.ensure_teacher_user_permissions", "tnc_v2_360ithub.customizations.reconcile_custom_fields"]
+after_migrate = ["tnc_v2_360ithub.admissions.setup.ensure_defaults", "tnc_v2_360ithub.admissions.custom_fields.ensure_custom_fields", "tnc_v2_360ithub.teachers.penalties.ensure_penalty_types", "tnc_v2_360ithub.setup_helpers.sync_role_profile_users", "tnc_v2_360ithub.setup_helpers.link_employees_to_teachers", "tnc_v2_360ithub.setup_helpers.ensure_teacher_user_permissions", "tnc_v2_360ithub.customizations.reconcile_custom_fields"]
+
 # Uninstallation
 # ------------
 
@@ -145,13 +151,14 @@ after_migrate = ["tnc_v2_360ithub.admissions.setup.ensure_defaults", "tnc_v2_360
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+# teachers see only their own penalties; imposers, approvers and managers see all
+permission_query_conditions = {
+	"Teacher Penalty": "tnc_v2_360ithub.tnc_v2.doctype.teacher_penalty.teacher_penalty.get_permission_query_conditions",
+}
+
+has_permission = {
+	"Teacher Penalty": "tnc_v2_360ithub.tnc_v2.doctype.teacher_penalty.teacher_penalty.has_permission",
+}
 
 # DocType Class
 # ---------------
@@ -179,12 +186,18 @@ doc_events = {
 	# Teacher payables: keep Teachers Timesheet payment_status in step with
 	# Purchase Invoice / Payment Entry, ported from institute_management_360ithub.
 	"Purchase Invoice": {
+		"before_submit": "tnc_v2_360ithub.hr.invoice_approval.before_submit",
+		"on_update": "tnc_v2_360ithub.hr.invoice_approval.on_update",
 		"on_submit": "tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_purchase_invoice_submit",
 		"on_cancel": "tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_purchase_invoice_cancel",
 	},
 	"Payment Entry": {
 		"validate": "tnc_v2_360ithub.hr.expense_claim.guard_payment_reference",
-		"on_submit": "tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_payment_entry_update",
+		"on_submit": [
+			"tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_payment_entry_update",
+			"tnc_v2_360ithub.teachers.teacher_documents.on_payment_entry_submit",
+		],
+		"before_cancel": "tnc_v2_360ithub.tnc_v2.doctype.teacher_penalty.teacher_penalty.before_payment_entry_cancel",
 		"on_cancel": "tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_payment_entry_update",
 	},
 	"Activity": {
@@ -196,6 +209,7 @@ doc_events = {
 	},
 	"Journal Entry": {
 		"validate": "tnc_v2_360ithub.hr.expense_claim.guard_payment_reference",
+		"on_cancel": "tnc_v2_360ithub.tnc_v2.doctype.teacher_penalty.teacher_penalty.on_journal_entry_cancel",
 	},
 	# enrolment Sales Orders: fee and schedule are changed through the enrolment only
 	"Sales Order": {
@@ -222,6 +236,10 @@ scheduler_events = {
 			"tnc_v2_360ithub.admissions.followups.create_form_followups",
 		],
 		# Monthly Teacher Task Summary emails, 07:00 on the 1st (as in v1).
+		# Weekly teacher settlement (SOW: week Sat..Fri, run on Saturday) + WhatsApp report card
+		"30 8 * * 6": [
+			"tnc_v2_360ithub.tnc_v2.doctype.teacher_settlement.teacher_settlement.weekly_job",
+		],
 		"0 7 1 * *": [
 			"tnc_v2_360ithub.teachers.monthly_summary.send_monthly_teacher_task_summary_reports",
 		],
@@ -337,7 +355,7 @@ override_whitelisted_methods = {
 fixtures = [
 	{"dt": "Role", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
 	{"dt": "Role Profile", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teacher"]]]},
-	{"dt": "Custom DocPerm", "filters": [["parent", "in", ["Task", "Comment", "Employee", "User", "Payment Entry", "Purchase Invoice", "Supplier"]], ["role", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
+	{"dt": "Custom DocPerm", "filters": [["parent", "in", ["Task", "Comment", "Employee", "User", "Payment Entry", "Purchase Invoice", "Supplier", "Buying Settings", "Accounts Settings", "Contact", "Address", "Cost Center", "Currency", "UOM", "Mode of Payment", "Payment Terms Template", "Purchase Taxes and Charges Template", "Terms and Conditions", "Item Group", "Supplier Group", "Tax Category", "Price List", "Bank Account"]], ["role", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
 	{"dt": "Number Card", "filters": [["module", "=", "TNC v2"]]},
 	{"dt": "Report", "filters": [["module", "=", "TNC v2"], ["is_standard", "=", "No"]]},
 	{"dt": "Workspace", "filters": [["module", "=", "TNC v2"]]},

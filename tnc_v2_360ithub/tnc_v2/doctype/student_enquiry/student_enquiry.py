@@ -254,7 +254,7 @@ def whatsapp_instance_state():
 	s = notifications.settings()
 	inst = {"provider": s.whatsapp_provider, "ok": False, "msg": None, "name": None, "connected": 0, "active": 0, "credits": 0, "number": None}
 	if s.whatsapp_provider != "Webtoolex":
-		inst["msg"] = _("WhatsApp provider is Disabled in TNC Settings")
+		inst["msg"] = _("WhatsApp sending is switched off. Please contact the administrator.")
 	elif not notifications.app_installed("webtoolex_whatsapp"):
 		inst["msg"] = _("webtoolex_whatsapp app is not installed")
 	else:

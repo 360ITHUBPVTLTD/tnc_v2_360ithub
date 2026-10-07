@@ -1,0 +1,117 @@
+{
+ "charts": [],
+ "content": "[\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Teachers</b></span>\"\n  },\n  \"id\": \"hdr\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Teachers\"\n  },\n  \"id\": \"sc0\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Timesheets\"\n  },\n  \"id\": \"sc1\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Timesheets to approve\"\n  },\n  \"id\": \"sc2\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Penalties\"\n  },\n  \"id\": \"sc3\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Penalties to approve\"\n  },\n  \"id\": \"sc4\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Penalty Types\"\n  },\n  \"id\": \"sc5\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Subjects\"\n  },\n  \"id\": \"sc6\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Syllabus Progress\"\n  },\n  \"id\": \"sc7\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Teachers Payable\"\n  },\n  \"id\": \"sc8\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Timesheet Report\"\n  },\n  \"id\": \"sc9\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Weekly Settlements\"\n  },\n  \"id\": \"sc10\",\n  \"type\": \"shortcut\"\n }\n]",
+ "creation": "2026-09-30 16:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "icon": "users",
+ "idx": 0,
+ "indicator_color": "blue",
+ "is_hidden": 0,
+ "label": "TNC Teachers",
+ "links": [],
+ "modified": "2026-09-30 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "TNC Teachers",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "TNC Employees"
+  },
+  {
+   "role": "TNC Manager"
+  },
+  {
+   "role": "TNC Super Admin"
+  }
+ ],
+ "sequence_id": 3.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Teachers",
+   "link_to": "Teacher",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Timesheets",
+   "link_to": "Teachers Timesheet",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Timesheets to approve",
+   "link_to": "Teachers Timesheet",
+   "type": "DocType",
+   "stats_filter": "{\"status\": \"Pending\"}"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Penalties",
+   "link_to": "Teacher Penalty",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Penalties to approve",
+   "link_to": "Teacher Penalty",
+   "type": "DocType",
+   "stats_filter": "{\"status\": \"Submitted\"}"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Penalty Types",
+   "link_to": "Penalty Type",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Subjects",
+   "link_to": "Subject",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "",
+   "label": "Syllabus Progress",
+   "link_to": "Syllabus Progress",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Teachers Payable",
+   "link_to": "Teachers Payable Report",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Timesheet Report",
+   "link_to": "Teachers Timesheet Report",
+   "type": "Report"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Weekly Settlements",
+   "link_to": "Teacher Settlement",
+   "type": "DocType"
+  }
+ ],
+ "title": "TNC Teachers"
+}

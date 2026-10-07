@@ -195,7 +195,58 @@ frappe.ui.form.on("Teachers Timesheet", {
 
 // --- Calculations Logic ---
 
+// --- Syllabus pickers on the class row ---
+// Chapter is an Autocomplete whose choices are the chosen subject's chapters. The choices are
+// pushed onto the table definition (for rows rendered later) and onto any Chapter editor that is
+// already open in the row or in the row's expanded form.
+function apply_chapter_options(frm, cdn, options) {
+    const grid = frm.fields_dict.activity_type.grid;
+    grid.update_docfield_property("chapter", "options", options);
+    const row = grid.grid_rows_by_docname && grid.grid_rows_by_docname[cdn];
+    if (!row) return;
+    const inline = row.on_grid_fields_dict && row.on_grid_fields_dict.chapter;
+    const expanded = row.grid_form && row.grid_form.fields_dict && row.grid_form.fields_dict.chapter;
+    [inline, expanded].forEach((ctrl) => { if (ctrl && ctrl.set_data) ctrl.set_data(options); });
+}
+
+function load_chapter_options(frm, cdn, subject) {
+    if (!subject) { apply_chapter_options(frm, cdn, []); return; }
+    frm.__chapters = frm.__chapters || {};
+    if (frm.__chapters[subject]) { apply_chapter_options(frm, cdn, frm.__chapters[subject]); return; }
+    frappe.call({ method: "tnc_v2_360ithub.tnc_v2.doctype.teachers_timesheet.teachers_timesheet.get_chapters", args: { subject } }).then((r) => {
+        frm.__chapters[subject] = r.message || [];
+        apply_chapter_options(frm, cdn, frm.__chapters[subject]);
+    });
+}
+
+frappe.ui.form.on("Teachers Timesheet", {
+    setup(frm) {
+        // only the activities switched on in the Activity list can be picked
+        frm.set_query("activity_name", "activity_type", () => ({ filters: { enable: 1 } }));
+        frm.set_query("batch", "activity_type", () => ({ filters: { status: ["in", ["Upcoming", "Ongoing"]] } }));
+        frm.set_query("subject", "activity_type", () => ({ query: "tnc_v2_360ithub.tnc_v2.doctype.teachers_timesheet.teachers_timesheet.subject_query" }));
+    },
+    onload_post_render(frm) {
+        (frm.doc.activity_type || []).forEach((row) => { if (row.subject) load_chapter_options(frm, row.name, row.subject); });
+    },
+});
+
 frappe.ui.form.on("Activities", {
+    subject: function (frm, cdt, cdn) {
+        const row = locals[cdt][cdn];
+        frappe.model.set_value(cdt, cdn, "chapter", "");
+        load_chapter_options(frm, cdn, row.subject);
+    },
+    chapter_status: function (frm, cdt, cdn) {
+        // keep the flag the report reads in step with what was picked
+        const row = locals[cdt][cdn];
+        frappe.model.set_value(cdt, cdn, "chapter_completed", row.chapter_status === "Completed" ? 1 : 0);
+    },
+    form_render: function (frm, cdt, cdn) {
+        // the row was opened in its own form: give its Chapter box the list too
+        const row = locals[cdt][cdn];
+        if (row.subject) load_chapter_options(frm, cdn, row.subject);
+    },
     activity_name: function (frm, cdt, cdn) {
         let row = locals[cdt][cdn];
         if (row.activity_name && frm.doc.teacher_id) {

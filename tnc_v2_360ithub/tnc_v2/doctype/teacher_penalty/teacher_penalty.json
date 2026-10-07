@@ -1,0 +1,291 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-09-30 16:00:00.000000",
+ "description": "One penalty on one teacher. An imposer (TNC Settings > Penalty imposers) creates and submits it; an approver (TNC Settings > Penalty approvers) approves or rejects it. Administrator can do both. Money is recovered only after approval (accounting step).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "teacher",
+  "teacher_name",
+  "penalty_date",
+  "cb1",
+  "penalty_type",
+  "amount",
+  "status",
+  "sb_reason",
+  "reason",
+  "sb_decision",
+  "imposed_by",
+  "imposed_by_name",
+  "cb2",
+  "approved_by",
+  "decided_on",
+  "approval_comment",
+  "sb_recovery",
+  "recovered_amount",
+  "waived_amount",
+  "cb3",
+  "outstanding_amount",
+  "recoveries",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "TP-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "TP-.YYYY.-",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "teacher",
+   "fieldtype": "Link",
+   "label": "Teacher",
+   "options": "Teacher",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "teacher_name",
+   "fieldtype": "Data",
+   "label": "Teacher Name",
+   "fetch_from": "teacher.full_name",
+   "read_only": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "penalty_date",
+   "fieldtype": "Date",
+   "label": "Date of Incident",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "penalty_type",
+   "fieldtype": "Link",
+   "label": "Penalty Type",
+   "options": "Penalty Type",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "reqd": 1,
+   "in_list_view": 1,
+   "fetch_from": "penalty_type.default_amount",
+   "fetch_if_empty": 1,
+   "description": "Filled from the penalty type; change it if this case is different."
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted\nApproved\nRecovered\nWaived\nRefunded\nRejected\nCancelled",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "sb_reason",
+   "fieldtype": "Section Break",
+   "label": "Reason"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "What happened",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sb_decision",
+   "fieldtype": "Section Break",
+   "label": "Decision",
+   "depends_on": "eval:doc.docstatus >= 1"
+  },
+  {
+   "fieldname": "imposed_by",
+   "fieldtype": "Link",
+   "label": "Imposed By",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "imposed_by_name",
+   "fieldtype": "Data",
+   "label": "Imposed By (name)",
+   "fetch_from": "imposed_by.full_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Decided By",
+   "options": "User",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "decided_on",
+   "fieldtype": "Datetime",
+   "label": "Decided On",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "approval_comment",
+   "fieldtype": "Small Text",
+   "label": "Decision Comment",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "sb_recovery",
+   "fieldtype": "Section Break",
+   "label": "Recovery",
+   "depends_on": "eval:['Approved','Recovered'].includes(doc.status)",
+   "collapsible": 0
+  },
+  {
+   "default": "0",
+   "fieldname": "recovered_amount",
+   "fieldtype": "Currency",
+   "label": "Recovered",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "waived_amount",
+   "fieldtype": "Currency",
+   "label": "Waived",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1,
+   "hidden": 1,
+   "description": "Only for penalties waived before approval became final (6 Oct 2026)."
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "outstanding_amount",
+   "fieldtype": "Currency",
+   "label": "Outstanding",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "recoveries",
+   "fieldtype": "Table",
+   "label": "Recovery History",
+   "options": "Teacher Penalty Recovery",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Teacher Penalty",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-07 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "Teacher Penalty",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Super Admin",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "TNC Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "TNC Employees"
+  },
+  {
+   "read": 1,
+   "role": "TNC Teachers"
+  }
+ ],
+ "search_fields": "teacher_name, penalty_type",
+ "sort_field": "penalty_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "teacher_name",
+ "track_changes": 1
+}
