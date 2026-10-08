@@ -99,6 +99,11 @@ def tnc_statement_view(doc):
 	return frappe._dict(summary=summary, lines=lines, net_penalties=net_pen)
 
 
+def _institute():
+	"""Institute name as set in settings, else the default company's name."""
+	return frappe.db.get_single_value("TNC Settings", "document_institute_name") or frappe.defaults.get_global_default("company") or ""
+
+
 def statement_text(doc):
 	"""WhatsApp caption: the same simple plus/minus list as the PDF."""
 	inr = lambda v: "₹{:,.0f}".format(flt(v))
@@ -107,8 +112,9 @@ def statement_text(doc):
 	rows = []
 	for label, amount, sign in v.summary:
 		rows.append(f"{sign + ' ' if sign else ''}{label}: {inr(amount)}")
-	return (_("Team Nursing Classes, weekly payment summary {0} to {1}").format(d(doc.week_start), d(doc.week_end)) + "\n"
-		+ (doc.teacher_name or doc.teacher).strip() + "\n\n" + "\n".join(rows) + "\n\n" + _("Questions? Please contact the office."))
+	return (_("Dear {0},").format((doc.teacher_name or doc.teacher).strip()) + "\n"
+		+ _("{0}, weekly payment summary {1} to {2}").format(_institute(), d(doc.week_start), d(doc.week_end))
+		+ "\n\n" + "\n".join(rows) + "\n\n" + _("Questions? Please contact the office."))
 
 
 # ---------- payment receipt ----------
@@ -145,7 +151,7 @@ def tnc_payment_view(doc):
 def receipt_text(doc):
 	v = tnc_payment_view(doc)
 	inr = lambda x: "₹{:,.0f}".format(flt(x))
-	lines = [_("Team Nursing Classes, payment receipt"), (v.teacher_name or "").strip(), "",
+	lines = [_("Dear {0},").format((v.teacher_name or "").strip()), _("{0}, payment receipt").format(_institute()), "",
 		_("Amount for classes: {0}").format(inr(v.gross))]
 	if v.deducted:
 		lines.append(_("Penalty deducted: {0}").format(inr(v.deducted)))
