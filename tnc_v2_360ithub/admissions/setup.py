@@ -183,7 +183,7 @@ def ensure_workspace():
 			continue
 		frappe.get_doc({"doctype": "Number Card", "name": label, "label": label, "type": "Document Type", "document_type": dt, "function": "Count",
 			"filters_json": frappe.as_json([[dt, f[0], f[1], f[2], False] for f in filters]), "is_public": 1, "show_percentage_stats": 1, "stats_time_interval": "Monthly", "color": color, "module": "TNC v2"}).insert(ignore_permissions=True)
-	shortcuts = [("Follow-ups", "Page", "follow-ups", "Red"), ("Share Forms", "Page", "share-forms", "Grey"), ("Student Enquiry", "DocType", "Student Enquiry", "Blue"), ("Demo Class", "DocType", "Demo Class", "Orange"), ("Student", "DocType", "Student", "Green"),
+	shortcuts = [("Follow-ups", "Page", "follow-ups", "Red"), ("Student Enquiry", "DocType", "Student Enquiry", "Blue"), ("Demo Class", "DocType", "Demo Class", "Orange"), ("Student", "DocType", "Student", "Green"),
 		("Enrol in Batch", "DocType", "Student Batch Enrollment", "Green"), ("Batches", "DocType", "Student Batch", "Grey"),
 		("Sales Orders", "DocType", "Sales Order", "Grey"), ("Enquiry Funnel", "Report", "Enquiry Funnel", "Blue")]
 	content = [{"id": "hdr", "type": "header", "data": {"text": "<span class=\"h4\"><b>Admissions</b></span>", "col": 12}}]
@@ -199,7 +199,10 @@ def ensure_workspace():
 	for label, *_r in NUMBER_CARDS:
 		ws.append("number_cards", {"label": label, "number_card_name": label})
 	for s in shortcuts:
-		ws.append("shortcuts", {"label": s[0], "type": s[1], "link_to": s[2], "color": s[3]})
+		row = {"label": s[0], "type": s[1], "link_to": s[2], "color": s[3]}
+		if s[1] == "Report":
+			row["report_ref_doctype"] = frappe.db.get_value("Report", s[2], "ref_doctype")
+		ws.append("shortcuts", row)
 	ws.content = frappe.as_json(content)
 	ws.roles = []
 	for r in ("TNC Employees", "TNC Manager", "TNC Super Admin"):

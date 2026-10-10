@@ -87,7 +87,9 @@ class StudentBatchEnrollment(Document):
 				frappe.format_value(total, {"fieldtype": "Currency"}), frappe.format_value(self.net_payable, {"fieldtype": "Currency"})))
 		batch_end = getdate(self.batch_end) if self.batch_end else None
 		beyond = [r for r in self.installments if batch_end and r.due_date and getdate(r.due_date) > batch_end]
-		if beyond:
+		if beyond and not frappe.flags.get("enrolment_window_warned"):
+			# validate runs on insert and again on submit (Admit does both in one call): warn once per request
+			frappe.flags.enrolment_window_warned = True
 			frappe.msgprint(_("{0} instalment(s) fall after the batch ends on {1} (latest due {2}). Collect the fee within the batch unless this was agreed.").format(
 				len(beyond), frappe.format_value(batch_end, {"fieldtype": "Date"}), frappe.format_value(max(getdate(r.due_date) for r in beyond), {"fieldtype": "Date"})),
 				title=_("Instalments beyond batch end"), indicator="orange")
@@ -179,6 +181,9 @@ class StudentBatchEnrollment(Document):
 		if self.gst_applicable and self.taxes_and_charges:
 			so.taxes_and_charges = self.taxes_and_charges
 		so.flags.ignore_permissions = True
+			# the order points back at this enrolment; clear that so a cancelled pair can be deleted
+			# (enrolment first, then the order) instead of each blocking the other
+			frappe.db.set_value("Sales Order", so.name, "custom_student_batch_enrollment", None, update_modified=False)
 		so.set_missing_values()
 		if so.taxes_and_charges and not so.taxes:
 			from erpnext.controllers.accounts_controller import get_taxes_and_charges

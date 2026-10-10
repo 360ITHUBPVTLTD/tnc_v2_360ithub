@@ -43,7 +43,10 @@
   "student_counsellor_feedback",
   "rated_on",
   "rating_token",
-  "rating_sent_on"
+  "rating_sent_on",
+  "schedule_sent_on",
+  "schedule_sent_status",
+  "reminder_sent_on"
  ],
  "fields": [
   {
@@ -273,6 +276,27 @@
    "fieldtype": "Datetime",
    "label": "Rating link sent on",
    "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "schedule_sent_on",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "Schedule Message Sent On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "schedule_sent_status",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Schedule Message Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reminder_sent_on",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "Demo Reminder Sent On",
    "read_only": 1
   }
  ],

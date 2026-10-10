@@ -109,6 +109,9 @@ def _make_receipt_invoice(so, amount, pe, posting_date, remarks):
 		"cost_center": so.get("cost_center"), "custom_student": so.get("custom_student"),
 		"remarks": _("Towards {0}").format(", ".join(r.payment_term for r in pe.references if r.payment_term) or so.name) + (f" — {remarks}" if remarks else ""),
 		"update_stock": 0, "allocate_advances_automatically": 0,
+		# the receipt is for the exact paise received (8,833.33); a rounded total of 8,833 would be
+		# smaller than the advance and ERPNext refuses "Advance amount cannot be greater than ..."
+		"disable_rounded_total": 1,
 	})
 	for so_item in so.items:
 		si.append("items", {

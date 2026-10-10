@@ -42,6 +42,24 @@ class DemoClass(Document):
 	def on_update(self):
 		self.sync_enquiry_status()
 		self.followup_after_result()
+		self.message_on_schedule()
+
+	def message_on_schedule(self):
+		"""The student gets a WhatsApp when the demo is scheduled, and again when its date, time
+		or batch changes while still Scheduled. Never blocks the save; the outcome is kept on the
+		demo (headline) so a failed send can be resent from More."""
+		if self.result != "Scheduled" or self.flags.no_schedule_message:
+			return
+		before = self.get_doc_before_save()
+		changed = before is None or any((before.get(k) or None) != (self.get(k) or None) for k in ("demo_date", "from_time", "to_time", "batch"))
+		if not changed:
+			return
+		if before and before.demo_date != self.demo_date and self.reminder_sent_on:
+			self.db_set("reminder_sent_on", None, update_modified=False)  # a new day gets its own reminder
+		try:
+			send_schedule_message(self, rescheduled=bool(before and before.schedule_sent_on))
+		except Exception:
+			frappe.log_error(title="Demo schedule message not sent", message=frappe.get_traceback())
 
 	def followup_after_result(self):
 		"""Once the demo result is known, the counsellor gets a next-day Enquiry follow-up so the
@@ -87,3 +105,98 @@ class DemoClass(Document):
 			new = "Demo Attended" if any(d.result == "Attended" for d in demos) else "New"
 		if new != status:
 			frappe.db.set_value("Student Enquiry", self.enquiry, "status", new, update_modified=False)
+
+
+# ---------- demo schedule message ----------
+
+def _institute():
+	return frappe.db.get_single_value("TNC Settings", "document_institute_name") or frappe.defaults.get_global_default("company") or _("our institute")
+
+
+def schedule_message(doc, rescheduled=False):
+	"""Message text for the scheduled demo: date, time, batch, and the Meet link for an online batch."""
+	from frappe.utils import get_datetime
+	hhmm = lambda t: get_datetime(f"2000-01-01 {t}").strftime("%I:%M %p").lstrip("0")  # 10:00 AM
+	when = frappe.format_value(doc.demo_date, {"fieldtype": "Date"}) if doc.demo_date else _("the agreed date")
+	if doc.from_time:
+		when += " " + _("at") + " " + hhmm(doc.from_time)
+		if doc.to_time:
+			when += " - " + hhmm(doc.to_time)
+	batch = frappe.db.get_value("Student Batch", doc.batch, ["batch_name", "mode", "meet_link"], as_dict=True) if doc.batch else None
+	lines = [(_("Namaste {0}, your demo class at {1} has been rescheduled to {2}.") if rescheduled else _("Namaste {0}, your demo class at {1} is scheduled on {2}.")).format(
+		(doc.student_name or "").strip() or _("student"), _institute(), when)]
+	if batch:
+		lines.append(_("Batch: {0} ({1})").format(batch.batch_name or doc.batch, batch.mode or _("Offline")))
+		if batch.mode == "Online" and batch.meet_link:
+			lines.append(_("Join link: {0}").format(batch.meet_link))
+		elif batch.mode != "Online":
+			lines.append(_("Please reach the centre 10 minutes early."))
+	lines.append(_("For any help, reply to this message or call the office."))
+	return "\n".join(lines)
+
+
+def send_schedule_message(doc, mobile=None, rescheduled=False):
+	from tnc_v2_360ithub import notifications
+	from frappe.utils import now_datetime
+	digits = "".join(ch for ch in (mobile or doc.mobile or "") if ch.isdigit())
+	if len(digits) < 10:
+		doc.db_set("schedule_sent_status", _("Not sent: no valid 10-digit mobile number"), update_modified=False)
+		return {"status": "Failed", "reason": _("Please enter a valid 10-digit mobile number."), "mobile": digits}
+	to = digits[-10:]
+	msg = schedule_message(doc, rescheduled)
+	result = notifications.send_whatsapp_to_mobile(to, msg, ref_doctype="Demo Class", ref_name=doc.name)
+	if isinstance(result, dict):
+		ok, reason = bool(result.get("status")), (result.get("msg") or result.get("message") or result.get("error"))
+	else:
+		ok, reason = bool(result), None
+	if ok:
+		doc.db_set({"schedule_sent_on": now_datetime(), "schedule_sent_status": "Sent"}, update_modified=False)
+		doc.add_comment("Info", _("Demo schedule sent on WhatsApp to {0}").format(to))
+	else:
+		doc.db_set("schedule_sent_status", f"Failed: {reason or ''}".strip(": ")[:140], update_modified=False)
+	return {"status": "Sent" if ok else "Failed", "reason": reason, "message": msg, "mobile": to}
+
+
+@frappe.whitelist()
+def resend_schedule_message(demo, mobile=None):
+	doc = frappe.get_doc("Demo Class", demo)
+	doc.check_permission("write")
+	if doc.result != "Scheduled":
+		frappe.throw(_("The schedule message can be sent only while the demo is Scheduled."))
+	return send_schedule_message(doc, mobile, rescheduled=bool(doc.schedule_sent_on))
+
+
+def reminder_message(doc):
+	when = _("today")
+	if doc.from_time:
+		from frappe.utils import get_datetime
+		when += " " + _("at") + " " + get_datetime(f"2000-01-01 {doc.from_time}").strftime("%I:%M %p").lstrip("0")
+	batch = frappe.db.get_value("Student Batch", doc.batch, ["batch_name", "mode", "meet_link"], as_dict=True) if doc.batch else None
+	lines = [_("Namaste {0}, a reminder: your demo class at {1} is {2}.").format((doc.student_name or "").strip() or _("student"), _institute(), when)]
+	if batch and batch.mode == "Online" and batch.meet_link:
+		lines.append(_("Join link: {0}").format(batch.meet_link))
+	elif batch:
+		lines.append(_("Please reach the centre 10 minutes early."))
+	lines.append(_("For any help, reply to this message or call the office."))
+	return "\n".join(lines)
+
+
+def send_demo_reminders(date=None):
+	"""Scheduled 08:00: one reminder to each student whose demo is Scheduled for today and
+	has not been reminded yet. Returns the count sent."""
+	from tnc_v2_360ithub import notifications
+	from frappe.utils import now_datetime, nowdate
+	date = date or nowdate()
+	sent = 0
+	for d in frappe.get_all("Demo Class", filters={"result": "Scheduled", "demo_date": date, "reminder_sent_on": ["is", "not set"]}, pluck="name"):
+		doc = frappe.get_doc("Demo Class", d)
+		digits = "".join(ch for ch in (doc.mobile or "") if ch.isdigit())
+		if len(digits) < 10:
+			continue
+		result = notifications.send_whatsapp_to_mobile(digits[-10:], reminder_message(doc), ref_doctype="Demo Class", ref_name=doc.name)
+		if isinstance(result, dict) and result.get("status"):
+			doc.db_set("reminder_sent_on", now_datetime(), update_modified=False)
+			doc.add_comment("Info", _("Demo reminder sent on WhatsApp to {0}").format(digits[-10:]))
+			sent += 1
+	frappe.db.commit()
+	return sent

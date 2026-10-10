@@ -20,6 +20,27 @@ class StudentEnquiry(Document):
 			frappe.msgprint(_("An open enquiry with this mobile already exists: {0} ({1}, {2}, counsellor {3}).").format(
 				frappe.utils.get_link_to_form("Student Enquiry", en.name), en.student_name, en.status, en.counsellor or ""), title=_("Duplicate enquiry"), indicator="orange")
 
+	def after_insert(self):
+		# a counsellor saved a new enquiry: the student gets their personal enquiry-form link at once.
+		# Enquiries that came in through that link (invite_token) or from the public site are not sent one.
+		if self.invite_token or frappe.session.user == "Guest" or self.flags.no_form_link:
+			return
+		try:
+			_send_enquiry_link(self)
+		except Exception:
+			frappe.log_error(title="Enquiry form link not sent", message=frappe.get_traceback())
+
+	def on_trash(self):
+		# the student points back at this enquiry; unlink it so either record can be deleted first
+		if self.student and frappe.db.exists("Student", self.student):
+			frappe.db.set_value("Student", self.student, "enquiry", None, update_modified=False)
+		# follow-ups, admission forms and demos belong to this enquiry: they go with it.
+		# A demo with a fee receipt stops the delete with Frappe's own message; cancel that first.
+		for dt, filters in (("Student Follow-Up", {"reference_type": "Student Enquiry", "reference_name": self.name}),
+				("Admission Form", {"enquiry": self.name}), ("Demo Class", {"enquiry": self.name})):
+			for n in frappe.get_all(dt, filters=filters, pluck="name"):
+				frappe.delete_doc(dt, n, ignore_permissions=True)
+
 	def validate(self):
 		# status is owned by the actions (demo results, Convert, Mark Lost, Reopen); a manual edit is reverted
 		if not self.is_new() and not self.flags.status_by_action:
@@ -120,6 +141,8 @@ def convert_to_student(enquiry, extra=None, link_student=None):
 		"email": enq.email,
 		"gender": enq.gender,
 		"city": enq.city,
+		"college": enq.college_name,
+		"passout_year": enq.passing_year,
 		"course_interested": enq.course_interested,
 		"batch_interested": enq.batch_interested,
 		"customer": enq.customer if enq.customer and frappe.db.exists("Customer", enq.customer) else None,
@@ -207,7 +230,13 @@ def admission_form_status(enquiry):
 	form = latest_form_for(enq.name, enq.mobile)
 	applied = frappe.get_all("Admission Form", filters={"enquiry": enq.name, "status": "Applied"}, pluck="name", limit=1)
 	link = admission_link(enq)
-	return {"pending": form, "applied": applied[0] if applied else None, "link": link}
+	# form_token_sent_on is stamped when a link is issued (also for a preview); "sent" means a WhatsApp went out
+	# only logs of this enquiry: a deleted enquiry's number can be reused, so ignore logs older than the record
+	sent_on = frappe.db.get_value("WhatsApp Message Log", {"reference_doctype": "Student Enquiry", "reference_name": enq.name, "status": "Sent",
+		"message": ["like", "%/admission/%"], "creation": [">=", enq.creation]}, "creation", order_by="creation desc")
+	demo = frappe.db.get_value("Demo Class", {"enquiry": enq.name, "result": "Scheduled"}, ["name", "demo_date", "from_time"], as_dict=True, order_by="demo_date desc, from_time desc")
+	attended = frappe.db.get_value("Demo Class", {"enquiry": enq.name, "result": "Attended"}, ["name", "demo_date", "from_time", "batch", "rated_on"], as_dict=True, order_by="demo_date desc, from_time desc")
+	return {"pending": form, "applied": applied[0] if applied else None, "link": link, "admission_sent_on": sent_on, "scheduled_demo": demo, "attended_demo": attended}
 
 
 LINK_HOURS = 48  # a personal admission link works for this long after it is sent
@@ -231,7 +260,7 @@ def admission_link(enq):
 @frappe.whitelist(allow_guest=True)
 def admission_prefill(enquiry, t):
 	"""Public form: the enquiry's details for prefilling, only with the matching token."""
-	row = frappe.db.get_value("Student Enquiry", enquiry, ["form_token", "form_token_sent_on", "student_name", "mobile", "email", "gender", "city", "course_interested", "batch_interested", "status"], as_dict=True)
+	row = frappe.db.get_value("Student Enquiry", enquiry, ["form_token", "form_token_sent_on", "student_name", "mobile", "email", "gender", "city", "college_name", "passing_year", "course_interested", "batch_interested", "status"], as_dict=True)
 	if not row or not t or row.form_token != t:
 		return {}
 	if admission_link_expired(row):
@@ -239,7 +268,8 @@ def admission_prefill(enquiry, t):
 	if frappe.db.exists("Admission Form", {"enquiry": enquiry, "status": ["!=", "Rejected"]}):
 		return {"closed": _("An admission form has already been submitted with this link. Please contact the institute if you need to correct it.")}
 	# a converted enquiry may still receive its consent form (Admit sends the link after admission)
-	return {"student_name": row.student_name, "mobile": row.mobile, "email": row.email, "gender": row.gender, "city": row.city, "course_interested": row.course_interested}
+	return {"student_name": row.student_name, "mobile": row.mobile, "email": row.email, "gender": row.gender, "city": row.city,
+		"college_name": row.college_name, "passing_year": row.passing_year, "course_interested": row.course_interested}
 
 
 def _admission_message(enq, link=None):
@@ -274,6 +304,71 @@ def whatsapp_instance_state():
 	return inst
 
 
+# ---------- personal enquiry-form link (replaces the Share Forms page) ----------
+
+def _enquiry_message(enq):
+	"""Message body without the link; the link is appended at send time."""
+	inst = frappe.db.get_single_value("TNC Settings", "document_institute_name") or frappe.defaults.get_global_default("company") or _("our institute")
+	return _("Namaste! Thank you for your interest in {0}. Please fill this short form so our counsellor can help you better.").format(inst)
+
+
+def _link_result(enq, result, to, link, msg, what):
+	"""Shared tail of a WhatsApp send: Sent / Failed / Skipped with the provider's reason."""
+	if isinstance(result, dict):
+		status = "Sent" if result.get("status") else "Failed"
+		reason = result.get("msg") or result.get("message") or result.get("error")
+	else:
+		status, reason = (result or "Skipped"), None
+	if status == "Sent":
+		enq.add_comment("Info", _("{0} link sent on WhatsApp to {1}").format(what, to))
+	if status != "Sent" and not reason:
+		reason = frappe.db.get_value("WhatsApp Message Log", {"reference_doctype": "Student Enquiry", "reference_name": enq.name}, "error", order_by="creation desc")
+	return {"status": status, "reason": reason, "link": link, "message": msg, "mobile": to}
+
+
+def _send_enquiry_link(enq, mobile=None, message=None):
+	"""WhatsApp the personal enquiry-form link to the enquiry's mobile. Records the outcome on
+	the enquiry (hidden fields shown in the form headline) so a failed send can be retried."""
+	from tnc_v2_360ithub import notifications
+	from tnc_v2_360ithub.admissions.invites import link as invite_link
+	from frappe.utils import now_datetime
+	digits = "".join(ch for ch in (mobile or enq.mobile or "") if ch.isdigit())
+	if len(digits) < 10:
+		enq.db_set("enquiry_link_status", _("Not sent: no valid 10-digit mobile number"), update_modified=False)
+		return {"status": "Failed", "reason": _("Please enter a valid 10-digit mobile number."), "mobile": digits}
+	to = digits[-10:]
+	link = invite_link(to)
+	msg = (message or "").strip() or _enquiry_message(enq)
+	if link not in msg:
+		msg = msg + "\n\n" + link
+	result = notifications.send_whatsapp_to_mobile(to, msg, ref_doctype="Student Enquiry", ref_name=enq.name)
+	out = _link_result(enq, result, to, link, msg, _("Enquiry form"))
+	if out["status"] == "Sent":
+		enq.db_set({"enquiry_link_sent_on": now_datetime(), "enquiry_link_status": "Sent"}, update_modified=False)
+	else:
+		enq.db_set("enquiry_link_status", f"{out['status']}: {out['reason'] or ''}".strip(": ")[:140], update_modified=False)
+	return out
+
+
+@frappe.whitelist()
+def enquiry_link_preview(enquiry):
+	"""Everything the Send WhatsApp dialog shows before the user confirms."""
+	from tnc_v2_360ithub.admissions.invites import link as invite_link
+	enq = frappe.get_doc("Student Enquiry", enquiry)
+	enq.check_permission("read")
+	digits = "".join(ch for ch in (enq.mobile or "") if ch.isdigit())[-10:]
+	return {"instance": whatsapp_instance_state(), "mobile": digits, "link": invite_link(digits) if len(digits) == 10 else None,
+		"message": _enquiry_message(enq), "student_name": enq.student_name}
+
+
+@frappe.whitelist()
+def send_enquiry_link(enquiry, mobile=None, message=None):
+	"""Confirm and Send (or resend) the personal enquiry-form link from the institute's number."""
+	enq = frappe.get_doc("Student Enquiry", enquiry)
+	enq.check_permission("write")
+	return _send_enquiry_link(enq, mobile, message)
+
+
 @frappe.whitelist()
 def admission_link_preview(enquiry):
 	"""Everything the Send WhatsApp dialog shows before the user confirms: the
@@ -305,16 +400,7 @@ def send_admission_link(enquiry, mobile=None, message=None):
 	if link not in msg:
 		msg = msg + "\n\n" + link  # the form link always goes at the end
 	result = notifications.send_whatsapp_to_mobile(to, msg, ref_doctype="Student Enquiry", ref_name=enq.name)
-	if isinstance(result, dict):
-		status = "Sent" if result.get("status") else "Failed"
-		reason = result.get("msg") or result.get("message") or result.get("error")
-	else:
-		status, reason = (result or "Skipped"), None
-	if status == "Sent":
-		enq.add_comment("Info", _("Admission form link sent on WhatsApp to {0}").format(to))
-	if status != "Sent" and not reason:
-		reason = frappe.db.get_value("WhatsApp Message Log", {"reference_doctype": "Student Enquiry", "reference_name": enq.name}, "error", order_by="creation desc")
-	return {"status": status, "reason": reason, "link": link, "message": msg, "mobile": to}
+	return _link_result(enq, result, to, link, msg, _("Admission form"))
 
 
 @frappe.whitelist(allow_guest=True)

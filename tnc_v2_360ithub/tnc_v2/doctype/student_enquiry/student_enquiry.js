@@ -1,4 +1,67 @@
 // Copyright (c) 2026, 360ITHub and contributors
+const P = "tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry.";
+
+// "10:00 AM" from a date and a time, or "" when no time
+function tnc_hhmm(date, time) {
+	if (!time) return "";
+	const dt = frappe.datetime.str_to_obj(date + " " + time);
+	return " " + dt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+// Button colouring: green with a tick when done, amber while waiting, plain when still to do
+function tnc_style($btn, state, title) {
+	$btn.removeClass("btn-default");
+	if (state === "done") $btn.css({ background: "#dcfce7", color: "#166534", "border-color": "#86efac", "font-weight": "600" });
+	else if (state === "partial") $btn.css({ background: "#fef3c7", color: "#92400e", "border-color": "#fcd34d", "font-weight": "600" });
+	else $btn.addClass("btn-default");
+	if (title) $btn.attr("title", title);
+	return $btn;
+}
+
+// One "Send WhatsApp" dialog for both personal links (enquiry form, admission form): shows the
+// instance that will send, the recipient and the message; falls back to the user's own phone.
+function tnc_link_button(frm, o) {
+	const $btn = frm.add_custom_button(o.label, () => {
+		frappe.call({ method: o.preview, args: { enquiry: frm.doc.name }, freeze: true, freeze_message: __("Checking WhatsApp instance...") }).then((rr) => {
+			const p = rr.message || {}; const i = p.instance || {};
+			const pill = (ok, on, off) => `<span class="indicator-pill ${ok ? "green" : "red"} no-indicator-dot">${ok ? on : off}</span>`;
+			const card = `<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:8px">
+				<div style="font-weight:600;margin-bottom:6px">${frappe.utils.escape_html(i.label || i.name || __("Default Instance"))}</div>
+				<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px">
+					${pill(i.connected, __("Connected"), __("Not connected"))} ${pill(i.active, __("Active"), __("Inactive"))}
+					<span>${__("Credits")}: <b>${i.credits || 0}</b></span>${i.number ? `<span>${__("Number")}: <b>${frappe.utils.escape_html(i.number)}</b></span>` : ""}
+				</div>
+				${i.ok ? "" : `<div class="text-danger small" style="margin-top:6px">${frappe.utils.escape_html(i.msg || __("Cannot send from the institute number right now."))}</div>`}
+			</div>`;
+			const wa = (n) => `https://wa.me/${n.length === 10 ? "91" + n : n}?text=`;
+			const d = new frappe.ui.Dialog({
+				title: o.label,
+				fields: [
+					{ fieldtype: "HTML", fieldname: "card", options: card },
+					{ fieldtype: "Data", fieldname: "mobile", label: __("Recipient Mobile Number (10 digits)"), reqd: 1, default: p.mobile },
+					{ fieldtype: "Small Text", fieldname: "message", label: __("Message"), default: p.message, description: o.hint },
+					{ fieldtype: "HTML", fieldname: "alt", options: `<div class="small text-muted" style="margin-top:4px">${__("Or send it from your own phone:")} <a class="btn btn-xs btn-success alt-wa" target="_blank">💬 WhatsApp</a> <a class="btn btn-xs btn-default alt-cp">${__("Copy link")}</a></div>` },
+				],
+				primary_action_label: __("Confirm and Send"),
+				primary_action(v) {
+					const digits = (v.mobile || "").replace(/\D/g, "");
+					if (digits.length < 10) { frappe.msgprint(__("Please enter a valid 10-digit mobile number.")); return; }
+					frappe.call({ method: o.send, args: { enquiry: frm.doc.name, mobile: digits, message: v.message }, freeze: true, freeze_message: __("Sending...") })
+					.then((r2) => {
+						const x = r2.message || {};
+						if (x.status === "Sent") { d.hide(); frappe.show_alert({ message: __("Sent on WhatsApp to {0}", [x.mobile]), indicator: "green" }, 6); frm.reload_doc(); }
+						else { frm.reload_doc(); frappe.msgprint({ title: __("Not sent"), indicator: "red", message: `${frappe.utils.escape_html(x.reason || x.status)}<br><a class="btn btn-sm btn-success" target="_blank" href="${wa(x.mobile || digits)}${encodeURIComponent(x.message || x.link)}">💬 ${__("Send from my phone")}</a>` }); }
+					});
+				},
+			});
+			d.show();
+			d.$wrapper.find(".alt-wa").attr("href", wa(p.mobile || "") + encodeURIComponent((p.message || "") + "\n\n" + (p.link || "")));
+			d.$wrapper.find(".alt-cp").on("click", () => { frappe.utils.copy_to_clipboard(p.link || ""); });
+			if (!i.ok) d.get_primary_btn().prop("disabled", true).attr("title", i.msg || "");
+		});
+	}, o.group);
+	if (o.state) tnc_style($btn, o.state, o.title);
+}
+
 frappe.ui.form.on("Student Enquiry", {
 	setup(frm) {
 		// only batches a student can still join; completed batches are never offered
@@ -8,80 +71,62 @@ frappe.ui.form.on("Student Enquiry", {
 		if (frm.__demo_fee_amount === undefined) frappe.db.get_single_value("TNC Settings", "demo_fee_amount").then((v) => { frm.__demo_fee_amount = flt(v) || 500; });
 		frm.trigger("render_overview");
 		if (frm.is_new()) return;
-		if (!frm.is_new() && frm.doc.status !== "Converted" && frm.doc.status !== "Lost") {
-			frappe.call({ method: "tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry.admission_form_status", args: { enquiry: frm.doc.name } }).then((r) => {
-				const m = r.message || {};
-				frm.dashboard.clear_headline();
-				if (m.pending) {
-					frm.dashboard.set_headline(`<span class="indicator-pill green no-indicator-dot">${__("Admission form received")}</span> &nbsp;
-						<a href="/app/admission-form/${m.pending.name}"><b>${m.pending.name}</b></a> · ${__("consent accepted")} ${frappe.datetime.str_to_user(m.pending.accepted_on)} ·
-						<b>${__("Convert to Student will use it.")}</b>`);
-				}
-				const $btn = frm.add_custom_button(__("Send Admission Form"), () => {
-					frappe.call({ method: "tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry.admission_link_preview", args: { enquiry: frm.doc.name }, freeze: true, freeze_message: __("Checking WhatsApp instance...") })
-					.then((rr) => {
-						const p = rr.message || {}; const i = p.instance || {};
-						const pill = (ok, on, off) => `<span class="indicator-pill ${ok ? "green" : "red"} no-indicator-dot">${ok ? on : off}</span>`;
-						const card = `<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:8px">
-							<div style="font-weight:600;margin-bottom:6px">${frappe.utils.escape_html(i.label || i.name || __("Default Instance"))}</div>
-							<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px">
-								${pill(i.connected, __("Connected"), __("Not connected"))} ${pill(i.active, __("Active"), __("Inactive"))}
-								<span>${__("Credits")}: <b>${i.credits || 0}</b></span>${i.number ? `<span>${__("Number")}: <b>${frappe.utils.escape_html(i.number)}</b></span>` : ""}
-							</div>
-							${i.ok ? "" : `<div class="text-danger small" style="margin-top:6px">${frappe.utils.escape_html(i.msg || __("Cannot send from the institute number right now."))}</div>`}
-						</div>`;
-						const wa = (n) => `https://wa.me/${n.length === 10 ? "91" + n : n}?text=`;
-						const d = new frappe.ui.Dialog({
-							title: __("Send WhatsApp"),
-							fields: [
-								{ fieldtype: "HTML", fieldname: "card", options: card },
-								{ fieldtype: "Data", fieldname: "mobile", label: __("Recipient Mobile Number (10 digits)"), reqd: 1, default: p.mobile },
-								{ fieldtype: "Small Text", fieldname: "message", label: __("Message"), default: p.message, description: __("The admission form link is added automatically at the end of the message.") },
-								{ fieldtype: "HTML", fieldname: "alt", options: i.ok ? "" : `<div class="small text-muted" style="margin-top:4px">${__("Or send it from your own phone:")} <a class="btn btn-xs btn-success alt-wa" target="_blank">💬 WhatsApp</a> <a class="btn btn-xs btn-default alt-cp">${__("Copy link")}</a></div>` },
-							],
-							primary_action_label: __("Confirm and Send"),
-							primary_action(v) {
-								const digits = (v.mobile || "").replace(/\D/g, "");
-								if (digits.length < 10) { frappe.msgprint(__("Please enter a valid 10-digit mobile number.")); return; }
-								frappe.call({ method: "tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry.send_admission_link", args: { enquiry: frm.doc.name, mobile: digits, message: v.message }, freeze: true, freeze_message: __("Sending...") })
-								.then((r2) => {
-									const x = r2.message || {};
-									if (x.status === "Sent") { d.hide(); frappe.show_alert({ message: __("Sent on WhatsApp to {0}", [x.mobile]), indicator: "green" }, 6); frm.reload_doc(); }
-									else { frappe.msgprint({ title: __("Not sent"), indicator: "red", message: `${frappe.utils.escape_html(x.reason || x.status)}<br><a class="btn btn-sm btn-success" target="_blank" href="${wa(x.mobile || digits)}${encodeURIComponent(x.message || x.link)}">💬 ${__("Send from my phone")}</a>` }); }
-								});
-							},
-						});
-						d.show();
-						if (!i.ok) {
-							d.get_primary_btn().prop("disabled", true).attr("title", i.msg || "");
-							d.$wrapper.find(".alt-wa").attr("href", wa(p.mobile || "") + encodeURIComponent((p.message || "") + "\n\n" + p.link));
-							d.$wrapper.find(".alt-cp").on("click", () => frappe.utils.copy_to_clipboard(p.link));
-						}
-					});
-				});
-				$btn.removeClass("btn-default").css({ background: "#dcfce7", color: "#166534", "border-color": "#86efac", "font-weight": "600" });
-			});
-		}
+		// toolbar: Schedule Demo (green when attended, amber when scheduled) and Admit (blue). Everything else under More.
+		const more = __("More");
 		if (frm.doc.status === "Lost") {
 			frm.add_custom_button(__("Reopen"), () => {
 				frappe.confirm(
 					`<p>${__("This enquiry was marked Lost on {0} ({1}).", [`<b>${frappe.datetime.str_to_user(frm.doc.lost_on)}</b>`, frm.doc.lost_reason || ""])}</p><p><b>${__("Are you sure you want to reopen it?")}</b></p>`,
-					() => frappe.call({ method: "tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry.reopen", args: { enquiry: frm.doc.name },
+					() => frappe.call({ method: P + "reopen", args: { enquiry: frm.doc.name },
 						callback: () => { frm.reload_doc(); frappe.show_alert({ message: __("Enquiry reopened"), indicator: "green" }); } })
 				);
 			});
-		} else if (frm.doc.status !== "Converted") {
-			frm.add_custom_button(__("Schedule Demo"), () => frm.trigger("schedule_demo"));
-			frm.add_custom_button(__("Admit"), () => frm.trigger("admit"), null).addClass("btn-primary");
-			frm.add_custom_button(__("Convert to Student only"), () => frm.trigger("convert"), __("More"));
-			frm.add_custom_button(__("Mark Lost"), () => frm.trigger("mark_lost"));
-		} else if (frm.doc.student) {
-			frm.add_custom_button(__("Open Student"), () => frappe.set_route("Form", "Student", frm.doc.student)).addClass("btn-primary");
+		} else if (frm.doc.status === "Converted") {
+			if (frm.doc.student) frm.add_custom_button(__("Open Student"), () => frappe.set_route("Form", "Student", frm.doc.student)).addClass("btn-primary");
+		} else {
+			frappe.call({ method: P + "admission_form_status", args: { enquiry: frm.doc.name } }).then((r) => {
+				const m = r.message || {};
+				// headline: where the two personal forms stand. Links are sent automatically (enquiry form on
+				// save, admission form from Admit); the buttons under More only resend them.
+				const pill = (c, t) => `<span class="indicator-pill ${c} no-indicator-dot">${t}</span>`;
+				const when = (d) => d ? " " + frappe.datetime.str_to_user(d) : "";
+				const parts = [];
+				if (frm.doc.enquiry_form_filled_on) parts.push(pill("green", "✓ " + __("Enquiry form filled")) + when(frm.doc.enquiry_form_filled_on));
+				else if (frm.doc.enquiry_link_status === "Sent") parts.push(pill("orange", __("Enquiry form link sent, waiting")) + when(frm.doc.enquiry_link_sent_on));
+				else if (frm.doc.enquiry_link_status) parts.push(pill("red", __("Enquiry form link not sent")) + " " + frappe.utils.escape_html(frm.doc.enquiry_link_status) + " · " + __("More › Resend enquiry form"));
+				if (m.pending) parts.push(pill("green", "✓ " + __("Admission form received")) + ` <a href="/app/admission-form/${m.pending.name}"><b>${m.pending.name}</b></a> · ${__("Admit will use it.")}`);
+				else if (m.applied) parts.push(pill("green", "✓ " + __("Admission form applied")));
+				else if (m.admission_sent_on) parts.push(pill("orange", __("Admission form link sent, waiting")) + when(m.admission_sent_on));
+				frm.dashboard.clear_headline();
+				if (parts.length) frm.dashboard.set_headline(parts.join(" &nbsp; "));
+				// toolbar: the two actions a counsellor takes. While a demo is scheduled the button is that demo
+				// (opens it to mark Attended / Not Attended); afterwards Schedule Demo comes back for another one.
+				if (m.scheduled_demo) {
+					const d = m.scheduled_demo;
+					tnc_style(frm.add_custom_button(__("Demo {0}{1} · mark result", [frappe.datetime.str_to_user(d.demo_date), tnc_hhmm(d.demo_date, d.from_time)]), () => frappe.set_route("Form", "Demo Class", d.name)), "partial",
+						__("Demo is scheduled. Open it to mark Attended or Not Attended."));
+				} else if (m.attended_demo) {
+					const d = m.attended_demo, when = frappe.datetime.str_to_user(d.demo_date) + tnc_hhmm(d.demo_date, d.from_time);
+					tnc_style(frm.add_custom_button(__("✓ Demo attended {0}", [frappe.datetime.str_to_user(d.demo_date)]), () => {
+						frappe.confirm(
+							`<p>${__("Demo attended on {0}{1}.", [`<b>${when}</b>`, d.batch ? ` · ${frappe.utils.escape_html(d.batch)}` : ""])} ${d.rated_on ? __("Rated by the student.") : __("Not rated yet.")}
+							 <a href="/app/demo-class/${d.name}" style="color:#2563eb;text-decoration:underline">${__("Open the demo")}</a></p><p><b>${__("Schedule another demo?")}</b></p>`,
+							() => frm.trigger("schedule_demo"));
+					}), "done", __("Demo attended on {0}. Click to see it or schedule another.", [when]));
+				} else {
+					tnc_style(frm.add_custom_button(__("Schedule Demo"), () => frm.trigger("schedule_demo")), "todo", __("Schedule a demo class"));
+				}
+				frm.add_custom_button(__("Admit"), () => frm.trigger("admit")).attr("title", __("Batch, fee, instalments, payment: makes the student. Sends the admission form link."));
+				if (!frm.doc.enquiry_form_filled_on) tnc_link_button(frm, { label: __("Resend enquiry form"), group: more, preview: P + "enquiry_link_preview", send: P + "send_enquiry_link", hint: __("The enquiry form link is added automatically at the end of the message.") });
+				if (!(m.pending || m.applied)) tnc_link_button(frm, { label: __("Resend admission form"), group: more, preview: P + "admission_link_preview", send: P + "send_admission_link", hint: __("The admission form link is added automatically at the end of the message.") });
+				frm.add_custom_button(__("Mark Lost"), () => frm.trigger("mark_lost"), more);
+				frm.add_custom_button(__("Add Follow-up"), () => frappe.new_doc("Student Follow-Up", { reference_type: "Student Enquiry", reference_name: frm.doc.name }), more);
+				frm.add_custom_button(__("Follow-ups page"), () => { frappe.route_options = { reference_type: "Student Enquiry", reference_name: frm.doc.name }; frappe.set_route("follow-ups"); }, more);
+			});
+			return;
 		}
-		frm.add_custom_button(__("Add Follow-up"), () => {
-			frappe.new_doc("Student Follow-Up", { reference_type: "Student Enquiry", reference_name: frm.doc.name });
-		});
-		frm.add_custom_button(__("Follow-ups page"), () => { frappe.route_options = { reference_type: "Student Enquiry", reference_name: frm.doc.name }; frappe.set_route("follow-ups"); });
+		frm.add_custom_button(__("Add Follow-up"), () => frappe.new_doc("Student Follow-Up", { reference_type: "Student Enquiry", reference_name: frm.doc.name }), more);
+		frm.add_custom_button(__("Follow-ups page"), () => { frappe.route_options = { reference_type: "Student Enquiry", reference_name: frm.doc.name }; frappe.set_route("follow-ups"); }, more);
 	},
 	mark_lost(frm) {
 		const d = new frappe.ui.Dialog({

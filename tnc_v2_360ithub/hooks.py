@@ -234,6 +234,8 @@ scheduler_events = {
 		"0 7 * * *": [
 			"tnc_v2_360ithub.admissions.followups.create_fee_followups",
 			"tnc_v2_360ithub.admissions.followups.create_form_followups",
+			# demo-day reminder to the student
+			"tnc_v2_360ithub.tnc_v2.doctype.demo_class.demo_class.send_demo_reminders",
 		],
 		# Monthly Teacher Task Summary emails, 07:00 on the 1st (as in v1).
 		# Weekly teacher settlement (SOW: week Sat..Fri, run on Saturday) + WhatsApp report card
