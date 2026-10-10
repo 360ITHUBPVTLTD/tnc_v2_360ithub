@@ -1,8 +1,10 @@
 """Personal enquiry-form links.
 
-Share Forms can WhatsApp the public enquiry form to one number. That link carries the
-mobile and a signature, so the form is locked to that number and can be submitted once.
-The plain link and the QR code stay open for flyers, Instagram and the notice board.
+When a counsellor saves a new Student Enquiry, the student gets a WhatsApp with a personal
+link to the public enquiry form (student_enquiry._send_enquiry_link; "Send Enquiry Form"
+resends it). The link carries the mobile and a signature, so the form is locked to that
+number and can be submitted once. The submitted form fills the enquiry the counsellor saved
+(submit_personal_form); it only creates a new enquiry when none exists for that number.
 """
 
 import hashlib, hmac
@@ -117,3 +119,42 @@ def guard(doc):
 def web_form_sources():
 	"""Sources a student may pick on the public enquiry form."""
 	return frappe.get_all("Enquiry Source", filters={"show_on_web_form": 1, "disabled": 0}, pluck="name", order_by="idx asc, name asc")
+
+
+FORM_FIELDS = ("student_name", "email", "gender", "batch_interested", "city", "college_name", "passing_year", "source", "referrer_name", "referrer_teacher_name", "notes")
+
+
+def open_enquiry_for(mobile):
+	"""The newest open enquiry a counsellor saved for this mobile that no personal link has filled yet."""
+	m = digits10(mobile)
+	for row in frappe.get_all("Student Enquiry", filters={"status": ["not in", ["Converted", "Lost"]], "mobile": ["like", f"%{m}"]},
+			fields=["name", "mobile", "invite_token"], order_by="creation desc"):
+		if digits10(row.mobile) == m and not row.invite_token:
+			return row.name
+	return None
+
+
+@frappe.whitelist(allow_guest=True)
+def submit_personal_form(m, t, values=None):
+	"""Public enquiry form, submitted through a personal link: fill the enquiry the counsellor
+	already saved for this number; create one only when there is none. The link is then used."""
+	from frappe.utils import now_datetime
+	state = enquiry_invite_state(m, t)
+	if not state.get("valid"):
+		frappe.throw(_("This link is not valid. Please call the institute for your link."), frappe.PermissionError)
+	if state.get("closed"):
+		return {"closed": state["closed"]}
+	values = frappe.parse_json(values or {}) or {}
+	data = {k: values.get(k) for k in FORM_FIELDS if values.get(k) not in (None, "")}
+	name = open_enquiry_for(m)
+	if name:
+		enq = frappe.get_doc("Student Enquiry", name)
+		enq.update(data)
+		enq.invite_token = t
+		enq.enquiry_form_filled_on = now_datetime()
+		enq.save(ignore_permissions=True)
+		enq.add_comment("Info", _("Enquiry form filled by the student through the personal link"))
+		return {"ok": True, "name": enq.name, "updated": True}
+	doc = frappe.get_doc({"doctype": "Student Enquiry", "mobile": digits10(m), "invite_token": t, "enquiry_form_filled_on": now_datetime(), **data})
+	doc.insert(ignore_permissions=True)
+	return {"ok": True, "name": doc.name, "updated": False}

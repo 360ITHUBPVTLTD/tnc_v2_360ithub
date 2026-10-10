@@ -6,6 +6,20 @@ frappe.ui.form.on("Demo Class", {
 	refresh(frm) {
 		if (frm.is_new()) return;
 		frm.trigger("demo_fee_buttons");
+		if (frm.doc.result === "Scheduled") {
+			frm.dashboard.clear_headline();
+			if (frm.doc.schedule_sent_status === "Sent") frm.dashboard.set_headline(`<span class="indicator-pill green no-indicator-dot">✓ ${__("Schedule sent on WhatsApp")}</span> ${frappe.datetime.str_to_user(frm.doc.schedule_sent_on)}`);
+			else if (frm.doc.schedule_sent_status) frm.dashboard.set_headline(`<span class="indicator-pill red no-indicator-dot">${__("Schedule message not sent")}</span> ${frappe.utils.escape_html(frm.doc.schedule_sent_status)} · ${__("More › Resend schedule")}`);
+			frm.add_custom_button(__("Resend schedule"), () => {
+				frappe.prompt([{ fieldname: "mobile", fieldtype: "Data", label: __("Send to mobile"), default: frm.doc.mobile, reqd: 1 }], (v) => {
+					frappe.call({ method: "tnc_v2_360ithub.tnc_v2.doctype.demo_class.demo_class.resend_schedule_message", args: { demo: frm.doc.name, mobile: v.mobile }, freeze: true, freeze_message: __("Sending...") }).then((r) => {
+						const x = r.message || {};
+						if (x.status === "Sent") { frappe.show_alert({ message: __("Schedule sent to {0}", [x.mobile]), indicator: "green" }); frm.reload_doc(); }
+						else { frm.reload_doc(); frappe.msgprint({ title: __("Not sent"), indicator: "red", message: `${frappe.utils.escape_html(x.reason || "")}<br><a class="btn btn-sm btn-success" target="_blank" href="https://wa.me/91${x.mobile}?text=${encodeURIComponent(x.message || "")}">💬 ${__("Send from my phone")}</a>` }); }
+					});
+				}, __("Send the demo date and time to the student"), __("Send on WhatsApp"));
+			}, __("More"));
+		}
 		if (frm.doc.result !== "Attended") return;
 		if (frm.doc.rated_on) {
 			frm.dashboard.clear_headline();

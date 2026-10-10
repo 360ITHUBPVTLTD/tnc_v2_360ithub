@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Guide — TNC v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ink: #1c1f24; --ink-soft: #4b5259; --paper: #eef1f2; --surface: #fafbfb;
+    --line: #c3cbd0; --line-soft: #dde3e6;
+    --indigo: #16556a; --indigo-soft: #e1edf1; --clay: #b0601f; --clay-soft: #f4e6d9;
+    --pine: #2f6b4f; --pine-soft: #e0eee6; --gold: #a9802a; --gold-soft: #f5ecd5; --red: #a33a2f; --red-soft: #f6e2df;
+    --shadow: rgba(28, 31, 36, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e7eaec; --ink-soft: #aab3ba; --paper: #151a1d; --surface: #1e2428;
+      --line: #3f4a51; --line-soft: #2d353b; --indigo: #7fbdd3; --indigo-soft: #1d3038;
+      --clay: #dc9a5e; --clay-soft: #36281c; --pine: #8cc3a6; --pine-soft: #1e2d26;
+      --gold: #d9b35f; --gold-soft: #332b17; --red: #e58a7f; --red-soft: #3a2220; --shadow: rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #e7eaec; --ink-soft: #aab3ba; --paper: #151a1d; --surface: #1e2428;
+    --line: #3f4a51; --line-soft: #2d353b; --indigo: #7fbdd3; --indigo-soft: #1d3038;
+    --clay: #dc9a5e; --clay-soft: #36281c; --pine: #8cc3a6; --pine-soft: #1e2d26;
+    --gold: #d9b35f; --gold-soft: #332b17; --red: #e58a7f; --red-soft: #3a2220; --shadow: rgba(0, 0, 0, 0.4);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Newsreader", Georgia, serif; font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .mono, code { font-family: "IBM Plex Mono", Consolas, monospace; }
+  code { font-size: .8em; background: var(--line-soft); padding: 1px 5px; border-radius: 3px; word-break: break-word; }
+  a { color: var(--indigo); }
+
+  .topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 14px; padding: 12px clamp(16px, 2.5vw, 40px); background: var(--paper); border-bottom: 1px solid var(--line-soft); font-family: "IBM Plex Mono", monospace; font-size: 12.5px; letter-spacing: .02em; }
+  .topbar__mark { font-weight: 600; white-space: nowrap; }
+  .topbar__mark span { color: var(--clay); }
+  .topbar nav { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+  .topbar nav a { padding: 5px 10px; border-radius: 3px; text-decoration: none; color: var(--ink-soft); border: 1px solid transparent; }
+  .topbar nav a:hover { border-color: var(--line); background: var(--surface); color: var(--ink); }
+  @media (max-width: 860px) { .topbar nav { display: none; } }
+
+  .page { padding: 0 clamp(16px, 2.5vw, 40px) 100px; }
+  header.masthead { padding: 34px 0 20px; border-bottom: 1px solid var(--line-soft); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 30px; align-items: end; }
+  @media (max-width: 900px) { header.masthead { grid-template-columns: 1fr; } }
+  .eyebrow { font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--clay); margin: 0 0 10px; }
+  h1.title { font-size: clamp(1.9rem, 3.4vw, 2.5rem); font-weight: 600; line-height: 1.12; margin: 0 0 10px; }
+  h1.title em { font-style: italic; color: var(--indigo); }
+  .lede { font-size: 1.06em; margin: 0; max-width: 1050px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  @media (max-width: 900px) { .actions { justify-content: flex-start; } }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 6px; cursor: pointer; font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600; text-decoration: none; border: 1.5px solid var(--indigo); background: var(--indigo); color: #fbfaf7; white-space: nowrap; }
+  .btn.outline { background: transparent; color: var(--indigo); }
+  .btn:hover { opacity: .88; }
+  .btn.sm { padding: 5px 10px; font-size: 11.5px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 18px 0 0; }
+  .stat { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px; padding: 10px 14px; cursor: pointer; text-align: left; font: inherit; color: inherit; }
+  .stat:hover { border-color: var(--indigo); }
+  .stat b { display: block; font-size: 1.6rem; line-height: 1.1; }
+  .stat span { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; }
+  .stat.done b { color: var(--pine); } .stat.open b { color: var(--clay); } .stat.todo b { color: var(--indigo); } .stat.wait b { color: var(--gold); }
+  .plan { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.6fr); gap: 14px; margin: 18px 0 0; }
+  @media (max-width: 900px) { .plan { grid-template-columns: 1fr; } }
+  .plan .box { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; padding: 14px 16px; }
+  .plan h5, .card h5 { font-family: "IBM Plex Mono", monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--clay); margin: 0 0 8px; }
+  .bar { height: 12px; border-radius: 6px; background: var(--line-soft); overflow: hidden; display: flex; margin: 6px 0 4px; }
+  .bar i { display: block; height: 100%; }
+  .bar .b-done { background: var(--pine); } .bar .b-open { background: var(--clay); } .bar .b-todo { background: var(--indigo); } .bar .b-wait { background: var(--gold); }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-soft); }
+  .legend button { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+  .legend button:hover { color: var(--ink); text-decoration: underline; }
+  .legend .dot, .lg .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+  .src-row { display: grid; grid-template-columns: 150px 1fr auto; gap: 10px; align-items: center; margin: 8px 0 0; font-size: 14px; cursor: pointer; }
+  .src-row:hover b { text-decoration: underline; }
+  .src-row .bar { margin: 0; height: 8px; }
+  .src-row span { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; }
+  .next { list-style: none; padding: 0; margin: 0; }
+  .next li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: baseline; padding: 6px 4px; border-bottom: 1px dashed var(--line-soft); cursor: pointer; font-size: 14.5px; }
+  .next li:last-child { border-bottom: 0; }
+  .next li:hover { background: var(--paper); }
+  .next .m { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+  tr.flash td { background: var(--gold-soft) !important; transition: background .6s; }
+
+  .ptabs { position: sticky; top: 45px; z-index: 20; display: flex; flex-wrap: wrap; gap: 2px; background: var(--paper); border-bottom: 2px solid var(--line); margin: 18px 0 24px; }
+  @media (max-width: 860px) { .ptabs { flex-wrap: nowrap; overflow-x: auto; top: 0; } }
+  .ptabs button { flex: none; font: 600 14.5px/1 "Newsreader", serif; padding: 11px 14px; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0; background: transparent; color: var(--ink-soft); cursor: pointer; margin-bottom: -2px; white-space: nowrap; }
+  .ptabs button:hover { color: var(--ink); background: var(--line-soft); }
+  .ptabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); border-color: var(--line); border-bottom: 2px solid var(--surface); }
+  .ptabs .num { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--clay); margin-right: 6px; }
+  .ptabs .cnt { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; background: var(--clay-soft); color: var(--clay); border-radius: 10px; padding: 1px 6px; margin-left: 6px; }
+  .tabpanel[hidden] { display: none !important; }
+  .print-title { display: none; }
+
+  h2 { font-size: 1.6rem; font-weight: 600; margin: 0 0 4px; }
+  h3 { font-size: 1.2rem; font-weight: 600; margin: 26px 0 8px; }
+  h4 { font-size: 1.02rem; font-weight: 700; margin: 0 0 4px; }
+  .sub { color: var(--ink-soft); margin: 0 0 16px; max-width: 1100px; }
+  p { margin: 0 0 10px; }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; }
+  li { margin: 3px 0; }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 18px; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line-soft); border-radius: 8px; background: var(--surface); margin: 8px 0 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 11px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  th { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); font-weight: 600; background: var(--paper); white-space: nowrap; }
+  th.sortable { cursor: pointer; } th.sortable:hover { color: var(--ink); }
+  th.sorted::after { content: " ▾"; } th.sorted.asc::after { content: " ▴"; }
+  td.k { font-weight: 600; }
+  td.id { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--clay); white-space: nowrap; }
+  td.nw { white-space: nowrap; }
+  tbody tr:hover td { background: var(--paper); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 8px 0 18px; }
+  .card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px; padding: 13px 15px; }
+  .card p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+  .card .tag { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--clay); text-transform: uppercase; letter-spacing: .06em; }
+
+  .note { padding: 11px 15px; border-radius: 8px; border: 1px solid var(--line-soft); background: var(--indigo-soft); font-size: 15px; margin: 8px 0 16px; }
+  .note.warn { background: var(--clay-soft); } .note.ok { background: var(--pine-soft); } .note.bad { background: var(--red-soft); }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin: 4px 0 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px; }
+  .filters input[type=search], .filters select { font: 14px "Newsreader", serif; padding: 6px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); color: var(--ink); }
+  .filters input[type=search] { flex: 1 1 220px; min-width: 180px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--line); background: transparent; color: var(--ink-soft); cursor: pointer; text-decoration: none; }
+  .chip[aria-pressed="true"] { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+  .chip .n { opacity: .75; margin-left: 5px; }
+  .count { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-soft); margin-left: auto; }
+
+  .pill { display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 600; padding: 1px 8px; border-radius: 20px; border: 1.2px solid transparent; white-space: nowrap; }
+  .s-done { color: var(--pine); background: var(--pine-soft); }
+  .s-open { color: var(--clay); background: var(--clay-soft); }
+  .s-todo { color: var(--indigo); background: var(--indigo-soft); }
+  .s-wait { color: var(--gold); background: var(--gold-soft); }
+  .s-std { color: var(--ink-soft); background: var(--line-soft); }
+  .p-high { color: var(--red); font-weight: 600; } .p-med { color: var(--clay); } .p-low { color: var(--ink-soft); }
+
+  .xitem { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px; margin: 0 0 8px; }
+  .xhead { display: flex; gap: 12px; align-items: flex-start; padding: 11px 14px; cursor: pointer; }
+  .xhead:hover { background: var(--paper); border-radius: 10px; }
+  .xid { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--clay); white-space: nowrap; padding-top: 3px; min-width: 52px; }
+  .xtitle { flex: 1; min-width: 0; }
+  .xtitle b { font-size: 1.02rem; }
+  .xtitle small { display: block; color: var(--ink-soft); font-size: 14px; }
+  .xmeta { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .chev { color: var(--ink-soft); transition: transform .15s; padding-top: 2px; }
+  .xitem.open .chev { transform: rotate(90deg); }
+  .xbody { display: none; padding: 0 14px 14px 78px; font-size: 15px; }
+  .xitem.open .xbody { display: block; }
+  .xbody dl { display: grid; grid-template-columns: 170px 1fr; gap: 6px 14px; margin: 0; }
+  .xbody dt { font-family: "IBM Plex Mono", monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); padding-top: 3px; }
+  .xbody dd { margin: 0; }
+  .xbody ul { margin: 0; }
+  @media (max-width: 700px) { .xbody { padding-left: 14px; } .xbody dl { grid-template-columns: 1fr; } .xhead { flex-wrap: wrap; } .xmeta { width: 100%; justify-content: flex-start; } }
+
+  .num { display: inline-block; width: 28px; height: 28px; border-radius: 50%; background: var(--indigo); color: #fff; font: 600 12px/28px "IBM Plex Mono", monospace; text-align: center; }
+  .who { display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; padding: 1px 8px; border-radius: 20px; border: 1px solid var(--pine); color: var(--pine); white-space: nowrap; margin-top: 3px; }
+  .flowgrid { display: grid; grid-template-columns: minmax(380px, 560px) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .flowside { position: sticky; top: 100px; max-height: calc(100vh - 115px); overflow: auto; }
+  @media (max-width: 1000px) { .flowgrid { grid-template-columns: 1fr; } .flowside { position: static; max-height: none; } }
+  .diagram { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; padding: 14px 16px 10px; margin: 0 0 16px; }
+  .diagram[hidden] { display: none; }
+  .dg-title { margin: 0 0 6px; }
+  .dg-body { overflow-x: auto; min-height: 60px; }
+  .dg-body svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  .lane { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 4px 0 16px; font-family: "IBM Plex Mono", monospace; font-size: 11.5px; }
+  .lane span { padding: 4px 9px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line-soft); }
+
+  .rolepick { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 14px; }
+  .rolecard { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; padding: 16px 18px; margin-bottom: 8px; }
+  .rolecard h3 { margin-top: 0; }
+  .rolecard .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 24px; }
+  .rolecard h5 { font-family: "IBM Plex Mono", monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--clay); margin: 0 0 4px; }
+  .role-all { display: none; }
+  .devnav { position: sticky; top: 92px; z-index: 15; }
+  .mini-steps { padding-left: 20px; font-size: 15px; } .mini-steps li { margin: 4px 0; }
+  @media (max-width: 860px) { .devnav { position: static; } }
+  footer.foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line-soft); font-size: 13px; color: var(--ink-soft); }
+
+  @media print {
+    :root, :root[data-theme="dark"] { --ink: #000; --ink-soft: #333; --paper: #fff; --surface: #fff; --line: #999; --line-soft: #ccc; }
+    @page { size: A4; margin: 11mm; }
+    body { font-size: 11px; }
+    .topbar, .ptabs, .actions, .no-print, .filters, .rolepick, .plan, .lane, #role-card { display: none !important; }
+    .page { padding: 0; }
+    header.masthead { display: block; padding-top: 0; }
+    .tabpanel, .tabpanel[hidden] { display: block !important; break-before: page; }
+    .tabpanel:first-of-type { break-before: auto; }
+    .print-title { display: block; font-family: "IBM Plex Mono", monospace; font-size: 9.5px; color: #555; margin-bottom: 4px; }
+    .xbody { display: block !important; padding-left: 14px; }
+    .chev { display: none; }
+    .xitem, .card, tr, .note, .rolecard { break-inside: avoid; }
+    .pill, th, .num { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: #000; text-decoration: none; }
+    .table-wrap { overflow: visible; }
+    .flowgrid { display: block; } .flowside { position: static; max-height: none; overflow: visible; }
+    .diagram, .diagram[hidden] { display: block !important; break-inside: avoid; }
+    .role-all { display: block !important; }
+    body.print-one .tabpanel { display: none !important; } body.print-one .tabpanel.print-me { display: block !important; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="topbar__mark">TNC <span>·</span> PROJECT GUIDE</span>
+  <nav>
+    <a href="/app/tnc-admissions" target="_blank" rel="noopener">Admissions ↗</a>
+    <a href="/app/tnc-teachers" target="_blank" rel="noopener">Teachers ↗</a>
+    <a href="/app/follow-ups" target="_blank" rel="noopener">Follow-ups ↗</a>
+    <a href="/app/task-dashboard" target="_blank" rel="noopener">Tasks ↗</a>
+    <a href="#overview" data-go="overview">All pages</a>
+  </nav>
+</div>
+
+<div class="page">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">TNC v2 — project guide · updated 10 Oct 2026</p>
+      <h1 class="title">How the TNC ERP <em>works</em> — and where the project stands.</h1>
+      <p class="lede">For everyone joining the project: the institute, the end-to-end flows, who controls what, the business and functional requirements, how to build, and the task list — delivered, open, and what waits on the client.</p>
+    </div>
+    <div class="actions no-print">
+      <button class="btn outline" type="button" id="btn-pdf">⎙ Print all</button>
+      <button class="btn outline" type="button" id="btn-tab">⎙ Print this tab</button>
+      <button class="btn outline" type="button" id="btn-html">⤓ HTML copy</button>
+      <button class="btn outline" type="button" id="btn-csv">⤓ Tasks to Excel</button>
+    </div>
+  </header>
+
+  <nav class="ptabs no-print" id="ptabs">
+    <button type="button" data-tab="overview"><span class="num">01</span>Overview</button>
+    <button type="button" data-tab="flow"><span class="num">02</span>Business flow</button>
+    <button type="button" data-tab="roles"><span class="num">03</span>Roles &amp; control</button>
+    <button type="button" data-tab="brd"><span class="num">04</span>BRD — business needs</button>
+    <button type="button" data-tab="frd"><span class="num">05</span>FRD — how it works</button>
+    <button type="button" data-tab="tasks"><span class="num">06</span>Project status<span class="cnt" id="tab-open-count"></span></button>
+    <button type="button" data-tab="dev"><span class="num">07</span>Developer handbook</button>
+    <button type="button" data-tab="glossary"><span class="num">08</span>Glossary</button>
+  </nav>
+
+  <!-- 01 OVERVIEW -->
+  <section class="tabpanel" id="tab-overview">
+    <div class="print-title">01 · Overview</div>
+    <h2>Overview</h2>
+    <p class="sub">What the institute does, what the system is for, and how the pieces fit.</p>
+    <div class="grid2">
+      <div>
+        <h3>The institute</h3>
+        <p>TNC is a coaching institute running <b>offline batches</b> at the centre and <b>online live batches</b> for competitive-exam students. A prospect comes in as an <b>enquiry</b>, takes a <b>demo class</b>, is <b>admitted</b> into a <b>batch</b> and pays the agreed fee in <b>instalments</b>. <b>Teachers</b> are paid for approved <b>timesheets</b>, less any <b>penalties</b>. Staff log <b>tasks</b>, <b>expenses</b> and their own attendance from a <b>mobile app</b>.</p>
+        <div class="cards">
+          <div class="card"><span class="tag">Admissions</span><h4>Enquiry to enrolment</h4><p>Enquiry, follow-ups, demo, admit, batch enrolment, Sales Order.</p></div>
+          <div class="card"><span class="tag">Fees</span><h4>Instalments &amp; receipts</h4><p>Payment schedule, follow-ups, receipt invoice per payment, outstanding.</p></div>
+          <div class="card"><span class="tag">Attendance</span><h4>Machine to daily record</h4><p>Biometric punches, Present / Late / Absent, automatic hold.</p></div>
+          <div class="card"><span class="tag">Teachers</span><h4>Timesheets to payment</h4><p>Approval, syllabus progress, invoices, penalties, weekly settlement.</p></div>
+          <div class="card"><span class="tag">Staff</span><h4>Tasks, expenses, HR</h4><p>Recurring tasks, digest, expense review, check-in, payroll-ready HRMS.</p></div>
+        </div>
+      </div>
+      <div>
+        <h3>What the system solves</h3>
+        <ul>
+          <li><b>One funnel</b> — every student starts as an enquiry; the counsellor who converted is stamped for incentives.</li>
+          <li><b>Fees on standard accounting</b> — committed fee is a Sales Order, every payment a receipt invoice; outstanding is never a spreadsheet.</li>
+          <li><b>No manual attendance marking</b> — the biometric machine is the record; staff only correct, with remarks.</li>
+          <li><b>Holds that follow the enrolment</b> — a student in two batches is blocked only where they are absent.</li>
+          <li><b>Teachers paid from approved work</b> — penalties recovered at payment time, never by hand.</li>
+          <li><b>One task system</b> — three generations of v1 task doctypes replaced by standard Task with v1's recurrence engine.</li>
+          <li><b>Everything configurable</b> — thresholds, approvers, numbers and switches live in settings, not in code.</li>
+        </ul>
+        <h3>System landscape</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Component</th><th>What it is</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="k">ERPNext v15 (frappe, erpnext, hrms, india_compliance)</td><td>Standard platform: accounts, selling, buying, HR, GST</td><td>Core changes are recorded in <code>docs/core-modifications.md</code> at the bench root.</td></tr>
+            <tr><td class="k">tnc_v2_360ithub</td><td>The custom app — all TNC business logic</td><td>Modules: admissions, attendance, teachers, tasks, hr, migration.</td></tr>
+            <tr><td class="k">clarity_360ithub</td><td>Shared 360ITHub HR app: mobile check-in, eSSL biometric push, expense and task hooks</td><td>Offers non-employee punches to tnc_v2 through a hook.</td></tr>
+            <tr><td class="k">fcm_360ithub · webtoolex_whatsapp</td><td>Push notifications · WhatsApp</td><td>Both switched from settings; text-only WhatsApp while PDF is broken on live.</td></tr>
+            <tr><td class="k">Flutter mobile app</td><td>Staff and teacher app (login, check-in, expenses, tasks, timesheets, approvals)</td><td>Repo flutter-tnc-360ithub-clarity; app and server ship together when select values change.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <h3>Batches and modes</h3>
+    <ul>
+      <li><b>Offline</b> — at the centre; attendance from the eSSL IN / OUT machines.</li>
+      <li><b>Online live</b> — Google Meet; same batch fields (days, time, Meet link), attendance source to be agreed in the FRD.</li>
+      <li>A student can hold more than one enrolment at a time (offline + online). Attendance and holds live on the enrolment.</li>
+    </ul>
+
+    <h3 id="pages">Pages &amp; links</h3>
+    <p class="sub">Every screen built for this project, with its address. Click to open; <b>Copy link</b> copies the full address of this site, ready to share.</p>
+    <div class="table-wrap"><table id="pages-table">
+      <thead><tr><th>Page</th><th>Address</th><th>Who can open it</th><th>What it is for</th><th class="no-print"></th></tr></thead>
+      <tbody id="pages-body"></tbody>
+    </table></div>
+  </section>
+
+  <!-- 02 BUSINESS FLOW -->
+  <section class="tabpanel" id="tab-flow" hidden>
+    <div class="print-title">02 · Business flow</div>
+    <h2>Business flow</h2>
+    <p class="sub">Five journeys. Pick one, follow the arrows — each step says who does it, which document it is, what happens and the rules the system enforces.</p>
+    <div class="filters no-print">
+      <div class="chips" id="journey-chips"></div>
+      <button class="btn sm outline" type="button" data-x="flow-list" data-open="1">Expand all</button>
+      <button class="btn sm outline" type="button" data-x="flow-list" data-open="0">Collapse all</button>
+    </div>
+    <div class="flowgrid">
+      <div class="flowside">
+        <div class="diagram" id="flow-diagram">
+          <h4 class="dg-title" id="dg-title"></h4>
+          <div class="dg-body" id="dg-body">Loading diagram…</div>
+        </div>
+      </div>
+      <div>
+        <h3 id="flow-steps-title">Steps</h3>
+        <div id="flow-list"></div>
+        <h3>Status words</h3>
+        <div class="lane"><i>Enquiry:</i> <span class="pill s-todo">New</span><span class="pill s-open">Demo Scheduled</span><span class="pill s-open">Demo Attended</span><span class="pill s-done">Converted</span><span class="pill s-std">Lost</span></div>
+        <div class="lane"><i>Student:</i> <span class="pill s-todo">Enrolment Pending</span><span class="pill s-done">Active</span><span class="pill s-wait">Attendance Hold</span><span class="pill s-std">Completed</span><span class="pill s-std">Discontinued</span></div>
+        <div class="lane"><i>Enrolment:</i> <span class="pill s-done">Active</span><span class="pill s-wait">On Hold (Attendance / Fee / Other)</span><span class="pill s-std">Completed</span><span class="pill s-std">Left</span></div>
+        <div class="lane"><i>Attendance:</i> <span class="pill s-done">Present</span><span class="pill s-open">Late</span><span class="pill s-wait">Absent</span><span class="pill s-todo">Leave</span></div>
+        <div class="lane"><i>Timesheet:</i> <span class="pill s-open">Pending</span><span class="pill s-done">Approved</span><span class="pill s-std">Rejected</span> · <span class="pill s-wait">Unpaid</span><span class="pill s-open">Partially Paid</span><span class="pill s-done">Paid</span></div>
+        <div class="lane"><i>Penalty:</i> <span class="pill s-todo">Draft</span><span class="pill s-open">Submitted</span><span class="pill s-done">Approved</span><span class="pill s-done">Recovered</span><span class="pill s-std">Waived</span><span class="pill s-std">Refunded</span><span class="pill s-std">Rejected</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 ROLES -->
+  <section class="tabpanel" id="tab-roles" hidden>
+    <div class="print-title">03 · Roles &amp; control</div>
+    <h2>Roles &amp; control</h2>
+    <p class="sub">Pick a role to see what it does, which screens it uses and what limits it. Role profiles bundle the roles a user gets.</p>
+    <div class="rolepick no-print" id="role-pick"></div>
+    <div id="role-card"></div>
+    <div class="role-all" id="role-all"></div>
+
+    <h3>Where access and behaviour are controlled — change it only here</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>What</th><th>Where</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Which roles a user has</td><td>User › Role Profile (TNC Employees, TNC Manager, TNC Super Admin, TNC Teacher)</td><td>Profiles are shipped by the app and synced on migrate; give the profile, not single roles.</td></tr>
+        <tr><td class="k">Document rights per role</td><td>Role Permissions Manager</td><td>Shipped in each doctype's JSON; custom rights for standard doctypes in the app's fixtures.</td></tr>
+        <tr><td class="k">Timesheet approvers, penalty imposers and approvers, invoice approvers</td><td>TNC Settings › Teachers / Accounts</td><td>User lists. Administrator is always allowed.</td></tr>
+        <tr><td class="k">Attendance: hold after N absences, late grace, parent WhatsApp, which parent number</td><td>TNC Settings › Student Attendance</td><td>Defaults 4 and 15 minutes; WhatsApp off until parent numbers exist.</td></tr>
+        <tr><td class="k">Class days, start / end time, late-after minutes, Meet link</td><td>Student Batch › Class Timing</td><td>Per batch. Days unticked get no attendance rows.</td></tr>
+        <tr><td class="k">Holidays</td><td>Company › Default Holiday List</td><td>Must cover the current year or Sundays become Absent.</td></tr>
+        <tr><td class="k">Demo fee amount and adjustment</td><td>TNC Settings › Demo Fee</td><td></td></tr>
+        <tr><td class="k">WhatsApp provider and instance, push, in-app notifications, task reminders</td><td>TNC Settings › Notifications / Reminders</td><td>Switched off on the local copy; on live as agreed.</td></tr>
+        <tr><td class="k">Weekly report card, payment receipt message, settlement start date, institute name on documents</td><td>TNC Settings › Teachers</td><td></td></tr>
+        <tr><td class="k">Penalty types and amounts</td><td>Penalty Type master</td><td>Seeded from the SOW; final amounts pending client.</td></tr>
+        <tr><td class="k">Who can release a hold</td><td>Code rule: TNC Counsellor, TNC Manager, TNC Super Admin, System Manager; remarks required</td><td>Not configurable by design.</td></tr>
+        <tr><td class="k">Who can complete a task</td><td>Code rule: the reporter or an admin</td><td>Ported from v1.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note warn">Never give Write on TNC Settings to fix a permission problem. Fix the role profile or the doctype rights.</div>
+  </section>
+
+  <!-- 04 BRD -->
+  <section class="tabpanel" id="tab-brd" hidden>
+    <div class="print-title">04 · Business Requirements (BRD)</div>
+    <h2>BRD — what the business needs</h2>
+    <p class="sub">Each requirement states the problem in v1, what the business needs, how we know it is met, and its status. Grouped by Scope-of-Work section.</p>
+    <div class="grid2">
+      <div class="card"><span class="tag">Objectives</span><ul>
+        <li>Replace the v1 customisations with a designed system on standard ERPNext.</li>
+        <li>Track every student from enquiry to completion with fees on the ledger.</li>
+        <li>Attendance from machines, holds without manual chasing.</li>
+        <li>Teacher pay and penalties from approved work, not spreadsheets.</li>
+        <li>One mobile app for staff and teachers.</li>
+      </ul></div>
+      <div class="card"><span class="tag">Scope &amp; stakeholders</span><ul>
+        <li>Scope: the Scope of Work of 14 Aug 2026, 14 sections; one agreed addition (digital admission form).</li>
+        <li>Client side: management (Bhojraj), office and counsellors, teachers, Finance.</li>
+        <li>Vendor: 360ITHub (Pankaj, Anurag; app builds by Apurba).</li>
+        <li>Out of scope: anything not in the SOW; FRD items are built only after their rule is frozen.</li>
+      </ul></div>
+    </div>
+    <div class="filters no-print">
+      <input type="search" id="brd-q" placeholder="Search requirements…">
+      <div class="chips" id="brd-st"></div>
+      <span class="count" id="brd-count"></span>
+    </div>
+    <div class="filters no-print">
+      <div class="chips" id="brd-chips"></div>
+      <button class="btn sm outline" type="button" data-x="brd-list" data-open="1">Expand all</button>
+      <button class="btn sm outline" type="button" data-x="brd-list" data-open="0">Collapse all</button>
+    </div>
+    <div id="brd-list"></div>
+  </section>
+
+  <!-- 05 FRD -->
+  <section class="tabpanel" id="tab-frd" hidden>
+    <div class="print-title">05 · Functional Requirements (FRD)</div>
+    <h2>FRD — how the system does it</h2>
+    <p class="sub">Each function: who uses it, where it lives, what the system does, the rules it enforces, how to test it, and where the code is.</p>
+    <div class="filters no-print">
+      <input type="search" id="frd-q" placeholder="Search functions…">
+      <div class="chips" id="frd-st"></div>
+      <span class="count" id="frd-count"></span>
+    </div>
+    <div class="filters no-print">
+      <div class="chips" id="frd-chips"></div>
+      <button class="btn sm outline" type="button" data-x="frd-list" data-open="1">Expand all</button>
+      <button class="btn sm outline" type="button" data-x="frd-list" data-open="0">Collapse all</button>
+    </div>
+    <div id="frd-list"></div>
+    <h3>Non-functional requirements</h3>
+    <ul>
+      <li><b>No hardcoding</b> — names, amounts, thresholds, sheet ids and approvers come from masters and settings; imports match against masters and report misses.</li>
+      <li><b>Upgrade-safe</b> — standard doctypes are extended with custom fields (prefix <code>custom_</code>) and hooks; own doctypes via JSON; every core deviation registered.</li>
+      <li><b>Testable</b> — each module has a flow test script that runs on the dev site and cleans up after itself.</li>
+      <li><b>Auditable</b> — submittable documents where money moves; Track Changes and mandatory remarks where staff correct a machine record.</li>
+      <li><b>Same domain</b> — live stays on tnc.360ithub.com so the app, the machines and the WhatsApp webhook never change address.</li>
+      <li><b>Nothing changes on live without a human</b> — migrations are run by the server admin from a release note; never from a developer's machine.</li>
+    </ul>
+  </section>
+
+  <!-- 06 PROJECT STATUS -->
+  <section class="tabpanel" id="tab-tasks" hidden>
+    <div class="print-title">06 · Project status</div>
+    <h2>Project status</h2>
+    <p class="sub">Where the project stands: progress, what is left per source, and the next highest-priority items. Click a number or a row to filter.</p>
+    <div class="plan no-print" id="plan"></div>
+    <h3>All tasks</h3>
+    <p class="sub">Delivered work, open actions from the client meetings, upcoming build items and what waits on the client. Use the filters; export with <b>Tasks to Excel</b> above.</p>
+    <div class="filters no-print">
+      <input type="search" id="task-q" placeholder="Search tasks…">
+      <select id="task-source"><option value="">All sources</option></select>
+      <select id="task-module"><option value="">All modules</option></select>
+      <select id="task-phase"><option value="">All phases</option></select>
+      <select id="task-priority"><option value="">All priorities</option></select>
+      <span class="count" id="task-count"></span>
+    </div>
+    <div class="filters no-print">
+      <div class="chips" id="task-chips"></div>
+      <button class="btn sm outline" type="button" id="task-reset">Reset filters</button>
+    </div>
+    <div class="table-wrap"><table id="task-table">
+      <thead><tr>
+        <th class="sortable" data-k="0">#</th><th class="sortable" data-k="1">Status</th><th class="sortable" data-k="2">Module</th><th>Task</th>
+        <th class="sortable" data-k="4">Source</th><th class="sortable" data-k="5">Phase</th><th class="sortable" data-k="6">Priority</th><th class="sortable" data-k="7">Date</th><th>Note</th>
+      </tr></thead>
+      <tbody id="task-body"></tbody>
+    </table></div>
+    <div class="note warn"><b>Waiting on client</b> means nothing can move until TNC gives a decision, data or access. <b>To do</b> is agreed build work not yet started. <b>Open</b> is built but not yet released or not yet confirmed.</div>
+  </section>
+
+  <!-- 07 DEV -->
+  <section class="tabpanel" id="tab-dev" hidden>
+    <div class="print-title">07 · Developer handbook</div>
+    <h2>Developer handbook</h2>
+    <p class="sub">Everything a developer needs to change this system safely: how it is built, where things live, the recipes for common changes, the rules, the tests and the fixes for the usual problems.</p>
+    <div class="filters no-print devnav">
+      <a class="chip" href="#dev-start">1 · Start here</a><a class="chip" href="#dev-arch">2 · Architecture</a><a class="chip" href="#dev-map">3 · Feature map</a><a class="chip" href="#dev-play">4 · Change playbooks</a><a class="chip" href="#dev-rules">5 · Rules &amp; conventions</a><a class="chip" href="#dev-test">6 · Testing</a><a class="chip" href="#dev-faq">7 · Troubleshooting</a>
+    </div>
+
+    <h3 id="dev-start">1 · Start here — your first day</h3>
+    <div class="grid2">
+      <div class="card"><span class="tag">Read in this order</span><ol>
+        <li>This guide: Overview and Business flow.</li>
+        <li><code>CONTEXT.md</code> at the bench root — the vocabulary; use these words in code and messages.</li>
+        <li><code>docs/adr/</code> 0004 to 0010 — the decisions you must not re-open.</li>
+        <li><code>docs/specs/tnc-v2/sow-checklist.md</code> — every scope line with its status.</li>
+        <li>The module design you are about to touch under <code>docs/specs/tnc-v2/modules/</code>.</li>
+      </ol></div>
+      <div class="card"><span class="tag">Set-up</span><ul>
+        <li>Bench at <code>bench-tnc-v2</code>, site <code>tnc-v2.local</code>, Frappe 15.120, Python 3.10, MariaDB.</li>
+        <li>Apps in order: frappe, erpnext, india_compliance, hrms, clarity_360ithub, fcm_360ithub, webtoolex_whatsapp, tnc_v2_360ithub.</li>
+        <li>Local site is a copy of live with WhatsApp, push and the weekly statement switched off. Keep them off.</li>
+        <li>Each app under <code>apps/</code> is its own git repo. Never stage app files from the bench root.</li>
+        <li>Flutter app: pinned SDK 3.35.2 via fvm; plain <code>flutter</code> breaks Gradle.</li>
+      </ul></div>
+    </div>
+    <div class="note ok">Rule of the bench: never <code>git push</code>, never <code>git reset --hard</code>, never migrate live. Local migrate only when a schema change needs it.</div>
+
+    <h3 id="dev-arch">2 · Architecture</h3>
+    <div class="grid2">
+      <div>
+        <h4>Layers</h4>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Layer</th><th>What lives there</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Browser</td><td>Desk forms and lists (<code>*.js</code> next to each doctype), pages (<code>tnc_v2/page/</code>), <code>public/js/tnc_admissions.js</code> loaded on every desk page, public web pages (<code>www/</code>, Web Forms).</td></tr>
+            <tr><td class="k">API</td><td>Whitelisted methods called by the desk and the mobile app: <code>admissions/api.py</code>, <code>hr/mobile.py</code>, <code>admissions/admit.py</code>, <code>attendance/daily.py</code>, penalty and settlement methods.</td></tr>
+            <tr><td class="k">Rules</td><td>Doctype controllers (<code>tnc_v2/doctype/*/*.py</code>) and <code>doc_events</code> hooks on standard doctypes (Task, Purchase Invoice, Payment Entry, File, Student Punch Log).</td></tr>
+            <tr><td class="k">Jobs</td><td><code>scheduler_events</code> in hooks: follow-ups 07:00, recurring tasks 07:30, task digest 08:00, attendance 23:30, settlement Saturday 08:30, monthly teacher summary on the 1st.</td></tr>
+            <tr><td class="k">ERPNext</td><td>Sales Order, Sales Invoice, Payment Entry, Purchase Invoice, Supplier, Customer, HRMS Employee / Checkin / Expense Claim.</td></tr>
+            <tr><td class="k">Config</td><td>TNC Settings (single), Penalty Type, Course, Student Batch, Holiday List, role profiles (fixtures).</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <h4>What happens when a user saves / submits a document</h4>
+        <ol class="mini-steps">
+          <li>Frappe runs the doctype controller: <code>validate</code>, then <code>before_save</code> / <code>on_update</code> / <code>on_submit</code>.</li>
+          <li>Hooks in <code>doc_events</code> run after the controller for standard doctypes (for example the Task notification hooks).</li>
+          <li>Submitted documents never run <code>validate</code> again; rules for later edits go in <code>before_update_after_submit</code> (enrolment hold release does this).</li>
+          <li>Side effects that create other documents (Sales Order on enrolment submit, Sales Invoice on payment, Purchase Invoice from timesheets) happen in the controller and are undone in <code>on_cancel</code>.</li>
+          <li>Notifications go through <code>notifications.py</code>, which checks the settings switches and logs every WhatsApp send.</li>
+        </ol>
+        <h4>Who sees which records</h4>
+        <ul>
+          <li>Teachers see only their own timesheets, penalties and payouts (user permission on Teacher, set on migrate).</li>
+          <li>Penalties have a permission query: imposers, approvers and the teacher concerned.</li>
+          <li>Employees see their own expense claims and tasks assigned to them; managers see their team's.</li>
+          <li>Public pages (<code>/enquiry</code>, <code>/admission</code>, <code>/demo-feedback</code>) run as Guest, locked to a signed, single-use, 48-hour link.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="dev-map">3 · Feature map — where things live</h3>
+    <p class="sub">Search a feature, screen, file or function.</p>
+    <div class="filters no-print"><input type="search" id="map-q" placeholder="Search the feature map…"><span class="count" id="map-count"></span></div>
+    <div class="table-wrap"><table id="map-table">
+      <thead><tr><th>Feature</th><th>Screen</th><th>Front-end</th><th>Back-end</th><th>Spec</th><th>Test</th></tr></thead>
+      <tbody id="map-body"></tbody>
+    </table></div>
+
+    <h3 id="dev-play">4 · Change playbooks</h3>
+    <p class="sub">Step-by-step recipes for the changes asked most often. Click one to open it.</p>
+    <div class="filters no-print"><input type="search" id="play-q" placeholder="Search playbooks…"><button class="btn sm outline" type="button" data-x="play-list" data-open="1">Expand all</button><span class="count" id="play-count"></span></div>
+    <div id="play-list"></div>
+
+    <h3 id="dev-rules">5 · Rules &amp; conventions</h3>
+    <div class="grid2">
+      <div><ul>
+        <li>Own doctypes: edit the JSON in the app, then local migrate. Standard doctypes: Customize Form, fields prefixed <code>custom_</code>, exported into the app.</li>
+        <li>No hardcoded names, ids, amounts or lists. Match against masters; report what did not match.</li>
+        <li>Settings switches default to off. A message is never sent unless the switch is on and a number exists.</li>
+        <li>Messages to users start with "Dear &lt;name&gt;," and never name internal screens.</li>
+        <li>Test data you create, you remove. Flow tests end with a cleanup count.</li>
+      </ul></div>
+      <div><ul>
+        <li>One repository per app; the workspace repo holds specs, ADRs and this guide's facts.</li>
+        <li>Branch per developer and date (for example <code>Anurag16Sept</code>); the user merges and pushes.</li>
+        <li>Release note before any live change: which apps move, the commands, who ran them, what was checked.</li>
+        <li>Every deviation from upstream core goes in <code>docs/core-modifications.md</code>, append-only.</li>
+        <li>Write plain explanations for the client; plan before build; show the form before the next step.</li>
+      </ul></div>
+    </div>
+
+    <h3 id="dev-test">6 · Testing</h3>
+    <p class="sub">Tests are Python scripts that run inside the site and clean up after themselves. Run them on the local copy, never on live.</p>
+    <div class="note">Run: <code>bench --site tnc-v2.local console</code> then <code>exec(open("path/to/test.py").read(), globals())</code>, or <code>bench --site tnc-v2.local execute tnc_v2_360ithub.&lt;module&gt;.&lt;function&gt;</code>. Each script prints lines starting with <code>RESULT</code>.</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Script</th><th>Covers</th></tr></thead>
+      <tbody>
+        <tr><td class="k">admissions/test_admissions_flow.py</td><td>Enquiry → demo → admit → enrolment → Sales Order → payment → receipt; follow-ups; invites.</td></tr>
+        <tr><td class="k">tasks/test_task_hooks_flow.py · tasks/recurring_task/test_recurring_task_flow.py</td><td>Task notifications, reporter-only completion, recurrence engine (478 lines of assertions from v1).</td></tr>
+        <tr><td class="k">teachers/test_teacher_flow.py · teachers/test_payables_flow.py</td><td>Timesheet approval, syllabus chapters, Purchase Invoice, payment with penalty recovery, settlement.</td></tr>
+        <tr><td class="k">attendance (scratch scripts, Oct 2026)</td><td>Punch intake, day status, hold at threshold, Leave correction, release with remarks, reports. To be committed as <code>attendance/test_attendance_flow.py</code>.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3 id="dev-faq">7 · Troubleshooting</h3>
+    <div class="filters no-print"><input type="search" id="faq-q" placeholder="Search problems…"><span class="count" id="faq-count"></span></div>
+    <div id="faq-list"></div>
+    <div class="note bad">If a fix needs a change on live, write the release note first and hand it to the server admin. Never run commands on the live server from a developer session.</div>
+  </section>
+
+  <!-- 09 GLOSSARY -->
+  <section class="tabpanel" id="tab-glossary" hidden>
+    <div class="print-title">08 · Glossary</div>
+    <h2>Glossary</h2>
+    <div class="filters no-print"><input type="search" id="glo-q" placeholder="Search terms…"><span class="count" id="glo-count"></span></div>
+    <div class="table-wrap"><table><thead><tr><th>Term</th><th>Meaning</th><th>Do not say</th></tr></thead><tbody id="glo-body"></tbody></table></div>
+  </section>
+
+  <footer class="foot">TNC v2 project guide · facts from the bench-tnc-v2 workspace repository (CONTEXT.md, docs/adr, docs/specs/tnc-v2) and the tnc_v2_360ithub app · prepared by 360ITHub · updated 10 Oct 2026.</footer>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ DATA */
+const PAGES = [
+  ["Admissions workspace", "/app/tnc-admissions", "TNC Employees · TNC Manager · TNC Super Admin", "Enquiries, demos, students, enrolments, batches, orders, funnel, attendance", "DocType"],
+  ["Teachers workspace", "/app/tnc-teachers", "TNC Employees · TNC Manager · TNC Super Admin", "Teachers, timesheets, approvals, penalties, subjects, payables, settlements"],
+  ["Follow-ups", "/app/follow-ups", "Counsellors and office", "Overdue / today / upcoming follow-ups, mine or all; log outcome, receive payment"],
+  ["Task Dashboard", "/app/task-dashboard", "All staff", "Open, overdue and by-person view of tasks"],
+  ["Student Enquiry", "/app/student-enquiry", "Counsellors and office", "The funnel record; the enquiry-form link goes out on save; Send Enquiry Form / Send Admission Form buttons; Admit dialog"],
+  ["Demo Class", "/app/demo-class", "Counsellors and office", "Schedule, result, demo fee, ratings"],
+  ["Student", "/app/student", "Office", "Profile, parents, documents, biometric ID, overview tab"],
+  ["Student Batch Enrollment", "/app/student-batch-enrollment", "Office", "One admission event; fee, instalments, hold"],
+  ["Student Batch", "/app/student-batch", "Office", "Batches with class days and timing"],
+  ["Student Attendance", "/app/student-attendance", "Office", "One row per student per class day; Rebuild a day"],
+  ["Student Punch Log", "/app/student-punch-log", "Office", "Raw machine punches matched to students"],
+  ["Attendance Register (report)", "/app/query-report/Student Attendance Register", "Office", "Daily lines with in / out / duration"],
+  ["Attendance Summary (report)", "/app/query-report/Student Attendance Summary", "Office", "Student / batch / month views with holds"],
+  ["Enquiry Funnel (report)", "/app/query-report/Enquiry Funnel", "Office, management", "Enquiries, demos, conversions, demo fee by counsellor"],
+  ["Teachers Timesheet", "/app/teachers-timesheet", "Teachers (own) · approvers", "Class rows with batch, subject, chapter; approval"],
+  ["Syllabus Progress (report)", "/app/query-report/Syllabus Progress", "Office, teachers", "Chapters done per subject and batch"],
+  ["Teachers Payable (report)", "/app/query-report/Teachers Payable Report", "Office, Finance", "Approved work waiting for invoice or payment"],
+  ["Teacher Penalty", "/app/teacher-penalty", "Imposers, approvers, the teacher", "Impose, approve, waive, refund"],
+  ["Teacher Settlement", "/app/teacher-settlement", "Office, Finance", "Weekly statement per teacher"],
+  ["Expense Claim", "/app/expense-claim", "All staff (own) · approvers", "Claims from the app; review step"],
+  ["TNC Settings", "/app/tnc-settings", "TNC Super Admin · System Manager", "Every switch, threshold and approver list"],
+  ["Public enquiry form", "/enquiry", "Anyone (public)", "Website enquiry → Student Enquiry, source Website"],
+  ["Personal enquiry link", "/enquiry/new?m=…&t=…", "The invited mobile number", "Pre-filled, single use, 48 h"],
+  ["Digital admission form", "/admission", "The admitted student (personal link)", "Admission details, Hindi rules, consent; reviewed by staff"],
+  ["Demo feedback", "/demo-feedback", "The demo student (personal link)", "Rate the demo and the counsellor out of 5"],
+  ["Project guide (this page)", "/project-guide", "Anyone with the link", "Overview, flow, roles, BRD, FRD, task status, developer and deploy notes"],
+];
+
+const FLOW = [
+  // journey, step, who, documents, what happens, rules[], note
+  ["Admissions & fees", "Enquiry", "Counsellor · Website", "Student Enquiry", "A prospect is registered: mobile first, name optional, source, course of interest, who referred. Counsellor defaults to the logged-in user. On save the student gets a WhatsApp with their personal enquiry-form link; what they fill lands on this same enquiry.", ["Duplicate mobile links to the existing student instead of a new one.", "Converted enquiries are hidden from the default list; a button shows them.", "If WhatsApp was down, the headline says so and Send Enquiry Form resends."], "The link is locked to the number, works once, expires in 48 h."],
+  ["Admissions & fees", "Follow-ups", "Counsellor", "Student Follow-Up", "Calls and visits are logged with a purpose and a next date. The Follow-ups page shows overdue, today and upcoming.", ["When a demo result is marked, the next-day follow-up is created automatically."], ""],
+  ["Admissions & fees", "Demo class", "Counsellor", "Demo Class", "A demo is scheduled in a batch of the chosen course. Result: Attended or Not Attended. Demo fee is collected at scheduling or on the demo.", ["Demo fee amount comes from settings; it is adjusted against the first instalment at enrolment.", "Two ratings: the counsellor rates the student; the student rates the demo through a personal link."], "An enquiry can have several demos."],
+  ["Admissions & fees", "Admit", "Counsellor", "Student · Student Batch Enrollment", "One dialog: batch, discount with reason, number of instalments, amount paid today. Creates the Student (Active), the submitted enrolment, the Sales Order, the first receipt and the admission-form link.", ["Counsellor is mandatory before Admit and locked afterwards; Converted By is stamped.", "Lost needs a reason from the list."], "Convert to Student without a batch is kept under More for rare cases."],
+  ["Admissions & fees", "Sales Order", "System", "Sales Order", "The committed fee after discount, with a payment schedule of instalments and due dates.", ["A due date after the batch end gives a warning.", "Migrated students can be enrolled with Fees settled outside the system: no order, no instalments."], ""],
+  ["Admissions & fees", "Fee follow-up", "System · Counsellor", "Student Follow-Up (Fee)", "At 07:00 a follow-up is created 3 days before each due date and the day after a missed one. Outcome and Receive Payment are on the same page.", [], ""],
+  ["Admissions & fees", "Receive payment", "Office", "Payment Entry · Sales Invoice", "Cash, UPI, bank transfer, card or cheque. Each payment creates a receipt Sales Invoice with GST and the Fee Receipt print; a WhatsApp receipt when switched on.", ["Outstanding shows on the order, the student overview and the ledger."], "Razorpay links wait on API keys."],
+  ["Student attendance", "Biometric punch", "Student · Machine", "eSSL push", "The IN and OUT machines push every punch to the site. Employee codes become Employee Checkin in clarity.", [], "Devices: ESSL IN and ESSL OUT."],
+  ["Student attendance", "Student Punch Log", "System", "Student Punch Log", "A code that is not an employee is offered to tnc_v2. If a Student carries that Biometric ID, a punch log is written with time, direction and device.", ["Unknown codes are refused, never stored blank.", "Duplicate punches (same id, time, device) are ignored."], "No backfill of punches before go-live of this step."],
+  ["Student attendance", "Daily attendance", "System", "Student Attendance", "At 23:30, for every batch with a class that day and every Active or On Hold enrolment: a punch means Present, first punch after start time + grace means Late, no punch means Absent. In time is the first IN, out time the last OUT.", ["Holidays from the Company list are skipped.", "A punch during the day refreshes the row immediately.", "Rebuild a day re-runs a past date without messaging parents."], ""],
+  ["Student attendance", "Correction", "Office", "Student Attendance", "Staff may change a day to Leave (or any status) with remarks. The row becomes Manual and keeps who changed it; a rebuild never overwrites it.", ["Remarks are mandatory on any status change.", "Track Changes keeps the history."], ""],
+  ["Student attendance", "Attendance Hold", "System · Counsellor", "Student Batch Enrollment", "After N absences in a row (setting, default 4; Leave breaks the run) the enrolment goes On Hold with type Attendance and the student becomes Attendance Hold.", ["Release needs new remarks and the Counsellor, Manager or Super Admin role.", "A hold is never released automatically."], ""],
+  ["Student attendance", "Parent WhatsApp", "System", "WhatsApp Message Log", "Absent today, and On hold: sent to the parent number chosen in settings (father / mother / guardian, then the student).", ["Only when the switch is on and a number exists."], "All 243 migrated students have no parent number yet."],
+  ["Teacher work & pay", "Timesheet", "Teacher (app)", "Teachers Timesheet", "Classes and activities for the day: batch, subject, chapter per class row, minutes, remarks, online / offline.", ["Chapter is validated against the subject's syllabus."], ""],
+  ["Teacher work & pay", "Approval", "Approver", "Teachers Timesheet", "Approvers from settings approve or reject with a reason. Pending timesheets can be edited; approved ones cannot.", [], ""],
+  ["Teacher work & pay", "Syllabus progress", "Office", "Syllabus Progress report", "Chapters done of total per subject and batch, time taught, last class and by whom.", [], ""],
+  ["Teacher work & pay", "Purchase Invoice", "Office", "Purchase Invoice", "Approved timesheets are billed on the teacher's supplier for a period; timesheets become Unpaid → Paid as payments land.", ["Invoice approvers from settings."], ""],
+  ["Teacher work & pay", "Penalty", "Imposer · Approver", "Teacher Penalty", "A penalty of a type (amount from the Penalty Type master) is submitted by an imposer and approved or rejected by an approver. Waiver and refund have their own steps.", ["Administrator is always allowed.", "The teacher sees only their own penalties."], "Final amounts and the repeat rule await the client."],
+  ["Teacher work & pay", "Payment", "Finance", "Payment Entry", "Payment against the invoice deducts approved penalties into the penalty account; recovery is recorded on the penalty and undone if the payment is cancelled.", [], ""],
+  ["Teacher work & pay", "Weekly settlement", "System", "Teacher Settlement", "Saturday 08:30: one statement per teacher for Saturday to Friday (opening, payable, penalties, payments, closing); WhatsApp text when the switch is on.", ["History starts at the settlement start date in settings."], ""],
+  ["Tasks", "Create", "Any staff", "Task", "Subject, description, owner, assignees, priority, start and due dates, attachments (documents, images, audio).", ["Only the reporter or an admin can mark Completed."], ""],
+  ["Tasks", "Recurring", "System", "Recurring Task", "A template generates occurrences daily, weekly or monthly with start, end and occurrence limit. Runs 07:30.", [], "v1 engine with its tests."],
+  ["Tasks", "Notify", "System", "Notification · WhatsApp Message Log", "Assignment and review notifications in the bell, as push and WhatsApp (logged). 08:00 digest of due and overdue.", [], ""],
+  ["Expenses", "Claim", "Employee (app)", "Expense Claim", "Amount, type, attachment, online or offline coaching classification.", ["Expense For is mandatory."], ""],
+  ["Expenses", "Review", "Approver", "Expense Claim", "The approver can request a review; the employee replies; then approve or reject.", ["Rejected claims cannot be paid."], ""],
+  ["Expenses", "Pay", "Finance", "Payment Entry", "Standard HRMS payment to the employee.", [], "Amount-based approval rule (Manager / CEO) is to do."],
+];
+const JOURNEY_DG = {
+  "Admissions & fees": "flowchart TD\n E[Enquiry]-->F[Follow-ups]-->D[Demo class]-->A{Admit?}\n A-- yes -->S[Student + Enrolment]-->O[Sales Order]-->P[Payment & receipt]\n A-- no -->L[Lost with reason]\n O-.07:00 job.->FF[Fee follow-up]-->P",
+  "Student attendance": "flowchart TD\n M[eSSL machine]-->C[clarity]-->K{Student with this ID?}\n K-- yes -->PL[Student Punch Log]-->DA[Daily attendance 23:30]\n K-- no -->X[Refused]\n DA-->H{4 absent in a row?}\n H-- yes -->HO[On Hold · Attendance]\n DA-->W[Parent WhatsApp]\n HO-->R[Release with remarks]",
+  "Teacher work & pay": "flowchart TD\n T[Timesheet from app]-->AP{Approved?}\n AP-- yes -->PI[Purchase Invoice]-->PE[Payment less penalties]-->ST[Weekly settlement]\n AP-- no -->RJ[Rejected with reason]\n PN[Penalty approved]-.->PE\n T-->SY[Syllabus progress]",
+  "Tasks": "flowchart TD\n RT[Recurring template 07:30]-->TK[Task]\n U[Staff]-->TK\n TK-->N[Bell · push · WhatsApp]\n TK-->DG[08:00 digest]\n TK-->CP{Reporter marks Completed}",
+  "Expenses": "flowchart TD\n EC[Claim from app]-->RV{Review needed?}\n RV-- yes -->RR[Employee replies]-->AD\n RV-- no -->AD{Approve?}\n AD-- yes -->PY[Payment]\n AD-- no -->RJ[Rejected · cannot be paid]",
+};
+
+const ROLES = [
+  {r: "TNC Counsellor", job: "Counsellor", does: ["Enquiries, follow-ups, demos", "Admit students; stamped as Converted By", "Release an Attendance Hold with remarks"], tabs: ["Follow-ups", "Share Forms", "Admissions workspace"], ctl: ["Counsellor locked after conversion"]},
+  {r: "TNC Employees", job: "Office staff", does: ["Students, enrolments, payments, receipts", "Attendance corrections and rebuilds", "Tasks and expense claims (own)"], tabs: ["Admissions workspace", "Teachers workspace", "Task Dashboard"], ctl: ["Own expense claims; tasks assigned to them"]},
+  {r: "TNC Manager", job: "Manager", does: ["Everything office staff do", "Approve timesheets, penalties, invoices when listed in settings", "Release holds"], tabs: ["All workspaces", "Reports"], ctl: ["Approval rights come from the settings lists, not the role alone"]},
+  {r: "TNC Super Admin", job: "Management / admin", does: ["All of the above", "Leave and expense approver", "Settings, role profiles, penalty types"], tabs: ["TNC Settings", "Role Permissions Manager"], ctl: ["Only role that edits settings"]},
+  {r: "TNC Teachers", job: "Teacher", does: ["Timesheets from the app", "See own payouts, settlements, penalties"], tabs: ["Mobile app", "Teachers Timesheet (own)"], ctl: ["User permission on their Teacher record", "Supplier role for payouts"]},
+  {r: "Student / parent", job: "Public, by personal link", does: ["Fill the enquiry or admission form", "Rate a demo", "Receive WhatsApp receipts, absence and hold messages"], tabs: ["/enquiry/new", "/admission", "/demo-feedback"], ctl: ["Links are signed to the mobile number, single use, 48 h"]},
+];
+
+const BRD = [
+  ["BR-01", "Admissions", "Every student starts as an enquiry", "v1 had a separate admission form; students were typed twice and the counsellor who sold was lost.", "One funnel: enquiry → demo → admit, carrying data forward; the converting counsellor is stamped for incentives.", ["No Student exists without an Enquiry (migration aside).", "Enquiry Funnel reports conversion by counsellor."], "Done"],
+  ["BR-02", "Admissions", "Admit in one step", "Several screens to admit, enrol, bill and collect.", "One dialog: batch, discount, instalments, paid today → student, enrolment, order, receipt and admission-form link.", ["A counsellor can admit a walk-in in under two minutes."], "Done"],
+  ["BR-03", "Admissions", "Demo fee handled, not lost", "Demo fees were collected in cash with no record.", "Demo fee (amount from settings) collected at scheduling or demo, receipted, adjusted at enrolment, refunded as credit note, kept as income when lost.", ["Funnel shows Demo Fee Collected."], "Done"],
+  ["BR-04", "Admissions", "Paper admission form replaced", "A paper form with rules and consent was filed by hand.", "A digital admission form on a personal link with the institute's Hindi rules and consent, reviewed by staff and applied to the Student.", ["Follow-up created if the form is not submitted."], "Done"],
+  ["BR-05", "Fees", "Fees on the ledger", "Fees were tracked in a custom doctype with no accounting.", "Committed fee = Sales Order; instalments = payment schedule; every payment = receipt invoice with GST.", ["Outstanding on the order equals the ledger."], "Done"],
+  ["BR-06", "Fees", "Nobody forgets a due instalment", "Collections depended on memory.", "Follow-ups created automatically before and after each due date; one page to call, log and receive.", ["07:00 job; follow-up page shows fee follow-ups."], "Done"],
+  ["BR-07", "Fees", "Online payment links", "Only cash and bank.", "Razorpay links against instalments with reconciliation.", [], "Waiting on client"],
+  ["BR-08", "Attendance", "Attendance from the machine", "v1 never recorded student attendance; students already punch.", "Each punch becomes a punch log when a student carries that ID; a daily job writes Present / Late / Absent per class day.", ["No marking screen.", "Unknown codes are refused."], "Open"],
+  ["BR-09", "Attendance", "Hold after repeated absence", "SOW: hold after 4 consecutive absences, removal by counsellor with remarks.", "Automatic hold on the enrolment at a configurable threshold; manual release with remarks by named roles.", ["Student status mirrors the hold."], "Open"],
+  ["BR-10", "Attendance", "Parents are told", "Parents learned of absence from the student.", "WhatsApp to the parent on absence and on hold, behind a switch.", [], "Open"],
+  ["BR-11", "Attendance", "Online batch attendance", "Online students are not at the machine.", "Attendance for Google Meet batches from Meet data into the same record.", [], "Waiting on client"],
+  ["BR-12", "Teachers", "Pay only approved work", "Timesheets existed but payouts never ran through the system.", "Approved timesheets → Purchase Invoice → payment; status Unpaid / Paid visible to the teacher.", [], "Done"],
+  ["BR-13", "Teachers", "Know where the syllabus stands", "No record of chapters taught.", "Subject and chapter on every class row; progress report per subject and batch.", ["28 subjects, 992 chapters imported from TNC's sheet."], "Done"],
+  ["BR-14", "Teachers", "Penalties with control", "Penalties were verbal.", "Typed penalties with imposer / approver rights, recovered at payment, waivable and refundable, fully audited.", ["Amounts seeded from the SOW; final values pending."], "Done"],
+  ["BR-15", "Teachers", "Weekly statement", "Teachers asked what they were owed.", "Saturday-to-Friday settlement per teacher, sent on WhatsApp.", [], "Done"],
+  ["BR-16", "Teachers", "Teacher scheduling and targets", "SOW asks for allocation, timetable, target vs actual.", "Teacher allocation to batch / subject, timetable views, target vs actual hours.", [], "To do"],
+  ["BR-17", "Tasks", "One task system", "Three task doctypes in v1.", "Standard Task with v1's recurrence and notifications; dashboard; digest.", [], "Done"],
+  ["BR-18", "Tasks", "Task reporting and discipline", "SOW asks for late indicators, reports, report cards.", "Designation assignment, late / overdue indicator, task reports, periodic report cards.", [], "To do"],
+  ["BR-19", "Expenses", "Expense claims from the phone with review", "Claims came on paper.", "Claim with attachment from the app; review question before approval; rejected cannot be paid.", [], "Done"],
+  ["BR-20", "Expenses", "Approval by amount", "SOW: Manager up to 2,000, CEO above.", "Workflow with amount condition.", [], "To do"],
+  ["BR-21", "Employees", "Staff attendance from machine and phone", "", "clarity check-in from eSSL and the app; HRMS Attendance.", ["Auto-attendance settings on shifts still to tick on live."], "Done"],
+  ["BR-22", "Employees", "Performance and KPIs", "SOW: KPI config, daily entry, approval, team dashboard, employee penalties.", "", [], "Waiting on client"],
+  ["BR-23", "Performance", "Exam results and outcomes", "SOW: LMS result upload, analysis, government exam history.", "", [], "To do"],
+  ["BR-24", "Communication", "WhatsApp and SMS", "Two WhatsApp apps in v1, no SMS.", "One notification service; Webtoolex now; official template API and SMS provider are client decisions.", [], "Waiting on client"],
+  ["BR-25", "Mobile", "One app for staff and teachers", "", "Login, check-in, expenses, tasks, timesheets, approvals; chapter pickers and penalty screens next.", [], "Done"],
+  ["BR-26", "Reports", "Management reports", "", "Student, counsellor, teacher, employee and finance reports as each module lands.", ["Attendance, funnel, timesheets, payables, syllabus, settlements exist."], "Open"],
+];
+
+const FRD = [
+  // id, module, title, who, where, what, rules[], test, code, status
+  ["FR-A1", "Admissions", "Enquiry with mobile first", "Counsellor · Website", "Student Enquiry · /enquiry", "Mobile is the key; name falls back to the mobile; source and counsellor default.", ["Duplicate mobile links the existing student.", "Converted hidden by default."], "Create two enquiries with one mobile → second links to the first.", "student_enquiry.py · admissions/api.py", "Done"],
+  ["FR-A2", "Admissions", "Personal enquiry-form link", "System · Counsellor", "Student Enquiry (on save; Send Enquiry Form)", "Signed link to the mobile, sent automatically when a counsellor saves a new enquiry; the submitted form fills that enquiry (no duplicate); single use; 48 h expiry; outcome shown in the form headline with a resend button.", ["One WhatsApp credit per send.", "Not sent for enquiries that arrived through a link."], "Save an enquiry → link status; open the link, submit → same enquiry filled; open again → refused.", "student_enquiry.py _send_enquiry_link · admissions/invites.py submit_personal_form", "Done"],
+  ["FR-A3", "Admissions", "Demo class and fee", "Counsellor", "Demo Class", "Schedule in a batch of the course; result; demo fee receipt and payment; refund as credit note; adjusted at enrolment.", ["Amount and adjustment switch from settings."], "Collect ₹500 at demo, admit → payable reduced by 500.", "admissions/demo_fee.py", "Done"],
+  ["FR-A4", "Admissions", "Demo ratings", "Counsellor · Student", "Demo Class · /demo-feedback", "Counsellor rates the student; the student rates the demo and the counsellor through a personal link.", [], "Open the link, rate → values on the demo.", "admissions/demo_rating.py · www/demo-feedback", "Done"],
+  ["FR-A5", "Admissions", "Admit dialog", "Counsellor", "Student Enquiry › Admit", "Creates Student (Active), submitted enrolment, Sales Order, first receipt, admission-form link in one call.", ["Counsellor mandatory, locked after; Converted By stamped."], "Admit with 2 instalments and ₹5,000 today → order with 2 rows, one receipt.", "admissions/admit.py", "Done"],
+  ["FR-A6", "Admissions", "Digital admission form", "Student", "/admission", "Admission details, Hindi rules, consent; staff review and apply to the Student.", ["Follow-up created when not submitted."], "", "Admission Form doctype · admissions/followups.py", "Done"],
+  ["FR-A7", "Admissions", "Enquiry Funnel report", "Management", "Enquiry Funnel", "Enquiries, demos, conversions, conversion %, demo fee collected, grouped by counsellor.", [], "", "report/enquiry_funnel", "Done"],
+  ["FR-F1", "Fees", "Enrolment creates the Sales Order", "System", "Student Batch Enrollment", "Fee from batch or course, discount (amount or %, reason mandatory), demo fee adjusted, GST option, N instalments from a first due date and gap; order with payment schedule on submit.", ["Due date after batch end warns.", "Fees settled outside the system skips order and instalments."], "Submit enrolment → one Sales Order; cancel → order cancelled.", "student_batch_enrollment.py · admissions/fees.py", "Done"],
+  ["FR-F2", "Fees", "Receive payment and receipt", "Office", "Follow-ups · Sales Order", "Payment Entry with mode; receipt Sales Invoice per payment with GST; Fee Receipt print; WhatsApp receipt text when switched on.", [], "", "admissions/fees.py · admissions/sales_order_hooks.py", "Done"],
+  ["FR-F3", "Fees", "Fee follow-ups job", "System", "07:00", "Creates a follow-up 3 days before each due date and the day after a missed one; skips v1 students without an enquiry.", [], "", "admissions/followups.py", "Done"],
+  ["FR-T1", "Attendance", "Biometric ID and punch intake", "System", "Student · Student Punch Log", "clarity offers non-employee punches through the essl_unmatched_punch hook; tnc_v2 records a punch only for a Student with that Biometric ID.", ["Unique ID.", "Dedupe on id + time + device.", "Unknown refused."], "Push a known and an unknown code → one log, request Completed.", "attendance/punches.py · clarity custom_employee_checkin.py", "Open"],
+  ["FR-T2", "Attendance", "Daily build", "System", "23:30 · Student Attendance", "For each batch with a class that day and each Active / On Hold enrolment: Present / Late / Absent with in, out, duration, punch count, note.", ["Holidays skipped.", "Late = first punch after start + grace (batch's late-after else global).", "Manual rows never overwritten."], "Scratch test: 7 days, Present / Late / Absent as expected.", "attendance/daily.py", "Open"],
+  ["FR-T3", "Attendance", "Live refresh and rebuild", "System · Office", "Student Attendance list", "A punch refreshes today's row; Rebuild a day re-runs a past date without parent messages.", ["No future dates.", "Roles: System Manager, Super Admin, Manager, Counsellor."], "", "attendance/daily.py on_punch, rebuild_day", "Open"],
+  ["FR-T4", "Attendance", "Correction with remarks", "Office", "Student Attendance", "Status change requires remarks → source Manual, marked by; Track Changes.", [], "Change to Leave without remarks → refused.", "student_attendance.py", "Open"],
+  ["FR-T5", "Attendance", "Automatic hold and release", "System · Counsellor", "Student Batch Enrollment", "Consecutive absences counted after each row; at threshold → On Hold / Attendance / hold_on / reason / comment; Student status mirrors. Release needs remarks and role.", ["Leave resets the run.", "Never released automatically."], "4 absences → On Hold; release w/o remarks refused; with remarks → Active.", "attendance/daily.py update_hold · student_batch_enrollment.py validate_hold", "Open"],
+  ["FR-T6", "Attendance", "Parent WhatsApp", "System", "Settings switch", "Absent today and On hold messages to the chosen parent number with fallbacks.", [], "", "attendance/daily.py notify_parent_*", "Open"],
+  ["FR-T7", "Attendance", "Reports", "Office", "Attendance Register · Attendance Summary", "Register: day lines. Summary: Student / Batch / Month views with %, last present, absences in a row, hold; Only on hold filter.", ["% = (Present+Late)/(Present+Late+Absent)."], "", "report/student_attendance_register · student_attendance_summary", "Open"],
+  ["FR-R1", "Teachers", "Timesheet with syllabus", "Teacher", "Teachers Timesheet", "Class rows carry batch, subject, chapter (autocomplete from the subject's chapters); chapter sequence validated.", [], "", "teachers_timesheet.py · teachers/syllabus.py", "Done"],
+  ["FR-R2", "Teachers", "Approval", "Approver", "Teachers Timesheet", "Approvers from settings; approve / reject with reason; approved rows locked.", [], "", "teachers_timesheet.py", "Done"],
+  ["FR-R3", "Teachers", "Syllabus import", "Admin", "System Console", "Imports subjects and chapters from the institute's sheet; teacher matched by nickname, exact first then fuzzy; misses reported.", ["No hardcoded names."], "", "teachers/syllabus.py", "Done"],
+  ["FR-R4", "Teachers", "Invoice and payment", "Office · Finance", "Purchase Invoice · Payment Entry", "Invoice from approved timesheets for a period; timesheet payment status follows invoice and payment; invoice approvers from settings.", [], "test_payables_flow", "hr/invoice_approval.py · teacher.py", "Done"],
+  ["FR-R5", "Teachers", "Penalties", "Imposer · Approver", "Teacher Penalty", "Submit, decide, waive, refund; recovery as a negative deduction on the payment into the penalty account; undone on cancel; refund by journal.", ["Imposers / approvers lists; Administrator always.", "Permission query limits visibility."], "test_teacher_flow", "teachers/penalties.py · teacher_penalty.py", "Done"],
+  ["FR-R6", "Teachers", "Weekly settlement", "System", "Teacher Settlement", "Sat–Fri window; generate per teacher; weekly job; WhatsApp statement when switched on; start date limits history.", [], "", "teacher_settlement.py · teachers/teacher_documents.py", "Done"],
+  ["FR-K1", "Tasks", "Task hooks", "System", "Task", "Owner and assignees notified on create and change; reporter-only completion; comment notifications.", [], "test_task_hooks_flow", "tasks/task_hooks.py", "Done"],
+  ["FR-K2", "Tasks", "Recurring tasks", "System", "Recurring Task · 07:30", "Daily / weekly / monthly with start, end, limit, owner, priority; occurrences numbered.", [], "test_recurring_task_flow", "tasks/recurring_task", "Done"],
+  ["FR-K3", "Tasks", "Digest and dashboard", "System · Staff", "08:00 · Task Dashboard", "Due and overdue digest; dashboard with number cards.", [], "", "tasks/jobs.py · page/task_dashboard", "Done"],
+  ["FR-E1", "Expenses", "Review step", "Approver · Employee", "Expense Claim", "Request review, reply, then approve or reject; rejected cannot be paid; Expense For mandatory.", [], "", "hr/expense_claim.py", "Done"],
+  ["FR-E2", "Expenses", "Mobile set_value guard", "System", "API", "Overrides frappe.client.set_value so the app cannot overwrite the employee on update.", [], "", "hr/mobile.py", "Done"],
+  ["FR-M1", "Migration", "v1 data migration", "Admin", "bench execute", "Students (243, series from 344), employees, teachers, timesheets, accounts, modes of payment; re-runnable steps.", [], "", "migration/from_v1.py", "Done"],
+  ["FR-N1", "Communication", "Notification service", "System", "notifications.py", "Bell, push (FCM), WhatsApp (Webtoolex) behind settings switches; every WhatsApp send logged; text begins Dear <name>.", [], "", "notifications.py · WhatsApp Message Log", "Done"],
+];
+
+const TASKS = [
+  // status, module, title, source, phase, priority, date, who, note
+  ["Done", "Admissions", "Enquiry, follow-ups, demo, convert, enrolment, Sales Order, instalments, receipts", "SOW", "1", "High", "2026-09-16", "360ithub", ""],
+  ["Done", "Admissions", "Client meeting items M1–M12 (mobile first, counsellor stamp, demo fee, one-step admit, personal links, ratings)", "Client meeting 14 Sep", "1", "High", "2026-09-16", "360ithub", ""],
+  ["Done", "Admissions", "243 v1 students migrated with customer links", "SOW", "1", "High", "2026-09-15", "360ithub", "Series continues from 344"],
+  ["Done", "Admissions", "Digital admission form with Hindi rules and consent", "Client meeting 14 Sep", "1", "Medium", "2026-09-16", "360ithub", "Agreed addition"],
+  ["Done", "Tasks", "Task management ported: recurrence engine, hooks, digest, dashboard, workspace", "SOW", "1", "High", "2026-09-11", "360ithub", ""],
+  ["Done", "Platform", "Go-live on tnc.360ithub.com; v1 stopped; app on Play Store", "Client", "1", "High", "2026-09-28", "360ithub", ""],
+  ["Done", "Expenses", "Expense claim review step; Expense For; rejected cannot be paid", "Client", "1", "Medium", "2026-09-28", "360ithub", ""],
+  ["Done", "Teachers", "Syllabus: Subject and chapters imported; chapter pickers on timesheets; Syllabus Progress report", "Client", "2", "High", "2026-09-30", "360ithub", "28 subjects, 992 chapters"],
+  ["Done", "Teachers", "Teacher penalties: types, rights, approve, recover at payment, waive, refund", "SOW", "2", "High", "2026-09-30", "360ithub", "Amounts pending client"],
+  ["Done", "Teachers", "Weekly settlement Sat–Fri with WhatsApp statement", "SOW", "2", "Medium", "2026-09-30", "360ithub", ""],
+  ["Done", "Communication", "WhatsApp text starts with Dear <name>", "Client", "2", "Low", "2026-10-07", "360ithub", "Live"],
+  ["Open", "Admissions", "Share Forms page removed; enquiry-form link sent on enquiry save, resend button, form fills the same enquiry", "Client", "2", "Medium", "2026-10-10", "360ithub", "Built and tested; release pending"],
+  ["Open", "Attendance", "Student biometric punches: Biometric ID, Student Punch Log, clarity hook", "SOW", "2", "High", "2026-10-08", "360ithub", "Built and tested; release pending"],
+  ["Open", "Attendance", "Daily Student Attendance, holds, parent WhatsApp, Rebuild a day", "SOW", "2", "High", "2026-10-09", "360ithub", "Built and tested; release pending"],
+  ["Open", "Attendance", "Attendance Register and Attendance Summary reports; Admissions workspace section", "SOW", "2", "Medium", "2026-10-09", "360ithub", "Built and tested"],
+  ["Open", "Platform", "Release step 1 and 2 to live: push both apps, migrate, restart", "360ithub", "2", "High", "", "Pankaj", "Commands in the release note"],
+  ["Open", "Platform", "Live PDF generation fails inside Docker (wkhtmltopdf connection refused)", "360ithub", "2", "High", "2026-10-08", "Server admin", "extra_hosts fix sent"],
+  ["Open", "Employees", "Employee auto-attendance: tick Last Sync, Strictly based on Log Type, holiday list on Company", "360ithub", "2", "Medium", "2026-10-08", "Pankaj", "Confirm internally"],
+  ["Open", "Teachers", "Assign penalty imposers / approvers and invoice approvers in settings on live", "360ithub", "2", "Medium", "", "Pankaj", ""],
+  ["Open", "Teachers", "Settlement start date set to 01-01-2026 is wrong; set to the date payouts started", "360ithub", "2", "Low", "2026-10-08", "Pankaj", ""],
+  ["To Do", "Admissions", "Enrol existing students tool (batch → tick students → enrolments, fees outside system)", "360ithub", "2", "High", "", "360ithub", "Pending yes"],
+  ["To Do", "Attendance", "Commit attendance flow test script", "360ithub", "2", "Low", "", "360ithub", ""],
+  ["To Do", "Mobile", "App: chapter pickers on timesheet rows; penalty screens (teacher view, approve / reject)", "Client", "2", "High", "", "360ithub", ""],
+  ["To Do", "Tasks", "Task extension: designation assignment, late indicator, notification rules, reports, report cards", "SOW", "3", "Medium", "", "360ithub", "~3 days"],
+  ["To Do", "Expenses", "Amount-based approval rule (Manager ≤ 2,000, CEO above); suspense list; management summary", "SOW", "3", "Medium", "", "360ithub", "~3 days"],
+  ["To Do", "Academic", "Academic Year, Classroom, teacher allocation, timetables", "SOW", "3", "Medium", "", "360ithub", "~1 week"],
+  ["To Do", "Performance", "Result upload, exam analysis, government exam history and outcome", "SOW", "3", "Medium", "", "360ithub", "~1 week"],
+  ["To Do", "Teachers", "Target vs actual hours; teacher desk dashboard", "SOW", "3", "Low", "", "360ithub", ""],
+  ["To Do", "Reports", "Student strength, batch allocation, fee collection reports", "SOW", "3", "Low", "", "360ithub", ""],
+  ["To Do", "Admissions", "Concession and waiver approval above a limit", "SOW", "3", "Low", "", "360ithub", ""],
+  ["Waiting on client", "Attendance", "Holiday list 2026–27 created and set as Company default", "360ithub", "2", "High", "", "TNC", "Else Sundays become Absent"],
+  ["Waiting on client", "Attendance", "Biometric ID entered on each student; students enrolled in batches; parent mobile numbers", "360ithub", "2", "High", "", "TNC", "Data entry"],
+  ["Waiting on client", "Attendance", "Each batch's class days and start time; confirm online batches excluded for now", "360ithub", "2", "High", "", "TNC", ""],
+  ["Waiting on client", "Teachers", "Final penalty amounts, repeat rule, ledger account, decision to pay teachers through the system", "SOW", "2", "High", "", "TNC", "FRD"],
+  ["Waiting on client", "Fees", "Razorpay API keys and account access", "SOW", "3", "Medium", "", "TNC", ""],
+  ["Waiting on client", "Communication", "Official WhatsApp template API decision; SMS provider; email account", "SOW", "3", "Medium", "", "TNC", ""],
+  ["Waiting on client", "Finance", "Accounts and opening balances sign-off; payroll configuration", "SOW", "3", "Medium", "", "TNC", "Finance"],
+  ["Waiting on client", "Attendance", "Google Meet attendance method for online batches (Workspace plan, organiser account, fixed link)", "SOW", "3", "Medium", "", "TNC", "FRD"],
+  ["Waiting on client", "FRD", "Referral reward, coupon rules, KPI formula, rank calculator, Spark TG, voice tasks, external-person tasks, custom schedules", "SOW", "3", "Medium", "", "TNC", "FRD session"],
+];
+
+const FEATURE_MAP = [
+  ["Enquiry, demo, admit, personal links", "Student Enquiry", "student_enquiry.js · public/js/tnc_admissions.js", "admissions/api.py · admit.py · invites.py · demo_fee.py · demo_rating.py", "modules/enquiry-to-fee.md", "test_admissions_flow.py"],
+  ["Follow-ups page and jobs", "/app/follow-ups", "page/follow_ups/follow_ups.js", "admissions/followups.py", "modules/enquiry-to-fee.md", "test_admissions_flow.py"],
+  ["Enrolment, fee, instalments, Sales Order", "Student Batch Enrollment", "student_batch_enrollment.js · admissions/sales_order.js", "student_batch_enrollment.py · admissions/fees.py · sales_order_hooks.py", "build-guide-enquiry-to-fee-attendance.md", "test_admissions_flow.py"],
+  ["Student punches", "Student Punch Log", "—", "attendance/punches.py · clarity custom_employee_checkin.py (hook essl_unmatched_punch)", "modules/attendance.md (as built)", "scratch atttest"],
+  ["Daily attendance, holds, parent WhatsApp", "Student Attendance", "student_attendance_list.js (Rebuild a day)", "attendance/daily.py · student_attendance.py · student_batch_enrollment.py validate_hold", "modules/attendance.md · ADR-0010", "scratch atttest / reptest"],
+  ["Attendance reports", "Query reports", "report/*.js", "report/student_attendance_register · student_attendance_summary", "modules/attendance.md", "scratch reptest"],
+  ["Timesheets, approval, syllabus", "Teachers Timesheet · Subject", "teachers_timesheet.js", "teachers_timesheet.py · teachers/syllabus.py", "docs (30 Sep state)", "test_teacher_flow.py"],
+  ["Teacher invoices and payments", "Purchase Invoice · Payment Entry", "hr/purchase_invoice.js · hr/payment_entry.js", "hr/invoice_approval.py · teacher.py · teachers/penalties.py (recovery)", "ADR-0008", "test_payables_flow.py"],
+  ["Penalties", "Teacher Penalty", "teacher_penalty.js", "teacher_penalty.py · teachers/penalties.py", "ADR-0008", "test_teacher_flow.py"],
+  ["Weekly settlement and documents", "Teacher Settlement", "teacher_settlement.js", "teacher_settlement.py · teachers/teacher_documents.py · templates/reports", "docs (30 Sep state)", "—"],
+  ["Tasks", "Task · Recurring Task · Task Dashboard", "page/task_dashboard", "tasks/task_hooks.py · tasks/jobs.py · tasks/recurring_task", "modules/task-management.md · ADR-0009", "test_task_hooks_flow.py · test_recurring_task_flow.py"],
+  ["Expense claims", "Expense Claim", "hr/expense_claim.js · expense_claim_list.js", "hr/expense_claim.py · hr/mobile.py", "sow-checklist §8", "—"],
+  ["Notifications", "WhatsApp Message Log", "—", "notifications.py", "modules/task-management.md", "test_task_hooks_flow.py"],
+  ["Settings, defaults, custom fields", "TNC Settings", "—", "admissions/setup.py · admissions/custom_fields.py · customizations.py · setup_helpers.py", "—", "—"],
+  ["v1 migration", "bench execute", "—", "migration/from_v1.py", "v1-live-usage-and-keep-plan.md", "compare scripts"],
+];
+
+const PLAYBOOKS = [
+  ["Add a field to one of our own doctypes", "A new piece of data on Student, Enrolment, Batch, Attendance…", ["Edit the doctype JSON under <code>tnc_v2/doctype/&lt;name&gt;/</code> (or use Customize Form on the dev site and export).", "Run <code>bench --site tnc-v2.local migrate</code> locally.", "Commit the JSON; live gets it on the next migrate."], "tnc_v2/doctype/*/*.json", "Never edit live through Customize Form."],
+  ["Add a field to a standard doctype (Sales Order, Expense Claim…)", "Data on an ERPNext/HRMS document.", ["Add it in <code>admissions/custom_fields.py</code> (ensure_custom_fields) with the <code>custom_</code> prefix.", "Migrate locally; <code>after_migrate</code> creates it.", "Record it in <code>docs/core-modifications.md</code> only if core behaviour changes."], "admissions/custom_fields.py", "Fields are never deleted by sync; removing one needs a patch."],
+  ["Change a threshold, grace or switch", "Hold after N absences, late grace, demo fee, WhatsApp on/off.", ["Open TNC Settings on the site; change the value.", "No code change, no migrate."], "TNC Settings", "If the value is not there, add a field to TNC Settings rather than a constant in code."],
+  ["Add an approver or imposer", "A new timesheet / penalty / invoice approver.", ["TNC Settings › Teachers or Accounts: add the user to the list.", "The user needs the TNC Manager profile or higher."], "TNC Settings", ""],
+  ["Add a batch for attendance", "A new batch must get daily attendance.", ["Create the Student Batch; tick class days; set start time, end time, late-after.", "Enrol students (Admit, or the Enrol existing students tool).", "Make sure each student has a Biometric ID and the holiday list covers the year."], "Student Batch", "Online batches get rows only once a Meet source exists."],
+  ["Add a new report", "Office needs a list the reports don't give.", ["<code>tnc_v2/report/&lt;name&gt;/</code> with .json (Script Report, roles), .py (execute → columns, rows) and .js (filters).", "Import locally with <code>import_file_by_path</code> or a migrate.", "Add a shortcut to the workspace JSON; re-export the workspace file after any forced import (the import deletes the folder)."], "tnc_v2/report", "Period filters use the shared <code>_period</code> helper."],
+  ["Add a WhatsApp message", "A new event should message someone.", ["Add a switch in TNC Settings.", "Call <code>notifications.send_whatsapp_to_mobile(mobile, text, ref_doctype, ref_name)</code> behind the switch.", "Text starts with Dear &lt;name&gt;, and names no internal screen."], "notifications.py", "Every send is logged in WhatsApp Message Log."],
+  ["Add a scheduled job", "Something must run daily / weekly.", ["Write the function; add a cron entry in <code>hooks.py scheduler_events</code>.", "Restart the scheduler locally; on live the release note includes the container restart."], "hooks.py", "Jobs must be re-runnable for a date."],
+  ["Change the mobile app contract", "A select value or API the app reads changes.", ["Change server and app together; the app's build is published by the app team.", "Guard old app versions server-side when needed (see keep_employee)."], "hr/mobile.py · Flutter repo", ""],
+  ["Release to live", "Code must reach tnc.360ithub.com.", ["Developer: commit on their branch; user merges and pushes both app repos.", "Server admin: <code>git pull</code> in each app, <code>docker compose exec backend bench --site tnc.360ithub.com migrate</code>, <code>docker compose restart backend queue-short queue-long scheduler</code>.", "Verify on live (scheduler status, Error Log, a test PDF); write the release note."], "docs/releases", "Never from a developer session."],
+];
+
+const FAQ = [
+  ["My desk JavaScript change doesn't show", "Hard refresh (Ctrl+Shift+R). For <code>app_include_js</code> files bump the <code>?v=</code> tag in hooks.py or run <code>bench build --app tnc_v2_360ithub</code>, then <code>bench --site tnc-v2.local clear-cache</code>."],
+  ["My Python change doesn't apply", "The dev server reloads by itself; background jobs need <code>bench restart</code> or a worker restart. On live: restart the containers."],
+  ["A new doctype field is missing on the site", "You edited the JSON but did not migrate. <code>bench --site tnc-v2.local migrate</code> (local only)."],
+  ["A workspace or report file vanished from the app folder", "A forced import of a Workspace deletes its folder in developer mode. Export it back with <code>export_to_files(record_list=[[\"Workspace\", \"TNC Admissions\"]], record_module=\"TNC v2\")</code> and restore the creation timestamp before committing."],
+  ["Sundays show as Absent", "The Company's default Holiday List does not cover the date. Create the year's list with weekly offs and festivals and set it on the Company."],
+  ["A student's punches don't appear", "The Student has no Biometric ID, or it differs from the machine code (exact digits, e.g. 846). Check Integration Request › eSSL Biometric Webhook for the raw code."],
+  ["Attendance rows exist but no hold was set", "The absences are not consecutive (a Leave or Present broke the run), or the enrolment is not Active. Check Consecutive Absences on the enrolment."],
+  ["A WhatsApp did not go", "The switch is off, the number is empty, or the provider is Disabled (always on the local copy). See WhatsApp Message Log."],
+  ["PDF fails with ConnectionRefusedError", "wkhtmltopdf inside Docker cannot reach the site's own URL. Needs the extra_hosts fix on live; locally set host_name to http://localhost:8000."],
+  ["No permission for X for a role", "Fix the role profile or the doctype rights in Role Permissions Manager. Never give Write on TNC Settings as a workaround."],
+  ["Empty Time field saved as now", "Frappe turns an empty Time into the current time on save. Write a real blank with <code>db_set({field: None})</code> after save (see attendance/daily.py)."],
+  ["A submitted document ignores my validate rule", "<code>validate</code> does not run on submitted docs. Use <code>before_update_after_submit</code>."],
+  ["Flutter build fails on Gradle", "You used the system flutter. Use the pinned SDK at <code>~/fvm/versions/3.35.2/bin/flutter</code> and revert pubspec.lock / gradle.properties changes."],
+];
+
+
+const GLOSSARY = [
+  ["Student Enquiry", "A prospect's first contact: a mobile number, a name, a course of interest and how they heard of us. Not a Student.", "lead, admission form"],
+  ["Demo Class", "One trial-class attempt for an Enquiry; an enquiry can have several.", "trial (as the record)"],
+  ["Admit / Convert to Student", "The single action that turns an Enquiry into a Student, carrying over what was captured. This is admission.", "admission form"],
+  ["Student", "A person the institute has admitted. Identity and lifecycle: Enrolment Pending → Active → Attendance Hold → Completed → Discontinued. Also the billing Customer.", "online student"],
+  ["Student Batch Enrollment", "One admission event: this Student in this Batch from this date, with a status. A student may hold several at once.", "current batch, registration"],
+  ["Student Batch", "A running class group with a course, mode (Offline / Online), dates, fee, class days and timing.", "class, course (as the group)"],
+  ["Class day", "A date on which a batch has a class, from the batch's day ticks, minus Company holidays. The unit attendance is recorded against.", "session, lecture"],
+  ["Student Attendance", "One student's status for one class day (Present / Late / Absent / Leave), built from punches, on their Enrollment.", "attendance sheet"],
+  ["Student Punch Log", "One raw punch from the machine matched to a Student: time, direction, device.", "finger print data"],
+  ["Biometric ID", "The code the student uses on the eSSL machine, stored on the Student, unique.", "employee code"],
+  ["Hold", "A block on one Enrollment with a type: Attendance, Fee or Other. Cleared only by a Counsellor, Manager or Super Admin with remarks.", "suspension"],
+  ["Committed Fee", "The price the student agreed to pay after every discount: the Sales Order.", "total fee, fee schedule"],
+  ["Instalment", "One due portion of the committed fee with a due date. A receipt invoice is created only when it is paid.", "EMI"],
+  ["Demo fee", "A fee collected for the demo, adjusted against the first instalment at enrolment or kept when the enquiry is lost.", ""],
+  ["Fees settled outside the system", "An enrolment flag for migrated students: no order, no instalments; attendance still works.", ""],
+  ["Counsellor", "The staff role that owns enquiries, follow-ups, demos and admissions, and can clear a hold.", "sales"],
+  ["Teacher", "Faculty, paid as a Supplier for approved timesheet activity.", "faculty, trainer"],
+  ["Teachers Timesheet", "A teacher's record of a day's classes and activities with batch, subject and chapter per class row.", ""],
+  ["Subject / Chapter", "The syllabus: a subject with ordered chapters; a chapter is Done for a batch once an approved timesheet marks it completed.", "topic"],
+  ["Penalty", "A deduction imposed on a Teacher (or an Employee) for a defined lapse, with approval, recovery, waiver and refund.", "fine"],
+  ["Settlement", "A teacher's Saturday-to-Friday statement: opening, payable, penalties, payments, closing.", "report card (that is the message)"],
+  ["Task / Task Owner / Reporter", "Standard Frappe Task. The owner is accountable; the reporter raised it and is the only non-admin who may complete it.", "team task, assignee"],
+  ["Recurring Task / Occurrence", "A template that generates Tasks on a schedule; each generated Task is an occurrence numbered from 1.", "scheduler"],
+  ["Expense For", "Online or Offline coaching classification on claims, journals, purchase invoices and timesheets.", ""],
+  ["clarity", "The shared 360ITHub HR app: mobile check-in, eSSL push, expense and task hooks.", ""],
+  ["FRD", "Functional requirements session with the client where unfrozen rules are decided. Features depending on them are designed but not built.", ""],
+  ["ADR", "Architecture decision record under docs/adr: one page per decision with context and consequences.", ""],
+];
+
+/* ------------------------------------------------------------------ UI */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const STATUS_CLS = { "Done": "s-done", "Open": "s-open", "To Do": "s-todo", "Waiting on client": "s-wait", "Standard": "s-std" };
+const PR_CLS = { High: "p-high", Medium: "p-med", Low: "p-low" };
+const pill = (s) => `<span class="pill ${STATUS_CLS[s] || "s-std"}">${esc(s)}</span>`;
+const listHtml = (a) => a && a.length ? `<ul>${a.map(x => `<li>${x}</li>`).join("")}</ul>` : "—";
+function chips(el, values, current, onPick, counts) {
+  el.innerHTML = ["All", ...values].map(v => `<button type="button" class="chip" data-v="${esc(v)}" aria-pressed="${v === current}">${esc(v)}${counts && counts[v] != null ? `<span class="n">${counts[v]}</span>` : ""}</button>`).join("");
+  $$(".chip", el).forEach(b => b.addEventListener("click", () => onPick(b.dataset.v)));
+}
+function xitem(id, title, sub, meta, body, extra = "") {
+  return `<div class="xitem ${extra}"><div class="xhead" role="button" tabindex="0"><span class="xid">${esc(id)}</span><div class="xtitle"><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div><div class="xmeta">${meta}</div><span class="chev">▸</span></div><div class="xbody">${body}</div></div>`;
+}
+document.addEventListener("click", (e) => { const h = e.target.closest(".xhead"); if (h) h.parentElement.classList.toggle("open"); });
+document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.classList.contains("xhead")) e.target.parentElement.classList.toggle("open"); });
+$$("[data-x]").forEach(b => b.addEventListener("click", () => $$("#" + b.dataset.x + " .xitem").forEach(x => x.classList.toggle("open", b.dataset.open === "1"))));
+
+/* tabs */
+const TAB_BTNS = $$(".ptabs button[data-tab]");
+let currentTab = "overview";
+function showTab(name, push = true) {
+  if (!TAB_BTNS.some(b => b.dataset.tab === name)) name = "overview";
+  currentTab = name;
+  TAB_BTNS.forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
+  $$(".tabpanel").forEach(p => p.hidden = p.id !== "tab-" + name);
+  if (push) history.replaceState(null, "", "#" + name);
+  if (name === "flow") drawFlow();
+  window.scrollTo({ top: 0 });
+}
+TAB_BTNS.forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+$$("[data-go]").forEach(a => a.addEventListener("click", (e) => { e.preventDefault(); showTab(a.dataset.go); }));
+$$(".devnav a").forEach(a => a.addEventListener("click", (e) => { e.preventDefault(); showTab("dev", false); const t = $(a.getAttribute("href")); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }));
+
+/* pages */
+$("#pages-body").innerHTML = PAGES.map(p => `<tr><td class="k">${esc(p[0])}</td><td><a href="${esc(p[1])}" target="_blank" rel="noopener"><code>${esc(p[1])}</code></a></td><td>${esc(p[2])}</td><td>${esc(p[3])}</td><td class="no-print"><button class="btn sm outline" type="button" data-copy="${esc(p[1])}">Copy link</button></td></tr>`).join("");
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  const url = location.origin + b.dataset.copy;
+  const done = () => { const t = b.textContent; b.textContent = "Copied"; setTimeout(() => b.textContent = t, 1200); };
+  (navigator.clipboard ? navigator.clipboard.writeText(url).then(done) : Promise.reject()).catch(() => { prompt("Copy this link", url); });
+});
+
+/* flow */
+let journey = Object.keys(JOURNEY_DG)[0], flowDrawn = {};
+function drawFlow() {
+  const jc = $("#journey-chips");
+  jc.innerHTML = Object.keys(JOURNEY_DG).map(j => `<button type="button" class="chip" data-j="${esc(j)}" aria-pressed="${j === journey}">${esc(j)}<span class="n">${FLOW.filter(f => f[0] === j).length} steps</span></button>`).join("");
+  $$(".chip", jc).forEach(b => b.addEventListener("click", () => { journey = b.dataset.j; drawFlow(); }));
+  $("#dg-title").textContent = journey;
+  $("#flow-steps-title").textContent = "Steps — " + journey;
+  const rows = FLOW.filter(f => f[0] === journey);
+  $("#flow-list").innerHTML = rows.map((f, i) => xitem("", f[1], f[3], `<span class="who">${esc(f[2])}</span>`, `<dl><dt>What happens</dt><dd>${esc(f[4])}</dd><dt>Rules</dt><dd>${listHtml(f[5].map(esc))}</dd>${f[6] ? `<dt>Note</dt><dd>${esc(f[6])}</dd>` : ""}</dl>`).replace('<span class="xid"></span>', `<span class="xid"><span class="num">${i + 1}</span></span>`)).join("");
+  renderDiagram();
+}
+function renderDiagram() {
+  const body = $("#dg-body");
+  if (flowDrawn[journey]) { body.innerHTML = flowDrawn[journey]; return; }
+  if (!window.mermaid) { body.innerHTML = `<pre class="mermaid">${esc(JOURNEY_DG[journey])}</pre>`; return; }
+  body.textContent = "Loading diagram…";
+  window.mermaid.render("dg-" + Object.keys(JOURNEY_DG).indexOf(journey) + "-" + Date.now(), JOURNEY_DG[journey]).then(({ svg }) => { flowDrawn[journey] = svg; if ($("#dg-title").textContent === journey) body.innerHTML = svg; }).catch(() => { body.innerHTML = `<pre class="mono" style="font-size:12px;white-space:pre-wrap">${esc(JOURNEY_DG[journey])}</pre>`; });
+}
+
+/* roles */
+let role = ROLES[0].r;
+function drawRoles() {
+  const rp = $("#role-pick");
+  rp.innerHTML = ROLES.map(x => `<button type="button" class="chip" data-r="${esc(x.r)}" aria-pressed="${x.r === role}">${esc(x.r)}</button>`).join("");
+  $$(".chip", rp).forEach(b => b.addEventListener("click", () => { role = b.dataset.r; drawRoles(); }));
+  const card = (x) => `<div class="rolecard"><h3>${esc(x.r)} · ${esc(x.job)}</h3><div class="cols"><div><h5>Does</h5>${listHtml(x.does.map(esc))}</div><div><h5>Screens</h5>${listHtml(x.tabs.map(esc))}</div><div><h5>Limits</h5>${listHtml(x.ctl.map(esc))}</div></div></div>`;
+  $("#role-card").innerHTML = card(ROLES.find(x => x.r === role));
+  $("#role-all").innerHTML = ROLES.map(card).join("");
+}
+drawRoles();
+
+/* BRD / FRD */
+function makeReqList(cfg) {
+  let q = "", st = "All", mod = "All";
+  const mods = [...new Set(cfg.data.map(r => r[1]))], sts = [...new Set(cfg.data.map(r => r[cfg.stIdx]))];
+  function draw() {
+    const rows = cfg.data.filter(r => (st === "All" || r[cfg.stIdx] === st) && (mod === "All" || r[1] === mod) && (!q || JSON.stringify(r).toLowerCase().includes(q)));
+    const counts = {}; cfg.data.forEach(r => counts[r[cfg.stIdx]] = (counts[r[cfg.stIdx]] || 0) + 1); counts.All = cfg.data.length;
+    chips($(cfg.stEl), sts, st, v => { st = v; draw(); }, counts);
+    chips($(cfg.modEl), mods, mod, v => { mod = v; draw(); });
+    $(cfg.listEl).innerHTML = rows.map(cfg.render).join("") || `<div class="note">Nothing matches.</div>`;
+    $(cfg.countEl).textContent = `${rows.length} of ${cfg.data.length}`;
+  }
+  $(cfg.qEl).addEventListener("input", (e) => { q = e.target.value.trim().toLowerCase(); draw(); });
+  draw();
+}
+makeReqList({ data: BRD, stIdx: 6, stEl: "#brd-st", modEl: "#brd-chips", listEl: "#brd-list", countEl: "#brd-count", qEl: "#brd-q",
+  render: r => xitem(r[0], r[2], r[1], pill(r[6]), `<dl><dt>Problem in v1</dt><dd>${esc(r[3]) || "—"}</dd><dt>What is needed</dt><dd>${esc(r[4]) || "To be designed after the FRD."}</dd><dt>How we know</dt><dd>${listHtml(r[5].map(esc))}</dd></dl>`) });
+makeReqList({ data: FRD, stIdx: 9, stEl: "#frd-st", modEl: "#frd-chips", listEl: "#frd-list", countEl: "#frd-count", qEl: "#frd-q",
+  render: r => xitem(r[0], r[2], `${r[3]} · ${r[4]}`, pill(r[9]), `<dl><dt>What the system does</dt><dd>${esc(r[5])}</dd><dt>Rules</dt><dd>${listHtml(r[6].map(esc))}</dd><dt>How to test</dt><dd>${esc(r[7]) || "—"}</dd><dt>Code</dt><dd><code>${esc(r[8])}</code></dd></dl>`) });
+
+/* tasks */
+const TF = { q: "", source: "", module: "", phase: "", priority: "", status: "All" };
+let sortK = 7, sortAsc = false;
+const STATUSES = ["Done", "Open", "To Do", "Waiting on client"];
+function fillSelect(id, values) { const s = $(id); values.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; s.appendChild(o); }); }
+fillSelect("#task-source", [...new Set(TASKS.map(t => t[3]))]); fillSelect("#task-module", [...new Set(TASKS.map(t => t[1]))].sort()); fillSelect("#task-phase", [...new Set(TASKS.map(t => t[4]))].sort()); fillSelect("#task-priority", ["High", "Medium", "Low"]);
+["source", "module", "phase", "priority"].forEach(k => $("#task-" + k).addEventListener("change", (e) => { TF[k] = e.target.value; drawTasks(); }));
+$("#task-q").addEventListener("input", (e) => { TF.q = e.target.value.trim().toLowerCase(); drawTasks(); });
+$("#task-reset").addEventListener("click", () => { Object.assign(TF, { q: "", source: "", module: "", phase: "", priority: "", status: "All" }); $("#task-q").value = ""; ["source", "module", "phase", "priority"].forEach(k => $("#task-" + k).value = ""); drawTasks(); });
+$$("#task-table th.sortable").forEach(th => th.addEventListener("click", () => { const k = +th.dataset.k; if (sortK === k) sortAsc = !sortAsc; else { sortK = k; sortAsc = true; } drawTasks(); }));
+function taskRows() {
+  return TASKS.map((t, i) => [i + 1, ...t]).filter(t => (TF.status === "All" || t[1] === TF.status) && (!TF.source || t[4] === TF.source) && (!TF.module || t[2] === TF.module) && (!TF.phase || t[5] === TF.phase) && (!TF.priority || t[6] === TF.priority) && (!TF.q || t.join(" ").toLowerCase().includes(TF.q)));
+}
+function drawTasks() {
+  const PR = { High: 0, Medium: 1, Low: 2 }, SO = { "Open": 0, "To Do": 1, "Waiting on client": 2, "Done": 3 };
+  const rows = taskRows().sort((a, b) => { let x = a[sortK], y = b[sortK]; if (sortK === 6) { x = PR[x]; y = PR[y]; } if (sortK === 1) { x = SO[x]; y = SO[y]; } if (sortK === 0) { x = +x; y = +y; } const r = x > y ? 1 : x < y ? -1 : 0; return sortAsc ? r : -r; });
+  const counts = {}; TASKS.forEach(t => counts[t[0]] = (counts[t[0]] || 0) + 1); counts.All = TASKS.length;
+  chips($("#task-chips"), STATUSES, TF.status, v => { TF.status = v; drawTasks(); }, counts);
+  $$("#task-table th").forEach(th => { th.classList.toggle("sorted", +th.dataset.k === sortK); th.classList.toggle("asc", +th.dataset.k === sortK && sortAsc); });
+  $("#task-body").innerHTML = rows.map(t => `<tr id="task-${t[0]}"><td class="id">${t[0]}</td><td>${pill(t[1])}</td><td class="nw">${esc(t[2])}</td><td>${esc(t[3])}${t[8] ? ` <span class="pill s-std">${esc(t[8])}</span>` : ""}</td><td class="nw">${esc(t[4])}</td><td>${esc(t[5])}</td><td class="${PR_CLS[t[6]] || ""}">${esc(t[6])}</td><td class="nw">${esc(t[7])}</td><td>${esc(t[9])}</td></tr>`).join("");
+  $("#task-count").textContent = `${rows.length} of ${TASKS.length}`;
+  const open = TASKS.filter(t => t[0] !== "Done").length; $("#tab-open-count").textContent = open;
+  drawPlan();
+}
+function drawPlan() {
+  const n = (s) => TASKS.filter(t => t[0] === s).length, total = TASKS.length;
+  const seg = (s, cls) => `<i class="${cls}" style="width:${n(s) / total * 100}%" title="${s}: ${n(s)}"></i>`;
+  const bySource = [...new Set(TASKS.map(t => t[3]))].map(s => { const rows = TASKS.filter(t => t[3] === s); const d = rows.filter(t => t[0] === "Done").length; return { s, d, t: rows.length }; });
+  const next = TASKS.map((t, i) => [i + 1, ...t]).filter(t => t[1] !== "Done").sort((a, b) => ({ High: 0, Medium: 1, Low: 2 }[a[6]] - { High: 0, Medium: 1, Low: 2 }[b[6]]) || ({ "Open": 0, "To Do": 1, "Waiting on client": 2 }[a[1]] - { "Open": 0, "To Do": 1, "Waiting on client": 2 }[b[1]])).slice(0, 8);
+  $("#plan").innerHTML = `
+    <div class="box"><h5>Progress</h5>
+      <div class="stats">
+        <button class="stat done" type="button" data-st="Done"><b>${n("Done")}</b><span>Done</span></button>
+        <button class="stat open" type="button" data-st="Open"><b>${n("Open")}</b><span>Open</span></button>
+        <button class="stat todo" type="button" data-st="To Do"><b>${n("To Do")}</b><span>To do</span></button>
+        <button class="stat wait" type="button" data-st="Waiting on client"><b>${n("Waiting on client")}</b><span>Waiting on client</span></button>
+      </div>
+      <div class="bar">${seg("Done", "b-done")}${seg("Open", "b-open")}${seg("To Do", "b-todo")}${seg("Waiting on client", "b-wait")}</div>
+      <div class="legend"><button type="button" data-st="Done"><span class="dot" style="background:var(--pine)"></span>Done</button><button type="button" data-st="Open"><span class="dot" style="background:var(--clay)"></span>Open</button><button type="button" data-st="To Do"><span class="dot" style="background:var(--indigo)"></span>To do</button><button type="button" data-st="Waiting on client"><span class="dot" style="background:var(--gold)"></span>Waiting on client</button></div>
+      <h5 style="margin-top:14px">By source</h5>
+      ${bySource.map(x => `<div class="src-row" data-src="${esc(x.s)}"><b>${esc(x.s)}</b><div class="bar"><i class="b-done" style="width:${x.d / x.t * 100}%"></i></div><span>${x.d} / ${x.t} done</span></div>`).join("")}
+    </div>
+    <div class="box"><h5>Next up — highest priority first</h5>
+      <ul class="next">${next.map(t => `<li data-row="${t[0]}"><span class="m">#${t[0]}</span><span>${esc(t[3])}</span>${pill(t[1])}</li>`).join("")}</ul>
+      <p style="margin-top:10px"><button class="btn sm outline" type="button" id="see-open">See all open work →</button></p>
+    </div>`;
+  $$("#plan [data-st]").forEach(b => b.addEventListener("click", () => { TF.status = b.dataset.st; drawTasks(); $("#task-table").scrollIntoView({ behavior: "smooth" }); }));
+  $$("#plan [data-src]").forEach(b => b.addEventListener("click", () => { $("#task-source").value = b.dataset.src; TF.source = b.dataset.src; drawTasks(); }));
+  $$("#plan [data-row]").forEach(li => li.addEventListener("click", () => { TF.status = "All"; drawTasks(); const tr = $("#task-" + li.dataset.row); if (tr) { tr.scrollIntoView({ behavior: "smooth", block: "center" }); tr.classList.add("flash"); setTimeout(() => tr.classList.remove("flash"), 1500); } }));
+  $("#see-open").addEventListener("click", () => { TF.status = "All"; $("#task-q").value = ""; TF.q = ""; drawTasks(); $("#task-table").scrollIntoView({ behavior: "smooth" }); });
+}
+drawTasks();
+
+/* feature map, playbooks, faq, glossary */
+function searchable(qEl, countEl, data, draw) {
+  const run = () => { const q = $(qEl).value.trim().toLowerCase(); const rows = data.filter(r => !q || JSON.stringify(r).toLowerCase().includes(q)); draw(rows); $(countEl).textContent = `${rows.length} of ${data.length}`; };
+  $(qEl).addEventListener("input", run); run();
+}
+searchable("#map-q", "#map-count", FEATURE_MAP, rows => $("#map-body").innerHTML = rows.map(r => `<tr><td class="k">${esc(r[0])}</td><td>${esc(r[1])}</td><td><code>${esc(r[2])}</code></td><td><code>${esc(r[3])}</code></td><td>${esc(r[4])}</td><td><code>${esc(r[5])}</code></td></tr>`).join(""));
+searchable("#play-q", "#play-count", PLAYBOOKS, rows => $("#play-list").innerHTML = rows.map((p, i) => xitem(`PB-${String(i + 1).padStart(2, "0")}`, p[0], p[1], `<code>${esc(p[3])}</code>`, `<ol class="steps-ol">${p[2].map(s => `<li>${s}</li>`).join("")}</ol>${p[4] ? `<div class="note warn" style="margin-top:10px">${p[4]}</div>` : ""}`)).join(""));
+searchable("#faq-q", "#faq-count", FAQ, rows => $("#faq-list").innerHTML = rows.map((f, i) => xitem(`Q${i + 1}`, f[0], "", "", `<p>${f[1]}</p>`)).join(""));
+searchable("#glo-q", "#glo-count", GLOSSARY, rows => $("#glo-body").innerHTML = rows.map(g => `<tr><td class="k">${esc(g[0])}</td><td>${esc(g[1])}</td><td class="area">${esc(g[2]) || "—"}</td></tr>`).join(""));
+
+/* actions */
+$("#btn-pdf").addEventListener("click", () => { document.body.classList.remove("print-one"); window.print(); });
+$("#btn-tab").addEventListener("click", () => { document.body.classList.add("print-one"); $$(".tabpanel").forEach(p => p.classList.toggle("print-me", p.id === "tab-" + currentTab)); window.print(); setTimeout(() => document.body.classList.remove("print-one"), 500); });
+function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+$("#btn-html").addEventListener("click", () => download("TNC v2 - Project Guide.html", "<!DOCTYPE html>\n" + document.documentElement.outerHTML, "text/html"));
+$("#btn-csv").addEventListener("click", () => { const h = ["#", "Status", "Module", "Task", "Source", "Phase", "Priority", "Date", "Who", "Note"]; const rows = TASKS.map((t, i) => [i + 1, ...t]); const csv = [h, ...rows].map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n"); download("TNC v2 - Tasks.csv", "﻿" + csv, "text/csv"); });
+
+/* boot */
+showTab((location.hash || "#overview").slice(1), false);
+window.addEventListener("hashchange", () => showTab(location.hash.slice(1), false));
+</script>
+<script type="module">
+  try {
+    const m = await import("https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs");
+    const mermaid = m.default; window.mermaid = mermaid;
+    mermaid.initialize({ startOnLoad: false, securityLevel: "loose", theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "neutral", flowchart: { curve: "basis", padding: 8 } });
+    if (!document.getElementById("tab-flow").hidden) document.dispatchEvent(new Event("mermaid-ready"));
+  } catch (e) { /* diagram falls back to text */ }
+</script>
+<script>document.addEventListener("mermaid-ready", () => { if (typeof renderDiagram === "function") renderDiagram(); });</script>
+</body>
+</html>

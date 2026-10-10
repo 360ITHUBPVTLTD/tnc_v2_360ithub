@@ -3,12 +3,21 @@
 """Student: the admitted person. Customer = Student, always (ADR-0006): a Customer
 is created on insert and kept in step, so fees run on standard ERPNext documents."""
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 from tnc_v2_360ithub.admissions.setup import CUSTOMER_GROUP, ensure_customer_group
 
 
 class Student(Document):
+	def on_trash(self):
+		# the enquiry points back at this student; unlink it so either record can be deleted first.
+		# The enquiry goes back to New (its data is intact) and keeps a note of what happened.
+		for enq in frappe.get_all("Student Enquiry", filters={"student": self.name}, pluck="name"):
+			frappe.db.set_value("Student Enquiry", enq, {"student": None, "status": "New", "converted_on": None, "converted_by": None}, update_modified=False)
+			frappe.get_doc({"doctype": "Comment", "comment_type": "Info", "reference_doctype": "Student Enquiry", "reference_name": enq,
+				"content": _("Student {0} was deleted; enquiry reopened as New.").format(self.name)}).insert(ignore_permissions=True)
+
 	def validate(self):
 		if self.mobile:
 			self.mobile = self.mobile.strip()
