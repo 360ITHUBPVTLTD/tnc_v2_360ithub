@@ -147,6 +147,9 @@ class StudentBatchEnrollment(Document):
 					frappe.throw(_("Sales Order {0} already has payments or invoices. Cancel those first.").format(so.name))
 				so.flags.ignore_permissions = True
 				so.cancel()
+			# the order points back at this enrolment; clear that so a cancelled pair can be deleted
+			# (enrolment first, then the order) instead of each blocking the other
+			frappe.db.set_value("Sales Order", so.name, "custom_student_batch_enrollment", None, update_modified=False)
 
 	def make_sales_order(self):
 		student = frappe.get_doc("Student", self.student)
@@ -181,9 +184,6 @@ class StudentBatchEnrollment(Document):
 		if self.gst_applicable and self.taxes_and_charges:
 			so.taxes_and_charges = self.taxes_and_charges
 		so.flags.ignore_permissions = True
-			# the order points back at this enrolment; clear that so a cancelled pair can be deleted
-			# (enrolment first, then the order) instead of each blocking the other
-			frappe.db.set_value("Sales Order", so.name, "custom_student_batch_enrollment", None, update_modified=False)
 		so.set_missing_values()
 		if so.taxes_and_charges and not so.taxes:
 			from erpnext.controllers.accounts_controller import get_taxes_and_charges
