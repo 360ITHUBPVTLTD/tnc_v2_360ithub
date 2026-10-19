@@ -9,7 +9,8 @@
  "field_order": [
   "activity_name",
   "uom",
-  "enable"
+  "enable",
+  "is_class"
  ],
  "fields": [
   {
@@ -31,6 +32,12 @@
    "fieldname": "enable",
    "fieldtype": "Check",
    "label": "Enable"
+  },
+  {
+   "fieldname": "is_class",
+   "fieldtype": "Check",
+   "label": "Class with students",
+   "description": "Tick for classes (offline, online live, YouTube live). The timesheet row then needs From and To time; the minutes come from them and student attendance is marked against them."
   }
  ],
  "index_web_pages_for_search": 1,

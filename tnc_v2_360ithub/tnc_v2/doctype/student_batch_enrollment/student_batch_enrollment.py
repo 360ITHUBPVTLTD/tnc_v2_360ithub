@@ -19,19 +19,51 @@ class StudentBatchEnrollment(Document):
 	# ---- amounts -------------------------------------------------------------
 	def validate(self):
 		self.set_batch_window()
-		self.compute_amounts()
-		if not self.installments or self.flags.regenerate:
-			self.generate_installments()
-		self.validate_installments()
+		if self.fees_outside_system:
+			# enrolled before this system: no order, no instalments, amounts kept at zero
+			self.discount_type = None; self.discount_value = 0; self.discount_amount = 0
+			self.demo_fee_adjusted = 0; self.net_payable = 0; self.gst_applicable = 0; self.taxes_and_charges = None
+			self.set("installments", []); self.number_of_installments = 0
+		else:
+			self.compute_amounts()
+			if not self.installments or self.flags.regenerate:
+				self.generate_installments()
+			self.validate_installments()
+		self.validate_hold()
 		if self.gst_applicable and not self.taxes_and_charges:
 			self.taxes_and_charges = DEFAULT_GST_TEMPLATE if frappe.db.exists("Sales Taxes and Charges Template", DEFAULT_GST_TEMPLATE) else None
 		self.suggest_admission_type()
 		if self.enrollment_type == "New Admission":
 			self.previous_enrollment = None
 		if self.status != "On Hold":
-			self.hold_reason = None
+			self.hold_reason = None; self.hold_type = None; self.hold_on = None
 		if not self.is_new() or self.docstatus == 0:
 			self.block_duplicate_ongoing()
+
+	def validate_hold(self):
+		"""A hold needs a type; releasing one needs remarks (who and why), by Counsellor, Manager or Super Admin."""
+		before = self.get_doc_before_save()
+		if self.status == "On Hold":
+			if not self.hold_type:
+				frappe.throw(_("Please choose the Hold Type."))
+			if not self.hold_on:
+				self.hold_on = nowdate()
+		elif before and before.status == "On Hold":
+			if not (self.remarks or "").strip() or (self.remarks or "").strip() == (before.remarks or "").strip():
+				frappe.throw(_("Please write in Remarks why the hold is released."))
+			if not ({"System Manager", "TNC Super Admin", "TNC Manager", "TNC Counsellor"} & set(frappe.get_roles())):
+				frappe.throw(_("Only a Counsellor, Manager or Super Admin can release a hold."), frappe.PermissionError)
+			self.consecutive_absences = 0
+
+	def before_update_after_submit(self):
+		# status/hold edits on a submitted enrolment do not go through validate()
+		if self.status != "On Hold":
+			self.hold_reason = None; self.hold_type = None; self.hold_on = None
+		self.validate_hold()
+
+	def on_update_after_submit(self):
+		from tnc_v2_360ithub.attendance.daily import sync_student_status
+		sync_student_status(self.student)
 
 	def set_batch_window(self):
 		if not self.batch:
@@ -127,6 +159,8 @@ class StudentBatchEnrollment(Document):
 
 	# ---- submit: the Sales Order ---------------------------------------------
 	def on_submit(self):
+		if self.fees_outside_system:
+			return
 		if not self.sales_order:
 			so = self.make_sales_order()
 			self.db_set("sales_order", so.name)

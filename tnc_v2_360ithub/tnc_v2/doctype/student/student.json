@@ -21,6 +21,7 @@
   "gender",
   "date_of_birth",
   "category",
+  "biometric_id",
   "cb_p1",
   "student_photo",
   "batch_interested",
@@ -141,6 +142,13 @@
    "fieldtype": "Select",
    "label": "Category",
    "options": "\nGeneral\nEWS\nOBC\nSC\nST"
+  },
+  {
+   "fieldname": "biometric_id",
+   "fieldtype": "Data",
+   "label": "Biometric ID",
+   "unique": 1,
+   "description": "The number enrolled for this student on the attendance machine. Punches with this number are recorded against the student."
   },
   {
    "fieldname": "cb_p1",

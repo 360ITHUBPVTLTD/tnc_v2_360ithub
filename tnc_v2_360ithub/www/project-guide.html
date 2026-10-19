@@ -139,6 +139,7 @@
   .s-todo { color: var(--indigo); background: var(--indigo-soft); }
   .s-wait { color: var(--gold); background: var(--gold-soft); }
   .s-std { color: var(--ink-soft); background: var(--line-soft); }
+  .s-idea { color: var(--ink-soft); background: var(--line-soft); border: 1px dashed var(--ink-soft); }
   .p-high { color: var(--red); font-weight: 600; } .p-med { color: var(--clay); } .p-low { color: var(--ink-soft); }
 
   .xitem { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px; margin: 0 0 8px; }
@@ -449,7 +450,7 @@
       </tr></thead>
       <tbody id="task-body"></tbody>
     </table></div>
-    <div class="note warn"><b>Waiting on client</b> means nothing can move until TNC gives a decision, data or access. <b>To do</b> is agreed build work not yet started. <b>Open</b> is built but not yet released or not yet confirmed.</div>
+    <div class="note warn"><b>Waiting on client</b> means nothing can move until TNC gives a decision, data or access. <b>To do</b> is agreed build work not yet started. <b>Open</b> is built but not yet released or not yet confirmed. <b>Idea</b> is something the client or we said aloud that is not scoped, not estimated and not approved; it is kept so it is not lost.</div>
   </section>
 
   <!-- 07 DEV -->
@@ -590,7 +591,6 @@ const PAGES = [
   ["Student Batch", "/app/student-batch", "Office", "Batches with class days and timing"],
   ["Student Attendance", "/app/student-attendance", "Office", "One row per student per class day; Rebuild a day"],
   ["Student Punch Log", "/app/student-punch-log", "Office", "Raw machine punches matched to students"],
-  ["Attendance Register (report)", "/app/query-report/Student Attendance Register", "Office", "Daily lines with in / out / duration"],
   ["Attendance Summary (report)", "/app/query-report/Student Attendance Summary", "Office", "Student / batch / month views with holds"],
   ["Enquiry Funnel (report)", "/app/query-report/Enquiry Funnel", "Office, management", "Enquiries, demos, conversions, demo fee by counsellor"],
   ["Teachers Timesheet", "/app/teachers-timesheet", "Teachers (own) · approvers", "Class rows with batch, subject, chapter; approval"],
@@ -695,12 +695,13 @@ const FRD = [
   ["FR-F2", "Fees", "Receive payment and receipt", "Office", "Follow-ups · Sales Order", "Payment Entry with mode; receipt Sales Invoice per payment with GST; Fee Receipt print; WhatsApp receipt text when switched on.", [], "", "admissions/fees.py · admissions/sales_order_hooks.py", "Done"],
   ["FR-F3", "Fees", "Fee follow-ups job", "System", "07:00", "Creates a follow-up 3 days before each due date and the day after a missed one; skips v1 students without an enquiry.", [], "", "admissions/followups.py", "Done"],
   ["FR-T1", "Attendance", "Biometric ID and punch intake", "System", "Student · Student Punch Log", "clarity offers non-employee punches through the essl_unmatched_punch hook; tnc_v2 records a punch only for a Student with that Biometric ID.", ["Unique ID.", "Dedupe on id + time + device.", "Unknown refused."], "Push a known and an unknown code → one log, request Completed.", "attendance/punches.py · clarity custom_employee_checkin.py", "Open"],
-  ["FR-T2", "Attendance", "Daily build", "System", "23:30 · Student Attendance", "For each batch with a class that day and each Active / On Hold enrolment: Present / Late / Absent with in, out, duration, punch count, note.", ["Holidays skipped.", "Late = first punch after start + grace (batch's late-after else global).", "Manual rows never overwritten."], "Scratch test: 7 days, Present / Late / Absent as expected.", "attendance/daily.py", "Open"],
+  ["FR-T2", "Attendance", "Daily build from timesheets", "System", "23:30 · on timesheet save · Student Attendance", "A batch has a class on a date when a teacher logged one; each class row (From/To) is a window. Day: any punch Present (optional minimum stay), first punch after first class + grace Late, none Absent. Class rows: IN-to-OUT overlap vs window: ≥ cover % Present, some Partial, none Absent.", ["Timesheet save/delete rebuilds its date; nightly refreshes last N days.", "Manual day rows keep their status.", "Approval of the timesheet does not matter."], "Scratch test: the client's examples (8-16 vs 10-14 & 15-17:30; 10-14 vs 12-17) came out as agreed.", "attendance/daily.py · Activities.from_time/to_time", "Open"],
   ["FR-T3", "Attendance", "Live refresh and rebuild", "System · Office", "Student Attendance list", "A punch refreshes today's row; Rebuild a day re-runs a past date without parent messages.", ["No future dates.", "Roles: System Manager, Super Admin, Manager, Counsellor."], "", "attendance/daily.py on_punch, rebuild_day", "Open"],
   ["FR-T4", "Attendance", "Correction with remarks", "Office", "Student Attendance", "Status change requires remarks → source Manual, marked by; Track Changes.", [], "Change to Leave without remarks → refused.", "student_attendance.py", "Open"],
   ["FR-T5", "Attendance", "Automatic hold and release", "System · Counsellor", "Student Batch Enrollment", "Consecutive absences counted after each row; at threshold → On Hold / Attendance / hold_on / reason / comment; Student status mirrors. Release needs remarks and role.", ["Leave resets the run.", "Never released automatically."], "4 absences → On Hold; release w/o remarks refused; with remarks → Active.", "attendance/daily.py update_hold · student_batch_enrollment.py validate_hold", "Open"],
   ["FR-T6", "Attendance", "Parent WhatsApp", "System", "Settings switch", "Absent today and On hold messages to the chosen parent number with fallbacks.", [], "", "attendance/daily.py notify_parent_*", "Open"],
-  ["FR-T7", "Attendance", "Reports", "Office", "Attendance Register · Attendance Summary", "Register: day lines. Summary: Student / Batch / Month views with %, last present, absences in a row, hold; Only on hold filter.", ["% = (Present+Late)/(Present+Late+Absent)."], "", "report/student_attendance_register · student_attendance_summary", "Open"],
+  ["FR-T7", "Attendance", "Reports and overview page", "Office", "Attendance Overview · Attendance Summary", "Overview page: a batch (students lowest first, subjects) or a student (tiles, by subject, day strip, classes). Register: day lines or class lines. Summary: Student / Batch / Month / Subject views.", ["% = present / (present + absent); Leave not counted."], "", "attendance/overview.py · page/attendance_overview · report/*", "Open"],
+  ["FR-T8", "Attendance", "Enrol existing students", "Office", "Student Batch › Enrol Students", "Tick students not yet in the batch; each gets a submitted enrolment with fees settled outside the system, no Sales Order.", ["Only Counsellor / Manager / Super Admin."], "Enrol two, one already enrolled → 1 made, 1 skipped.", "admissions/enrol_existing.py", "Open"],
   ["FR-R1", "Teachers", "Timesheet with syllabus", "Teacher", "Teachers Timesheet", "Class rows carry batch, subject, chapter (autocomplete from the subject's chapters); chapter sequence validated.", [], "", "teachers_timesheet.py · teachers/syllabus.py", "Done"],
   ["FR-R2", "Teachers", "Approval", "Approver", "Teachers Timesheet", "Approvers from settings; approve / reject with reason; approved rows locked.", [], "", "teachers_timesheet.py", "Done"],
   ["FR-R3", "Teachers", "Syllabus import", "Admin", "System Console", "Imports subjects and chapters from the institute's sheet; teacher matched by nickname, exact first then fuzzy; misses reported.", ["No hardcoded names."], "", "teachers/syllabus.py", "Done"],
@@ -729,17 +730,16 @@ const TASKS = [
   ["Done", "Teachers", "Teacher penalties: types, rights, approve, recover at payment, waive, refund", "SOW", "2", "High", "2026-09-30", "360ithub", "Amounts pending client"],
   ["Done", "Teachers", "Weekly settlement Sat–Fri with WhatsApp statement", "SOW", "2", "Medium", "2026-09-30", "360ithub", ""],
   ["Done", "Communication", "WhatsApp text starts with Dear <name>", "Client", "2", "Low", "2026-10-07", "360ithub", "Live"],
-  ["Open", "Admissions", "Share Forms page removed; enquiry-form link sent on enquiry save, resend button, form fills the same enquiry", "Client", "2", "Medium", "2026-10-10", "360ithub", "Built and tested; release pending"],
-  ["Open", "Attendance", "Student biometric punches: Biometric ID, Student Punch Log, clarity hook", "SOW", "2", "High", "2026-10-08", "360ithub", "Built and tested; release pending"],
-  ["Open", "Attendance", "Daily Student Attendance, holds, parent WhatsApp, Rebuild a day", "SOW", "2", "High", "2026-10-09", "360ithub", "Built and tested; release pending"],
-  ["Open", "Attendance", "Attendance Register and Attendance Summary reports; Admissions workspace section", "SOW", "2", "Medium", "2026-10-09", "360ithub", "Built and tested"],
+  ["Done", "Admissions", "Share Forms page removed; enquiry-form link sent on enquiry save, resend button, form fills the same enquiry; Source first, college and passing year; demo WhatsApp + 8:00 reminder", "Client", "2", "Medium", "2026-10-14", "360ithub", "Live 14 Oct"],
+  ["Open", "Attendance", "Student biometric punches: Biometric ID, Student Punch Log, clarity hook", "SOW", "2", "High", "2026-10-08", "360ithub", "Release 17 Oct"],
+  ["Open", "Attendance", "Class days from teacher timesheets (From/To time), class rows Present/Late/Partial/Absent/Leave, hold after 4 absent days, release with remarks, parent WhatsApp, Attendance Overview page", "SOW", "2", "High", "2026-10-13", "360ithub", "Demoed 16 Oct, approved; release 17 Oct"],
+  ["Open", "Attendance", "Attendance Summary report (student, batch, month and subject views); Admissions workspace section", "SOW", "2", "Medium", "2026-10-13", "360ithub", "Release 17 Oct"],
   ["Open", "Platform", "Release step 1 and 2 to live: push both apps, migrate, restart", "360ithub", "2", "High", "", "Pankaj", "Commands in the release note"],
   ["Open", "Platform", "Live PDF generation fails inside Docker (wkhtmltopdf connection refused)", "360ithub", "2", "High", "2026-10-08", "Server admin", "extra_hosts fix sent"],
   ["Open", "Employees", "Employee auto-attendance: tick Last Sync, Strictly based on Log Type, holiday list on Company", "360ithub", "2", "Medium", "2026-10-08", "Pankaj", "Confirm internally"],
   ["Open", "Teachers", "Assign penalty imposers / approvers and invoice approvers in settings on live", "360ithub", "2", "Medium", "", "Pankaj", ""],
   ["Open", "Teachers", "Settlement start date set to 01-01-2026 is wrong; set to the date payouts started", "360ithub", "2", "Low", "2026-10-08", "Pankaj", ""],
-  ["To Do", "Admissions", "Enrol existing students tool (batch → tick students → enrolments, fees outside system)", "360ithub", "2", "High", "", "360ithub", "Pending yes"],
-  ["To Do", "Attendance", "Commit attendance flow test script", "360ithub", "2", "Low", "", "360ithub", ""],
+  ["Open", "Admissions", "Enrol existing students tool and office-list importer (253 Achievers students with Biometric ID + enrolment, 47 as students only)", "360ithub", "2", "High", "2026-10-16", "360ithub", "Run on live after release, dry run first"],
   ["To Do", "Mobile", "App: chapter pickers on timesheet rows; penalty screens (teacher view, approve / reject)", "Client", "2", "High", "", "360ithub", ""],
   ["To Do", "Tasks", "Task extension: designation assignment, late indicator, notification rules, reports, report cards", "SOW", "3", "Medium", "", "360ithub", "~3 days"],
   ["To Do", "Expenses", "Amount-based approval rule (Manager ≤ 2,000, CEO above); suspense list; management summary", "SOW", "3", "Medium", "", "360ithub", "~3 days"],
@@ -748,14 +748,21 @@ const TASKS = [
   ["To Do", "Teachers", "Target vs actual hours; teacher desk dashboard", "SOW", "3", "Low", "", "360ithub", ""],
   ["To Do", "Reports", "Student strength, batch allocation, fee collection reports", "SOW", "3", "Low", "", "360ithub", ""],
   ["To Do", "Admissions", "Concession and waiver approval above a limit", "SOW", "3", "Low", "", "360ithub", ""],
-  ["Waiting on client", "Attendance", "Holiday list 2026–27 created and set as Company default", "360ithub", "2", "High", "", "TNC", "Else Sundays become Absent"],
-  ["Waiting on client", "Attendance", "Biometric ID entered on each student; students enrolled in batches; parent mobile numbers", "360ithub", "2", "High", "", "TNC", "Data entry"],
-  ["Waiting on client", "Attendance", "Each batch's class days and start time; confirm online batches excluded for now", "360ithub", "2", "High", "", "TNC", ""],
+  ["Waiting on client", "Attendance", "Mobile numbers for 5 students; confirm sheet mobile is student or parent; 47 unpaid students added to eSSL and system as they pay", "360ithub", "2", "High", "2026-10-16", "TNC", ""],
   ["Waiting on client", "Teachers", "Final penalty amounts, repeat rule, ledger account, decision to pay teachers through the system", "SOW", "2", "High", "", "TNC", "FRD"],
   ["Waiting on client", "Fees", "Razorpay API keys and account access", "SOW", "3", "Medium", "", "TNC", ""],
   ["Waiting on client", "Communication", "Official WhatsApp template API decision; SMS provider; email account", "SOW", "3", "Medium", "", "TNC", ""],
   ["Waiting on client", "Finance", "Accounts and opening balances sign-off; payroll configuration", "SOW", "3", "Medium", "", "TNC", "Finance"],
-  ["Waiting on client", "Attendance", "Google Meet attendance method for online batches (Workspace plan, organiser account, fixed link)", "SOW", "3", "Medium", "", "TNC", "FRD"],
+  ["Waiting on client", "Attendance", "Online batches via Google Meet: total time in meeting vs threshold, students keyed by mobile; needs Meet account login (Vijeta) and the online student master", "Client meeting 16 Oct", "3", "Medium", "2026-10-16", "TNC", ""],
+  ["To Do", "Attendance", "Parent WhatsApp only when a hold starts: switch for the daily absence message, default off", "Client meeting 16 Oct", "2", "Medium", "2026-10-16", "360ithub", "Small"],
+  ["To Do", "Admissions", "Enquiry dashboard: per batch and counsellor — total, converted, remaining, demo attended, follow-up count, today's / pending follow-ups, conversion rate; counsellor sees own", "Client meeting 16 Oct", "2", "High", "2026-10-16", "360ithub", "~2–3 days"],
+  ["To Do", "Attendance", "Excel template for the online student master (name, mobile, batch, parent mobile)", "Client meeting 16 Oct", "2", "Medium", "2026-10-16", "360ithub", ""],
+  ["To Do", "Platform", "Nicer look for all dashboards and the project guide", "Client meeting 16 Oct", "3", "Low", "2026-10-16", "360ithub", ""],
+  ["Idea", "Attendance", "Student / parent app or page to see own attendance: days, classes, subjects", "Client meeting 16 Oct", "", "", "2026-10-16", "", "Bhojraj's second version; would reuse the student overview behind a personal link"],
+  ["Idea", "Admissions", "Undo admission action on the enquiry", "360ithub", "", "", "2026-10-10", "", "Proposed, not approved"],
+  ["Idea", "Admissions", "College master with suggestions while typing", "360ithub", "", "", "2026-10-10", "", "Proposed, not approved"],
+  ["Idea", "Attendance", "Class-level Regularise; Leave for a date range; auto-release hold on first Present; timesheet filing limit", "360ithub", "", "", "2026-10-13", "", "Proposed, not approved"],
+  ["Idea", "Platform", "Branch support for more than one institute", "Client", "", "", "2026-10-13", "", "Single institute today"],
   ["Waiting on client", "FRD", "Referral reward, coupon rules, KPI formula, rank calculator, Spark TG, voice tasks, external-person tasks, custom schedules", "SOW", "3", "Medium", "", "TNC", "FRD session"],
 ];
 
@@ -765,7 +772,7 @@ const FEATURE_MAP = [
   ["Enrolment, fee, instalments, Sales Order", "Student Batch Enrollment", "student_batch_enrollment.js · admissions/sales_order.js", "student_batch_enrollment.py · admissions/fees.py · sales_order_hooks.py", "build-guide-enquiry-to-fee-attendance.md", "test_admissions_flow.py"],
   ["Student punches", "Student Punch Log", "—", "attendance/punches.py · clarity custom_employee_checkin.py (hook essl_unmatched_punch)", "modules/attendance.md (as built)", "scratch atttest"],
   ["Daily attendance, holds, parent WhatsApp", "Student Attendance", "student_attendance_list.js (Rebuild a day)", "attendance/daily.py · student_attendance.py · student_batch_enrollment.py validate_hold", "modules/attendance.md · ADR-0010", "scratch atttest / reptest"],
-  ["Attendance reports", "Query reports", "report/*.js", "report/student_attendance_register · student_attendance_summary", "modules/attendance.md", "scratch reptest"],
+  ["Attendance reports", "Query reports", "report/*.js", "report/student_attendance_summary", "modules/attendance.md", "scratch reptest"],
   ["Timesheets, approval, syllabus", "Teachers Timesheet · Subject", "teachers_timesheet.js", "teachers_timesheet.py · teachers/syllabus.py", "docs (30 Sep state)", "test_teacher_flow.py"],
   ["Teacher invoices and payments", "Purchase Invoice · Payment Entry", "hr/purchase_invoice.js · hr/payment_entry.js", "hr/invoice_approval.py · teacher.py · teachers/penalties.py (recovery)", "ADR-0008", "test_payables_flow.py"],
   ["Penalties", "Teacher Penalty", "teacher_penalty.js", "teacher_penalty.py · teachers/penalties.py", "ADR-0008", "test_teacher_flow.py"],
@@ -841,7 +848,7 @@ const GLOSSARY = [
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
-const STATUS_CLS = { "Done": "s-done", "Open": "s-open", "To Do": "s-todo", "Waiting on client": "s-wait", "Standard": "s-std" };
+const STATUS_CLS = { "Done": "s-done", "Open": "s-open", "To Do": "s-todo", "Waiting on client": "s-wait", "Standard": "s-std", "Idea": "s-idea" };
 const PR_CLS = { High: "p-high", Medium: "p-med", Low: "p-low" };
 const pill = (s) => `<span class="pill ${STATUS_CLS[s] || "s-std"}">${esc(s)}</span>`;
 const listHtml = (a) => a && a.length ? `<ul>${a.map(x => `<li>${x}</li>`).join("")}</ul>` : "—";
@@ -936,7 +943,7 @@ makeReqList({ data: FRD, stIdx: 9, stEl: "#frd-st", modEl: "#frd-chips", listEl:
 /* tasks */
 const TF = { q: "", source: "", module: "", phase: "", priority: "", status: "All" };
 let sortK = 7, sortAsc = false;
-const STATUSES = ["Done", "Open", "To Do", "Waiting on client"];
+const STATUSES = ["Done", "Open", "To Do", "Waiting on client", "Idea"];
 function fillSelect(id, values) { const s = $(id); values.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; s.appendChild(o); }); }
 fillSelect("#task-source", [...new Set(TASKS.map(t => t[3]))]); fillSelect("#task-module", [...new Set(TASKS.map(t => t[1]))].sort()); fillSelect("#task-phase", [...new Set(TASKS.map(t => t[4]))].sort()); fillSelect("#task-priority", ["High", "Medium", "Low"]);
 ["source", "module", "phase", "priority"].forEach(k => $("#task-" + k).addEventListener("change", (e) => { TF[k] = e.target.value; drawTasks(); }));
@@ -947,21 +954,21 @@ function taskRows() {
   return TASKS.map((t, i) => [i + 1, ...t]).filter(t => (TF.status === "All" || t[1] === TF.status) && (!TF.source || t[4] === TF.source) && (!TF.module || t[2] === TF.module) && (!TF.phase || t[5] === TF.phase) && (!TF.priority || t[6] === TF.priority) && (!TF.q || t.join(" ").toLowerCase().includes(TF.q)));
 }
 function drawTasks() {
-  const PR = { High: 0, Medium: 1, Low: 2 }, SO = { "Open": 0, "To Do": 1, "Waiting on client": 2, "Done": 3 };
+  const PR = { High: 0, Medium: 1, Low: 2 }, SO = { "Open": 0, "To Do": 1, "Waiting on client": 2, "Done": 3, "Idea": 4 };
   const rows = taskRows().sort((a, b) => { let x = a[sortK], y = b[sortK]; if (sortK === 6) { x = PR[x]; y = PR[y]; } if (sortK === 1) { x = SO[x]; y = SO[y]; } if (sortK === 0) { x = +x; y = +y; } const r = x > y ? 1 : x < y ? -1 : 0; return sortAsc ? r : -r; });
   const counts = {}; TASKS.forEach(t => counts[t[0]] = (counts[t[0]] || 0) + 1); counts.All = TASKS.length;
   chips($("#task-chips"), STATUSES, TF.status, v => { TF.status = v; drawTasks(); }, counts);
   $$("#task-table th").forEach(th => { th.classList.toggle("sorted", +th.dataset.k === sortK); th.classList.toggle("asc", +th.dataset.k === sortK && sortAsc); });
   $("#task-body").innerHTML = rows.map(t => `<tr id="task-${t[0]}"><td class="id">${t[0]}</td><td>${pill(t[1])}</td><td class="nw">${esc(t[2])}</td><td>${esc(t[3])}${t[8] ? ` <span class="pill s-std">${esc(t[8])}</span>` : ""}</td><td class="nw">${esc(t[4])}</td><td>${esc(t[5])}</td><td class="${PR_CLS[t[6]] || ""}">${esc(t[6])}</td><td class="nw">${esc(t[7])}</td><td>${esc(t[9])}</td></tr>`).join("");
   $("#task-count").textContent = `${rows.length} of ${TASKS.length}`;
-  const open = TASKS.filter(t => t[0] !== "Done").length; $("#tab-open-count").textContent = open;
+  const open = TASKS.filter(t => t[0] !== "Done" && t[0] !== "Idea").length; $("#tab-open-count").textContent = open;
   drawPlan();
 }
 function drawPlan() {
   const n = (s) => TASKS.filter(t => t[0] === s).length, total = TASKS.length;
   const seg = (s, cls) => `<i class="${cls}" style="width:${n(s) / total * 100}%" title="${s}: ${n(s)}"></i>`;
   const bySource = [...new Set(TASKS.map(t => t[3]))].map(s => { const rows = TASKS.filter(t => t[3] === s); const d = rows.filter(t => t[0] === "Done").length; return { s, d, t: rows.length }; });
-  const next = TASKS.map((t, i) => [i + 1, ...t]).filter(t => t[1] !== "Done").sort((a, b) => ({ High: 0, Medium: 1, Low: 2 }[a[6]] - { High: 0, Medium: 1, Low: 2 }[b[6]]) || ({ "Open": 0, "To Do": 1, "Waiting on client": 2 }[a[1]] - { "Open": 0, "To Do": 1, "Waiting on client": 2 }[b[1]])).slice(0, 8);
+  const next = TASKS.map((t, i) => [i + 1, ...t]).filter(t => t[1] !== "Done" && t[1] !== "Idea").sort((a, b) => ({ High: 0, Medium: 1, Low: 2 }[a[6]] - { High: 0, Medium: 1, Low: 2 }[b[6]]) || ({ "Open": 0, "To Do": 1, "Waiting on client": 2 }[a[1]] - { "Open": 0, "To Do": 1, "Waiting on client": 2 }[b[1]])).slice(0, 8);
   $("#plan").innerHTML = `
     <div class="box"><h5>Progress</h5>
       <div class="stats">

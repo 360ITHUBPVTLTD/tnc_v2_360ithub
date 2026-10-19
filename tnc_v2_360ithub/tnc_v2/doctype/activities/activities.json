@@ -9,6 +9,8 @@
   "activity_name",
   "sb_syllabus",
   "batch",
+  "from_time",
+  "to_time",
   "subject",
   "cb_syllabus",
   "chapter",
@@ -46,6 +48,21 @@
    "in_list_view": 1,
    "columns": 1,
    "description": "Which batch attended this class."
+  },
+  {
+   "fieldname": "from_time",
+   "fieldtype": "Time",
+   "label": "From Time",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Class start; minutes are worked out from From and To"
+  },
+  {
+   "fieldname": "to_time",
+   "fieldtype": "Time",
+   "label": "To Time",
+   "in_list_view": 1,
+   "columns": 1
   },
   {
    "fieldname": "subject",

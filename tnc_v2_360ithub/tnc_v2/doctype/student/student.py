@@ -10,6 +10,17 @@ from tnc_v2_360ithub.admissions.setup import CUSTOMER_GROUP, ensure_customer_gro
 
 
 class Student(Document):
+	def guard_hold_mirror(self):
+		# Student.status mirrors the enrolments. A hold is released on the enrolment (with remarks),
+		# never by editing the student; an edit here is put back and the user is told where to go.
+		before = self.get_doc_before_save()
+		if before and before.status == "Attendance Hold" and self.status != "Attendance Hold" and not self.flags.ignore_hold_mirror:
+			held = frappe.get_all("Student Batch Enrollment", filters={"student": self.name, "docstatus": 1, "status": "On Hold", "hold_type": "Attendance"}, pluck="name")
+			if held:
+				self.status = "Attendance Hold"
+				frappe.msgprint(_("The hold is on the enrolment, not on the student. Open {0}, set Status to Active and write the reason in Remarks; the student becomes Active by itself.").format(
+					", ".join(frappe.utils.get_link_to_form("Student Batch Enrollment", h) for h in held)), title=_("Release the hold on the enrolment"), indicator="orange")
+
 	def on_trash(self):
 		# the enquiry points back at this student; unlink it so either record can be deleted first.
 		# The enquiry goes back to New (its data is intact) and keeps a note of what happened.
@@ -19,6 +30,7 @@ class Student(Document):
 				"content": _("Student {0} was deleted; enquiry reopened as New.").format(self.name)}).insert(ignore_permissions=True)
 
 	def validate(self):
+		self.guard_hold_mirror()
 		if self.mobile:
 			self.mobile = self.mobile.strip()
 		if self.status == "Discontinued" and self.merged_into == self.name:
@@ -56,3 +68,28 @@ class Student(Document):
 		customer.insert()
 		self.db_set("customer", customer.name, update_modified=False)
 		return customer.name
+
+
+@frappe.whitelist()
+def holds(student):
+	"""Enrolments of this student that are On Hold, for the Release Hold dialog."""
+	return frappe.get_all("Student Batch Enrollment", filters={"student": student, "docstatus": 1, "status": "On Hold"},
+		fields=["name", "batch", "hold_type", "hold_on", "hold_reason", "consecutive_absences"])
+
+
+@frappe.whitelist()
+def release_hold(student, enrollment, remarks):
+	"""Release one enrolment's hold from the Student form. Same rule as on the enrolment: a
+	reason is required and only Counsellor, Manager, Super Admin or System Manager may do it."""
+	if not ({"TNC Counsellor", "TNC Manager", "TNC Super Admin", "System Manager"} & set(frappe.get_roles())):
+		frappe.throw(_("Only a Counsellor, Manager or Super Admin can release a hold."), frappe.PermissionError)
+	if not (remarks or "").strip():
+		frappe.throw(_("Please write why the hold is released."))
+	e = frappe.get_doc("Student Batch Enrollment", enrollment)
+	if e.student != student or e.status != "On Hold":
+		frappe.throw(_("{0} is not an enrolment of this student on hold.").format(enrollment))
+	e.status = "Active"
+	e.remarks = remarks.strip()
+	e.flags.ignore_permissions = True
+	e.save()
+	return {"status": e.status, "student_status": frappe.db.get_value("Student", student, "status")}

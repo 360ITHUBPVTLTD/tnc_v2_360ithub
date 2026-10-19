@@ -186,10 +186,15 @@ def ensure_workspace():
 	shortcuts = [("Follow-ups", "Page", "follow-ups", "Red"), ("Student Enquiry", "DocType", "Student Enquiry", "Blue"), ("Demo Class", "DocType", "Demo Class", "Orange"), ("Student", "DocType", "Student", "Green"),
 		("Enrol in Batch", "DocType", "Student Batch Enrollment", "Green"), ("Batches", "DocType", "Student Batch", "Grey"),
 		("Sales Orders", "DocType", "Sales Order", "Grey"), ("Enquiry Funnel", "Report", "Enquiry Funnel", "Blue")]
+	attendance = [("Attendance Overview", "Page", "attendance-overview", "Green"), ("Student Attendance", "DocType", "Student Attendance", "Green"),
+		("Attendance Summary", "Report", "Student Attendance Summary", "Blue"), ("Machine Punches", "DocType", "Student Punch Log", "Grey")]
 	content = [{"id": "hdr", "type": "header", "data": {"text": "<span class=\"h4\"><b>Admissions</b></span>", "col": 12}}]
 	content += [{"id": f"nc{i}", "type": "number_card", "data": {"number_card_name": label, "col": 3 if i else 3}} for i, (label, *_r) in enumerate(NUMBER_CARDS)]
 	content += [{"id": "sh", "type": "header", "data": {"text": "<span class=\"h4\"><b>Quick actions</b></span>", "col": 12}}]
 	content += [{"id": f"sc{i}", "type": "shortcut", "data": {"shortcut_name": s[0], "col": 3}} for i, s in enumerate(shortcuts)]
+	content += [{"id": "att", "type": "header", "data": {"text": "<span class=\"h4\"><b>Attendance</b></span>", "col": 12}}]
+	content += [{"id": f"at{i}", "type": "shortcut", "data": {"shortcut_name": s[0], "col": 3}} for i, s in enumerate(attendance)]
+	shortcuts = shortcuts + attendance
 	is_new = not frappe.db.exists("Workspace", WORKSPACE)
 	if is_new:
 		ws = frappe.get_doc({"doctype": "Workspace", "name": WORKSPACE, "label": WORKSPACE, "title": WORKSPACE, "module": "TNC v2", "public": 1, "icon": "education", "sequence_id": 2.0})

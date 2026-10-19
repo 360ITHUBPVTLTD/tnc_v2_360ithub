@@ -7,6 +7,31 @@ frappe.ui.form.on("Student", {
 		frm.trigger("render_overview");
 		frm.trigger("render_payments");
 		frm.trigger("render_followups");
+		if (!frm.is_new() && frm.doc.status === "Attendance Hold") {
+			// the hold sits on the enrolment; release it from here with a reason
+			const $b = frm.add_custom_button(__("Release Hold"), () => {
+				frappe.call({ method: "tnc_v2_360ithub.tnc_v2.doctype.student.student.holds", args: { student: frm.doc.name } }).then((r) => {
+					const holds = r.message || [];
+					if (!holds.length) { frappe.msgprint(__("No enrolment of this student is on hold.")); return; }
+					const d = new frappe.ui.Dialog({
+						title: __("Release hold"),
+						fields: [
+							{ fieldtype: "Select", fieldname: "enrollment", label: __("Enrolment"), reqd: 1, default: holds[0].name,
+							  options: holds.map(h => ({ value: h.name, label: `${h.batch} · ${h.hold_type || ""} ${h.hold_on ? __("since {0}", [frappe.datetime.str_to_user(h.hold_on)]) : ""}` })) },
+							{ fieldtype: "HTML", fieldname: "why", options: `<div class="text-muted small" style="margin-bottom:8px">${frappe.utils.escape_html(holds[0].hold_reason || "")}</div>` },
+							{ fieldtype: "Small Text", fieldname: "remarks", label: __("Why is the hold released?"), reqd: 1 },
+						],
+						primary_action_label: __("Release"),
+						primary_action(v) {
+							frappe.call({ method: "tnc_v2_360ithub.tnc_v2.doctype.student.student.release_hold", args: { student: frm.doc.name, enrollment: v.enrollment, remarks: v.remarks }, freeze: true })
+								.then(() => { d.hide(); frappe.show_alert({ message: __("Hold released"), indicator: "green" }); frm.reload_doc(); });
+						},
+					});
+					d.show();
+				});
+			});
+			$b.removeClass("btn-default").css({ background: "#fee2e2", color: "#991b1b", "border-color": "#fca5a5", "font-weight": "600" });
+		}
 		if (!frm.is_new()) {
 			frm.add_custom_button(__("Enrol in Batch"), () => {
 				frappe.db.get_list("Student Batch Enrollment", { filters: { student: frm.doc.name, docstatus: 1, status: ["in", ["Active", "On Hold"]] },

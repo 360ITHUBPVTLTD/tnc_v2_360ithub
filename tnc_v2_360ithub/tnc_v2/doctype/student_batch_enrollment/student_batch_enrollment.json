@@ -23,6 +23,7 @@
   "enrollment_type",
   "previous_enrollment",
   "sb_fee",
+  "fees_outside_system",
   "standard_fee",
   "discount_type",
   "discount_value",
@@ -46,6 +47,9 @@
   "sb_status",
   "status",
   "hold_reason",
+  "hold_type",
+  "hold_on",
+  "consecutive_absences",
   "cb_s",
   "sales_order",
   "remarks",
@@ -150,22 +154,30 @@
    "label": "Fee"
   },
   {
+   "fieldname": "fees_outside_system",
+   "fieldtype": "Check",
+   "label": "Fees settled outside the system",
+   "description": "For students enrolled before this system: no fee order or instalments are created. Attendance works as normal."
+  },
+  {
    "fetch_from": "batch.standard_fee",
    "fetch_if_empty": 1,
    "fieldname": "standard_fee",
    "fieldtype": "Currency",
    "label": "Standard Fee",
    "options": "Company:company:default_currency",
-   "reqd": 1
+   "reqd": 1,
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
    "fieldname": "discount_type",
    "fieldtype": "Select",
    "label": "Discount Type",
-   "options": "\nAmount\nPercentage"
+   "options": "\nAmount\nPercentage",
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
-   "depends_on": "eval:doc.discount_type",
+   "depends_on": "eval:!doc.fees_outside_system",
    "fieldname": "discount_value",
    "fieldtype": "Float",
    "label": "Discount Value"
@@ -175,14 +187,15 @@
    "fieldtype": "Currency",
    "label": "Discount Amount",
    "options": "Company:company:default_currency",
-   "read_only": 1
+   "read_only": 1,
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
    "fieldname": "cb_fee",
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.demo_fee_adjusted",
+   "depends_on": "eval:!doc.fees_outside_system",
    "description": "Demo fee(s) already paid at enquiry stage, deducted from the payable.",
    "fieldname": "demo_fee_adjusted",
    "fieldtype": "Currency",
@@ -195,22 +208,24 @@
    "in_list_view": 1,
    "label": "Net Payable (before GST)",
    "options": "Company:company:default_currency",
-   "read_only": 1
+   "read_only": 1,
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
    "fieldname": "gst_applicable",
    "fieldtype": "Check",
-   "label": "GST Applicable"
+   "label": "GST Applicable",
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
-   "depends_on": "eval:doc.gst_applicable",
+   "depends_on": "eval:!doc.fees_outside_system",
    "fieldname": "taxes_and_charges",
    "fieldtype": "Link",
    "label": "Taxes And Charges",
    "options": "Sales Taxes and Charges Template"
   },
   {
-   "depends_on": "eval:doc.discount_type",
+   "depends_on": "eval:!doc.fees_outside_system",
    "fieldname": "discount_reason",
    "fieldtype": "Small Text",
    "label": "Discount Reason",
@@ -226,13 +241,15 @@
    "fieldname": "number_of_installments",
    "fieldtype": "Int",
    "label": "Number Of Installments",
-   "reqd": 1
+   "reqd": 1,
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
    "default": "Today",
    "fieldname": "first_due_date",
    "fieldtype": "Date",
-   "label": "First Due Date"
+   "label": "First Due Date",
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
    "fieldname": "cb_inst",
@@ -242,12 +259,14 @@
    "default": 30,
    "fieldname": "installment_gap_days",
    "fieldtype": "Int",
-   "label": "Gap between instalments (days)"
+   "label": "Gap between instalments (days)",
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
    "fieldname": "regenerate",
    "fieldtype": "Button",
-   "label": "Generate Instalments"
+   "label": "Generate Instalments",
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
    "fieldname": "batch_window_note",
@@ -263,12 +282,14 @@
    "fieldname": "installments",
    "fieldtype": "Table",
    "label": "Installments",
-   "options": "Enrollment Installment"
+   "options": "Enrollment Installment",
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
    "fieldname": "instalment_check_html",
    "fieldtype": "HTML",
-   "label": "Instalment check"
+   "label": "Instalment check",
+   "depends_on": "eval:!doc.fees_outside_system"
   },
   {
    "fieldname": "sb_status",
@@ -292,6 +313,30 @@
    "label": "On Hold Reason"
   },
   {
+   "fieldname": "hold_type",
+   "fieldtype": "Select",
+   "label": "Hold Type",
+   "options": "\nAttendance\nFee\nOther",
+   "depends_on": "eval:doc.status=='On Hold'",
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "hold_on",
+   "fieldtype": "Date",
+   "label": "On Hold Since",
+   "read_only": 1,
+   "depends_on": "eval:doc.status=='On Hold'",
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "consecutive_absences",
+   "fieldtype": "Int",
+   "label": "Consecutive Absences",
+   "read_only": 1,
+   "description": "Class days in a row with no punch, as of the last attendance run.",
+   "allow_on_submit": 1
+  },
+  {
    "fieldname": "cb_s",
    "fieldtype": "Column Break"
   },
@@ -305,7 +350,8 @@
   {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
-   "label": "Remarks"
+   "label": "Remarks",
+   "allow_on_submit": 1
   },
   {
    "fieldname": "amended_from",

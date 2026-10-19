@@ -21,11 +21,48 @@ class TeachersTimesheet(Document):
 
     def validate(self):
         # Perform all calculations and checks
+        self.validate_date()
+        self.minutes_from_times()
         self.calculate_totals()
         self.validate_single_activity()
         self.validate_unique_activities()
         self.validate_enabled_activities()
         self.resolve_chapters()
+
+    def validate_date(self):
+        """The date is the day the classes were taught, never a day that has not come yet."""
+        from frappe.utils import getdate, nowdate
+        if self.date and getdate(self.date) > getdate(nowdate()):
+            frappe.throw(_("The timesheet date cannot be in the future. Enter the day the class was taught."))
+
+    def minutes_from_times(self):
+        """A class row may carry From and To time (student attendance is matched against them);
+        then its minutes are worked out from the two, never typed. Rows without times keep the
+        quantity as entered (older app versions, non-class activities)."""
+        from frappe.utils import time_diff_in_seconds
+        for row in self.activity_type:
+            # Frappe fills an empty Time with the clock at insert (seconds and microseconds set);
+            # a picked time is always HH:MM:00. Anything else means "not given".
+            row.from_time, row.to_time = _clean_time(row.from_time), _clean_time(row.to_time)
+            is_class = bool(row.batch) or bool(frappe.db.get_value("Activity", row.activity_name, "is_class")) if row.activity_name else bool(row.batch)
+            if is_class and not (row.from_time and row.to_time) and frappe.db.get_single_value("TNC Settings", "timesheet_class_time_required"):
+                frappe.throw(_("Row {0}: a class needs From Time and To Time; the minutes come from them and student attendance is marked from them.").format(row.idx))
+            if not (row.from_time or row.to_time):
+                continue
+            if not (row.from_time and row.to_time):
+                frappe.throw(_("Row {0}: enter both From Time and To Time, or neither.").format(row.idx))
+            secs = time_diff_in_seconds(str(row.to_time), str(row.from_time))
+            if secs <= 0 and int(str(row.to_time).split(":")[0]) < 12:
+                # "2:00" after a 10:00 start means 2:00 PM (12-hour pickers in the app)
+                h, rest = str(row.to_time).split(":", 1)
+                row.to_time = f"{int(h) + 12:02d}:{rest}"
+                secs = time_diff_in_seconds(str(row.to_time), str(row.from_time))
+            if secs <= 0:
+                frappe.throw(_("Row {0}: To Time must be after From Time.").format(row.idx))
+            if (row.uom or "Minute") == "Minute":
+                row.qty = round(secs / 60)
+            elif row.uom == "Hour":
+                row.qty = round(secs / 3600, 2)
 
     def resolve_chapters(self):
         """Syllabus tracking: a row that names a subject and chapter must use a chapter of that
@@ -68,6 +105,15 @@ class TeachersTimesheet(Document):
 
             self.grand_total += activity.amount
 
+    def on_update(self):
+        # an empty Time is stamped with the clock on save; keep a real blank for rows without a class time
+        for row in self.activity_type:
+            blank = {k: None for k in ("from_time", "to_time") if not _clean_time(row.get(k))}
+            if blank:
+                frappe.db.set_value("Activities", row.name, blank, update_modified=False)
+                for k in blank:
+                    row.set(k, None)
+
     def validate_single_activity(self):
         """Throws an error if the user tries to add more than one row"""
         if len(self.activity_type) > 1:
@@ -96,6 +142,20 @@ class TeachersTimesheet(Document):
 
 
 @frappe.whitelist()
+
+def _clean_time(value):
+    """A class time as given (HH:MM:00) or None; the clock stamp Frappe puts on an empty Time field
+    (seconds / microseconds present) is not a time anyone chose."""
+    if not value:
+        return None
+    s = str(value)
+    if "." in s:
+        return None
+    parts = s.split(":")
+    if len(parts) < 2 or (len(parts) > 2 and parts[2] not in ("00", "0")):
+        return None
+    return f"{int(parts[0]):02d}:{parts[1]}:00"
+
 def get_rate_for_activity(teacher_id, activity_name):
     """
     Return the 'rate' for a specific activity in a given Teacher doc.
