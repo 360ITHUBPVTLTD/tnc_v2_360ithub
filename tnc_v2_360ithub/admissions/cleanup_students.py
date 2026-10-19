@@ -35,7 +35,9 @@ def unused():
 	return out
 
 
+@frappe.whitelist()
 def preview():
+	frappe.only_for(("System Manager", "TNC Super Admin"))
 	rows = unused()
 	total = frappe.db.count("Student")
 	lines = [f"{len(rows)} of {total} students have no history and would be deleted; {total - len(rows)} kept."]
@@ -43,6 +45,7 @@ def preview():
 	return "\n".join(lines)
 
 
+@frappe.whitelist()
 def delete_unused():
 	frappe.only_for(("System Manager", "TNC Super Admin"))
 	rows = unused()
