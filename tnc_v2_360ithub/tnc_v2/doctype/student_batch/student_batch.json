@@ -20,7 +20,20 @@
   "sb_dates",
   "starting_date",
   "cb2",
-  "actual_ending_date"
+  "actual_ending_date",
+  "sb_timing",
+  "day_mon",
+  "day_tue",
+  "day_wed",
+  "day_thu",
+  "day_fri",
+  "day_sat",
+  "day_sun",
+  "cb_timing",
+  "start_time",
+  "end_time",
+  "late_after_minutes",
+  "meet_link"
  ],
  "fields": [
   {
@@ -106,6 +119,74 @@
    "in_list_view": 1,
    "label": "End Date",
    "reqd": 1
+  },
+  {
+   "fieldname": "sb_timing",
+   "fieldtype": "Section Break",
+   "label": "Class Timing",
+   "description": "Which days this batch has classes and when it starts. Student attendance is built from the machine punches on these days; a class day with no punch is an absence."
+  },
+  {
+   "fieldname": "day_mon",
+   "fieldtype": "Check",
+   "label": "Monday"
+  },
+  {
+   "fieldname": "day_tue",
+   "fieldtype": "Check",
+   "label": "Tuesday"
+  },
+  {
+   "fieldname": "day_wed",
+   "fieldtype": "Check",
+   "label": "Wednesday"
+  },
+  {
+   "fieldname": "day_thu",
+   "fieldtype": "Check",
+   "label": "Thursday"
+  },
+  {
+   "fieldname": "day_fri",
+   "fieldtype": "Check",
+   "label": "Friday"
+  },
+  {
+   "fieldname": "day_sat",
+   "fieldtype": "Check",
+   "label": "Saturday"
+  },
+  {
+   "fieldname": "day_sun",
+   "fieldtype": "Check",
+   "label": "Sunday"
+  },
+  {
+   "fieldname": "cb_timing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "start_time",
+   "fieldtype": "Time",
+   "label": "Class Start Time"
+  },
+  {
+   "fieldname": "end_time",
+   "fieldtype": "Time",
+   "label": "Class End Time"
+  },
+  {
+   "fieldname": "late_after_minutes",
+   "fieldtype": "Int",
+   "label": "Late After (minutes)",
+   "description": "First punch later than start time plus these minutes counts as Late. Blank uses the default from settings."
+  },
+  {
+   "fieldname": "meet_link",
+   "fieldtype": "Data",
+   "label": "Google Meet Link",
+   "depends_on": "eval:doc.mode!='Offline'",
+   "description": "Online batches: the fixed Meet link of the class, used for online attendance later."
   }
  ],
  "idx": 0,

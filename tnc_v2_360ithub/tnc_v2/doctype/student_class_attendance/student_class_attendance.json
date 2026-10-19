@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "creation": "2026-10-10 15:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "module": "TNC v2",
+ "name": "Student Class Attendance",
+ "owner": "Administrator",
+ "modified": "2026-10-10 15:00:00.000000",
+ "modified_by": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "field_order": [
+  "subject",
+  "chapter",
+  "teacher",
+  "teacher_name",
+  "from_time",
+  "to_time",
+  "status",
+  "covered_minutes",
+  "class_minutes",
+  "cover_pct",
+  "timesheet",
+  "timesheet_row"
+ ],
+ "fields": [
+  {
+   "fieldname": "subject",
+   "fieldtype": "Link",
+   "label": "Subject",
+   "options": "Subject",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "chapter",
+   "fieldtype": "Data",
+   "label": "Chapter",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "teacher",
+   "fieldtype": "Link",
+   "label": "Teacher",
+   "options": "Teacher",
+   "read_only": 1
+  },
+  {
+   "fieldname": "teacher_name",
+   "fieldtype": "Data",
+   "label": "Teacher Name",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_time",
+   "fieldtype": "Time",
+   "label": "From",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_time",
+   "fieldtype": "Time",
+   "label": "To",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Present\nLate\nPartial\nAbsent\nLeave",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "covered_minutes",
+   "fieldtype": "Int",
+   "label": "Minutes Attended",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "class_minutes",
+   "fieldtype": "Int",
+   "label": "Class Minutes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cover_pct",
+   "fieldtype": "Percent",
+   "label": "Covered %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "timesheet",
+   "fieldtype": "Data",
+   "label": "Timesheet",
+   "read_only": 1,
+   "description": "Reference only: the timesheet can be deleted; the day is then rebuilt"
+  },
+  {
+   "fieldname": "timesheet_row",
+   "fieldtype": "Data",
+   "label": "Timesheet Row",
+   "read_only": 1,
+   "hidden": 1
+  }
+ ]
+}

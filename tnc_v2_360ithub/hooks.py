@@ -174,6 +174,10 @@ has_permission = {
 
 doc_events = {
 	"File": {"validate": "tnc_v2_360ithub.admissions.guest_files.validate"},
+	# A student punch refreshes that student's attendance row for the day.
+	"Student Punch Log": {"after_insert": "tnc_v2_360ithub.attendance.daily.on_punch"},
+	# A teacher's timesheet decides which batches had a class that day: rebuild that date on save / delete.
+	"Teachers Timesheet": {"on_update": "tnc_v2_360ithub.attendance.daily.on_timesheet_change", "on_trash": "tnc_v2_360ithub.attendance.daily.on_timesheet_change"},
 	# Task notifications and the creator-only completion rule, ported from v1.
 	"Task": {
 		"before_save": "tnc_v2_360ithub.tasks.task_hooks.before_save",
@@ -220,6 +224,9 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
+# Attendance machine punches whose code is not an Employee (clarity's eSSL endpoint asks here).
+essl_unmatched_punch = ["tnc_v2_360ithub.attendance.punches.on_unmatched_punch"]
+
 scheduler_events = {
 	"cron": {
 		# Recurring Task engine, ported from v1 (ran 07:30 there too).
@@ -229,16 +236,20 @@ scheduler_events = {
 		# 08:00 WhatsApp task digest, gated by TNC Settings.task_reminders_enabled.
 		"0 8 * * *": [
 			"tnc_v2_360ithub.tasks.jobs.enqueue_task_reminders",
+			# demo-day reminder to the student
+			"tnc_v2_360ithub.tnc_v2.doctype.demo_class.demo_class.send_demo_reminders",
 		],
 		# Fee follow-ups: upcoming (3 days before due) and overdue instalments, 07:00 daily.
 		"0 7 * * *": [
 			"tnc_v2_360ithub.admissions.followups.create_fee_followups",
 			"tnc_v2_360ithub.admissions.followups.create_form_followups",
-			# demo-day reminder to the student
-			"tnc_v2_360ithub.tnc_v2.doctype.demo_class.demo_class.send_demo_reminders",
 		],
 		# Monthly Teacher Task Summary emails, 07:00 on the 1st (as in v1).
 		# Weekly teacher settlement (SOW: week Sat..Fri, run on Saturday) + WhatsApp report card
+		# Student attendance: close the day (absences, holds) late evening.
+		"30 23 * * *": [
+			"tnc_v2_360ithub.attendance.daily.nightly",
+		],
 		"30 8 * * 6": [
 			"tnc_v2_360ithub.tnc_v2.doctype.teacher_settlement.teacher_settlement.weekly_job",
 		],

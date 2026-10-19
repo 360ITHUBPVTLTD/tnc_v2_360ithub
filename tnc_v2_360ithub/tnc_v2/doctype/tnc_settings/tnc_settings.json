@@ -23,6 +23,19 @@
   "send_weekly_report_card",
   "send_payment_receipt",
   "settlement_start_date",
+  "student_attendance_section",
+  "attendance_hold_after",
+  "attendance_hold_count_by",
+  "attendance_late_grace",
+  "attendance_class_source",
+  "timesheet_class_time_required",
+  "attendance_lookback_days",
+  "attendance_min_stay",
+  "attendance_class_cover_pct",
+  "cb_att",
+  "attendance_parent_whatsapp",
+  "attendance_parent_daily",
+  "attendance_parent_number",
   "accounts_section",
   "invoice_approvers",
   "demo_fee_section",
@@ -149,6 +162,94 @@
    "fieldtype": "Date",
    "label": "Settlement start date",
    "description": "Weekly settlements count timesheets, penalties and payments from this date. Set it to the day teacher payouts start going through the system, so old timesheets paid outside it are not shown as owed."
+  },
+  {
+   "fieldname": "student_attendance_section",
+   "fieldtype": "Section Break",
+   "label": "Student Attendance"
+  },
+  {
+   "fieldname": "attendance_hold_after",
+   "fieldtype": "Int",
+   "label": "Attendance Hold after consecutive absences",
+   "default": "4",
+   "description": "A student absent this many times in a row (days or classes, see below) is put on Attendance Hold for that batch. Only Counsellor, Manager or Super Admin can release it, with remarks."
+  },
+  {
+   "fieldname": "attendance_hold_count_by",
+   "fieldtype": "Select",
+   "label": "Count Absences By",
+   "options": "Days\nClasses",
+   "default": "Days",
+   "description": "Days: a day with no punch counts as one absence. Classes: each class missed counts as one (two subjects missed on one day = 2)."
+  },
+  {
+   "fieldname": "attendance_late_grace",
+   "fieldtype": "Int",
+   "label": "Late after (minutes)",
+   "default": "15",
+   "description": "Default grace after the batch start time before the first punch counts as Late. A batch can override it."
+  },
+  {
+   "fieldname": "attendance_class_source",
+   "fieldtype": "Select",
+   "label": "Class Days From",
+   "options": "Teacher timesheets\nBatch class days",
+   "default": "Teacher timesheets",
+   "description": "Teacher timesheets: a batch has a class on a date when a teacher logged one (From/To time on the row gives the class window). Batch class days: the Mon-Sun ticks and start time on the batch."
+  },
+  {
+   "fieldname": "timesheet_class_time_required",
+   "fieldtype": "Check",
+   "label": "Class time required on timesheets",
+   "default": "0",
+   "description": "When on, a timesheet row for a class (batch set, or a 'Class with students' activity) must carry From and To time. Keep off until every teacher has the app version with the time fields; rows without times create no class day."
+  },
+  {
+   "fieldname": "attendance_lookback_days",
+   "fieldtype": "Int",
+   "label": "Rebuild Last N Days Nightly",
+   "default": "7",
+   "description": "Timesheets filed late are picked up for this many days back. A timesheet also rebuilds its own date the moment it is saved."
+  },
+  {
+   "fieldname": "attendance_min_stay",
+   "fieldtype": "Int",
+   "label": "Minimum Stay (minutes)",
+   "default": "0",
+   "description": "A day counts as Present only if the student stayed at least this long (needs the OUT punch). 0 = any punch is Present."
+  },
+  {
+   "fieldname": "attendance_class_cover_pct",
+   "fieldtype": "Int",
+   "label": "Class Counts as Present From (%)",
+   "default": "50",
+   "description": "Share of a class's time the student must have been in (between IN and OUT punches) to be Present for that class. Below it: Partial, counted as absent."
+  },
+  {
+   "fieldname": "cb_att",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "attendance_parent_whatsapp",
+   "fieldtype": "Check",
+   "label": "WhatsApp parent when an Attendance Hold starts",
+   "description": "Sends a short message to the parent's mobile on the Student record when the student goes on Attendance Hold after the consecutive absences above."
+  },
+  {
+   "fieldname": "attendance_parent_daily",
+   "fieldtype": "Check",
+   "label": "Also WhatsApp parent on every absent day",
+   "default": "0",
+   "description": "Off by default: the client asked for the hold message only. On: a message goes out each night for every day the student is marked Absent (needs the hold tick above as well)."
+  },
+  {
+   "fieldname": "attendance_parent_number",
+   "fieldtype": "Select",
+   "label": "Parent number to use",
+   "options": "Father\nMother\nGuardian",
+   "default": "Father",
+   "description": "If that number is blank on the student, the other parent numbers are tried, then the student's own mobile."
   },
   {
    "fieldname": "accounts_section",

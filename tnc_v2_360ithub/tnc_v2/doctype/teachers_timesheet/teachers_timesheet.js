@@ -232,6 +232,16 @@ frappe.ui.form.on("Teachers Timesheet", {
 });
 
 frappe.ui.form.on("Activities", {
+    form_render(frm, cdt, cdn) { tnc_lock_qty(frm, locals[cdt][cdn]); },
+    // From / To on a class row: minutes are worked out, not typed
+    batch: function (frm, cdt, cdn) {
+        const row = locals[cdt][cdn];
+        if (row.batch && !(row.from_time && row.to_time)) frappe.show_alert({ message: __("Set the class From and To time: student attendance is marked from it."), indicator: "orange" }, 6);
+        tnc_lock_qty(frm, row);
+    },
+    uom: function (frm, cdt, cdn) { tnc_lock_qty(frm, locals[cdt][cdn]); },
+    from_time: function (frm, cdt, cdn) { tnc_minutes_from_times(frm, cdt, cdn); },
+    to_time: function (frm, cdt, cdn) { tnc_minutes_from_times(frm, cdt, cdn); },
     subject: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         frappe.model.set_value(cdt, cdn, "chapter", "");
@@ -249,6 +259,13 @@ frappe.ui.form.on("Activities", {
     },
     activity_name: function (frm, cdt, cdn) {
         let row = locals[cdt][cdn];
+        // a class (ticked on the Activity) gets its minutes from From / To; the quantity box is locked
+        if (!row.activity_name) { row.__is_class = 0; tnc_lock_qty(frm, row); }
+        else frappe.db.get_value("Activity", row.activity_name, "is_class").then((r) => {
+            row.__is_class = r.message && r.message.is_class ? 1 : 0;
+            if (row.__is_class && !(row.from_time && row.to_time)) frappe.show_alert({ message: __("This is a class: set From and To time. The minutes come from them."), indicator: "orange" }, 6);
+            tnc_lock_qty(frm, row);
+        });
         if (row.activity_name && frm.doc.teacher_id) {
             frappe.call({
                 method: "tnc_v2_360ithub.tnc_v2.doctype.teachers_timesheet.teachers_timesheet.get_rate_for_activity",
@@ -323,4 +340,32 @@ function handle_status_update(frm, status, reason = null) {
             }
         }
     });
+}
+
+function tnc_minutes_from_times(frm, cdt, cdn) {
+    const row = locals[cdt][cdn];
+    tnc_lock_qty(frm, row);
+    if (!row.from_time || !row.to_time) return;
+    const [fh, fm] = row.from_time.split(":").map(Number);
+    let [th, tm] = row.to_time.split(":").map(Number);
+    let mins = (th * 60 + tm) - (fh * 60 + fm);
+    if (mins <= 0 && th < 12) {
+        // "2:00" after a 10:00 start means 2:00 PM
+        th += 12; mins += 12 * 60;
+        frappe.model.set_value(cdt, cdn, "to_time", `${String(th).padStart(2, "0")}:${String(tm).padStart(2, "0")}:00`);
+    }
+    if (mins <= 0) { frappe.show_alert({ message: __("To Time must be after From Time"), indicator: "red" }); return; }
+    const uom = row.uom || "Minute";
+    frappe.model.set_value(cdt, cdn, "qty", uom === "Hour" ? Math.round(mins / 60 * 100) / 100 : mins);
+}
+
+// Quantity is typed only when the row has no class time; with From and To it is worked out
+function tnc_lock_qty(frm, row) {
+    // a class row (activity ticked "Class with students", or a batch chosen) gets its minutes from the class time
+    const locked = !!row.__is_class || !!row.batch || !!(row.from_time && row.to_time);
+    const grid_row = frm.fields_dict.activity_type.grid.grid_rows_by_docname[row.name];
+    if (grid_row && grid_row.docfields) {
+        const df = grid_row.docfields.find((d) => d.fieldname === "qty");
+        if (df) { df.read_only = locked ? 1 : 0; grid_row.refresh_field && grid_row.refresh_field("qty"); }
+    }
 }
