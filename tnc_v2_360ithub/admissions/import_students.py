@@ -36,9 +36,11 @@ def _by_mobile_without_id(mob):
 	return rows[0] if rows else None
 
 
+@frappe.whitelist()
 def run(path, batch, dry_run=1, enrollment_date=None, enrol=1):
 	"""enrol=0: create or update the students only, with no Biometric ID and no enrolment
 	(students on the office list who are not yet active on the machine)."""
+	frappe.only_for(("System Manager", "TNC Super Admin"))
 	dry_run, enrol = cint(dry_run), cint(enrol)
 	if not frappe.db.exists("Student Batch", batch):
 		frappe.throw(_("Batch {0} not found").format(batch))
