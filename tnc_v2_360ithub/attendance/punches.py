@@ -34,7 +34,9 @@ def record_punch(punch, integration_request=None):
 	if not student:
 		return None
 	device = str(punch.get("SerialNumber") or punch.get("device_id") or "").strip()
-	if frappe.db.exists("Student Punch Log", {"biometric_id": code, "punch_time": get_datetime(when), "device_id": device}):
+	# same code at the same second is the same punch, whichever path delivered it: the live push
+	# reports the device serial, the nightly eSSL sync reports the device name
+	if frappe.db.exists("Student Punch Log", {"biometric_id": code, "punch_time": get_datetime(when)}):
 		return None
 	doc = frappe.get_doc({
 		"doctype": "Student Punch Log",
