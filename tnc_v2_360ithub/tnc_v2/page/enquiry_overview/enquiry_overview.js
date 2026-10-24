@@ -7,7 +7,13 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 	const state = { batch: null, counsellor: null, from: null, to: null };
 	const manager = frappe.user.has_role(["TNC Manager", "TNC Super Admin", "System Manager"]);
 
-	const fBatch = page.add_field({ fieldname: "batch", label: __("Batch"), fieldtype: "Link", options: "Student Batch", change() { state.batch = fBatch.get_value() || null; load(); } });
+	const NO_BATCH = "__none__";
+	const fBatch = page.add_field({ fieldname: "batch", label: __("Batch"), fieldtype: "Select", options: [{ value: "", label: __("All batches") }], change() { state.batch = fBatch.get_value() || null; load(); } });
+	frappe.call("tnc_v2_360ithub.admissions.enquiry_overview.batch_options").then(r => {
+		fBatch.df.options = [{ value: "", label: __("All batches") }, ...(r.message || [])];
+		fBatch.refresh();
+		if (state.batch) fBatch.set_value(state.batch);
+	});
 	const fCoun = manager ? page.add_field({ fieldname: "counsellor", label: __("Counsellor"), fieldtype: "Link", options: "User", change() { state.counsellor = fCoun.get_value() || null; load(); },
 		get_query: () => ({ query: "frappe.core.doctype.user.user.user_query", filters: { ignore_user_type: 1 } }) }) : null;
 	const fPeriod = page.add_field({ fieldname: "period", label: __("Enquiry date"), fieldtype: "DateRange", change() {
@@ -17,7 +23,7 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 	} });
 	page.add_inner_button(`${frappe.utils.icon("refresh", "sm")} ${__("Refresh")}`, () => load());
 	page.set_secondary_action(__("Follow-ups"), () => frappe.set_route("follow-ups"));
-	page.set_primary_action(__("New Enquiry"), () => frappe.new_doc("Student Enquiry", state.batch ? { batch_interested: state.batch } : {}), "add");
+	page.set_primary_action(__("New Enquiry"), () => frappe.new_doc("Student Enquiry", state.batch && state.batch !== NO_BATCH ? { batch_interested: state.batch } : {}), "add");
 	if (frappe.route_options) {
 		if (frappe.route_options.batch) { state.batch = frappe.route_options.batch; fBatch.set_value(state.batch); }
 		if (frappe.route_options.counsellor && fCoun) { state.counsellor = frappe.route_options.counsellor; fCoun.set_value(state.counsellor); }
@@ -136,8 +142,7 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 			$body.find("[data-logcall]").on("click", (e) => { e.stopPropagation(); const $b = $(e.currentTarget); logCall($b.attr("data-logcall"), $b.attr("data-name"), null, $b.attr("data-plan"), $b.attr("data-due")); });
 			$body.find("[data-enq]").on("click", (e) => { if ($(e.target).closest("a, button").length) return; frappe.set_route("Form", "Student Enquiry", $(e.currentTarget).attr("data-enq")); });
 			$body.find("[data-batch]").on("click", (e) => {
-				const b = $(e.currentTarget).attr("data-batch");
-				if (!b) { frappe.route_options = { batch_interested: ["is", "not set"], status: ["not in", ["Converted", "Lost"]] }; frappe.set_route("List", "Student Enquiry"); return; }
+				const b = $(e.currentTarget).attr("data-batch") || NO_BATCH;
 				state.batch = b; fBatch.set_value(b); load();
 			});
 			if (fCoun) $body.find("[data-coun]").on("click", (e) => { state.counsellor = $(e.currentTarget).attr("data-coun"); fCoun.set_value(state.counsellor); load(); });
@@ -178,7 +183,7 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 	function render(d) {
 		const title = d.batch ? (d.batch.batch_name || d.batch.name) : !d.manager ? __("My enquiries") : d.counsellor ? (d.counsellor_name || d.counsellor) : __("All enquiries");
 		const meta = [
-			d.batch ? `${esc(d.batch.mode || "")} · ${esc(d.batch.status || "")}${d.enrolled != null ? ` · ${d.enrolled} ${__("enrolled")}${d.batch.seats ? ` / ${d.batch.seats} ${__("seats")}` : ""}` : ""}` : "",
+			d.batch && d.batch.none ? __("batch not chosen yet · open each enquiry and set Batch interested") : d.batch ? `${esc(d.batch.mode || "")} · ${esc(d.batch.status || "")}${d.enrolled != null ? ` · ${d.enrolled} ${__("enrolled")}${d.batch.seats ? ` / ${d.batch.seats} ${__("seats")}` : ""}` : ""}` : "",
 			d.counsellor && (d.batch || !d.manager) ? `${__("Counsellor")}: ${esc(d.counsellor_name || d.counsellor)}` : "",
 			!d.batch && !d.counsellor ? __("every batch and counsellor") : "",
 			d.from_date ? `${__("enquired")} ${dUser(d.from_date)} – ${dUser(d.to_date)}` : __("all time"),
@@ -188,7 +193,7 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 		const seg = (k, l, n) => `<button data-seg="${k}"${k === "open" ? ' class="on"' : ""}>${l}${n != null ? ` (${n})` : ""}</button>`;
 		const n = (v, c) => v ? (c ? `<span class="np ${c}">${v}</span>` : `<span>${v}</span>`) : `<span class="n0">0</span>`;
 		const bucketTable = (rows, key, label, attr) => rows.length ? `<div class="scroll"><table class="table bt"><thead><tr><th>${label}</th><th class="c">${__("Total")}</th><th class="c" title="${__("Still being worked: not converted, not lost")}">${__("Remaining")}</th><th class="c" title="${__("Attended a demo, not yet admitted or lost")}">${__("Hot leads")}</th><th class="c">${__("Converted")}</th><th class="c">${__("Lost")}</th><th class="c" title="${__("Follow-ups due today / overdue")}">${__("Due / overdue")}</th><th class="c">${__("Conversion")}</th></tr></thead><tbody>
-			${rows.map(x => `<tr class="${attr ? "row-link" : ""}"${attr && x.key ? ` ${attr}="${esc(x.key)}"` : ""}><td><b>${esc(x.label)}</b></td><td class="c">${n(x.total)}</td><td class="c">${n(x.open, "warn")}</td><td class="c">${n(x.demo, "hot")}</td><td class="c">${n(x.converted, "ok")}</td><td class="c">${n(x.lost, "bad")}</td><td class="c">${x.due_today || x.overdue ? `${n(x.due_today, "warn")} <span class="n0">/</span> ${n(x.overdue, "bad")}` : `<span class="n0">0 / 0</span>`}</td><td class="c">${bar(x.rate)}</td></tr>`).join("")}
+			${rows.map(x => `<tr class="${attr ? "row-link" : ""}"${attr ? ` ${attr}="${esc(x.key || "")}"` : ""}><td><b>${esc(x.label)}</b></td><td class="c">${n(x.total)}</td><td class="c">${n(x.open, "warn")}</td><td class="c">${n(x.demo, "hot")}</td><td class="c">${n(x.converted, "ok")}</td><td class="c">${n(x.lost, "bad")}</td><td class="c">${x.due_today || x.overdue ? `${n(x.due_today, "warn")} <span class="n0">/</span> ${n(x.overdue, "bad")}` : `<span class="n0">0 / 0</span>`}</td><td class="c">${bar(x.rate)}</td></tr>`).join("")}
 			</tbody></table></div>` : `<div class="text-muted">${__("Nothing yet.")}</div>`;
 		return `
 			<div class="head"><div class="avatar"><img src="${esc(d.logo || "")}" alt=""></div><div><div class="hname">${esc(title)}</div><div class="hmeta">${meta}</div></div>
