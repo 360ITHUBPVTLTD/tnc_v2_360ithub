@@ -54,7 +54,7 @@ def get_student_overview(student):
 	doc = frappe.get_doc("Student", student)
 	doc.check_permission("read")
 	enrollments = frappe.get_all("Student Batch Enrollment", filters={"student": student, "docstatus": 1},
-		fields=["name", "batch", "course_name", "status", "standard_fee", "discount_amount", "demo_fee_adjusted", "net_payable", "gst_applicable", "sales_order", "enrollment_date"], order_by="enrollment_date desc")
+		fields=["name", "batch", "course_name", "status", "standard_fee", "discount_amount", "demo_fee_adjusted", "net_payable", "gst_applicable", "sales_order", "enrollment_date", "fees_outside_system"], order_by="enrollment_date desc")
 	total_fee = paid_total = pending_total = 0
 	next_due = None
 	cards, rows = [], []
@@ -87,16 +87,17 @@ def get_student_overview(student):
 		    <div class="tnc-kv"><span>{_('Fee')}</span><span>{_money(en.standard_fee)}</span></div>
 		    {'<div class="tnc-kv"><span>' + _('Discount') + '</span><span>- ' + _money(en.discount_amount) + '</span></div>' if flt(en.discount_amount) else ''}
 		    {'<div class="tnc-kv"><span>' + _('Demo fee paid') + '</span><span>- ' + _money(en.demo_fee_adjusted) + '</span></div>' if flt(en.demo_fee_adjusted) else ''}
-		    <div class="tnc-kv"><span>{_('Total') + (' (incl. GST)' if en.gst_applicable else '')}</span><b>{_money(grand)}</b></div>
+		    {'' if en.fees_outside_system else '<div class="tnc-kv"><span>' + _('Total') + (' (incl. GST)' if en.gst_applicable else '') + '</span><b>' + _money(grand) + '</b></div>'}
 		  </div>
 		  <div class="tnc-col tnc-col-pay">
-		    <div class="tnc-kv"><span>{_('Paid')}</span><span class="text-success"><b>{_money(paid)}</b></span></div>
-		    <div class="tnc-kv"><span>{_('Pending')}</span><span class="{'text-danger' if pending > 0.5 else 'text-success'}"><b>{_money(pending)}</b></span></div>
-		    <div class="progress" style="height:8px;margin-top:8px"><div class="progress-bar" style="width:{pct}%"></div></div>
-		    <div class="text-muted small" style="margin-top:4px">{pct}% {_('paid')}</div>
+		    {('<div class="text-muted small" style="line-height:1.5">' + _('Fee collected before this system.') + '<br>' + _('No payments are tracked here.') + '</div>') if en.fees_outside_system else
+		     '<div class="tnc-kv"><span>' + _('Paid') + '</span><span class="text-success"><b>' + _money(paid) + '</b></span></div>'
+		     '<div class="tnc-kv"><span>' + _('Pending') + '</span><span class="' + ('text-danger' if pending > 0.5 else 'text-success') + '"><b>' + _money(pending) + '</b></span></div>'
+		     '<div class="progress" style="height:8px;margin-top:8px"><div class="progress-bar" style="width:' + str(pct) + '%"></div></div>'
+		     '<div class="text-muted small" style="margin-top:4px">' + str(pct) + '% ' + _('paid') + '</div>'}
 		  </div>
 		  <div class="tnc-col tnc-col-act">
-		    {'<a class="btn btn-sm btn-primary" data-action="receive" data-so="' + e(en.sales_order) + '">' + _('Receive Payment') + '</a>' if en.sales_order and pending > 0.5 else '<span class="tnc-pill green">' + _('Fully paid') + '</span>'}
+		    {'<span class="tnc-pill gray" title="' + _('Fee collected before this system; no fee order here') + '">' + _('Fees outside system') + '</span>' if en.fees_outside_system else '<a class="btn btn-sm btn-primary" data-action="receive" data-so="' + e(en.sales_order) + '">' + _('Receive Payment') + '</a>' if en.sales_order and pending > 0.5 else '<span class="tnc-pill green">' + _('Fully paid') + '</span>'}
 		    {'<a class="btn btn-sm btn-default" href="/app/sales-order/' + e(en.sales_order) + '">' + _('Sales Order') + '</a>' if en.sales_order else ''}
 		    <a class="btn btn-sm btn-default" href="/app/student-batch-enrollment/{e(en.name)}">{_('Enrolment')}</a>
 		  </div>

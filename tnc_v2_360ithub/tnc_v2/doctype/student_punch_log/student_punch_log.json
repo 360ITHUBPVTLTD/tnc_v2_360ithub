@@ -29,8 +29,9 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Biometric ID",
-   "reqd": 1,
-   "search_index": 1
+   "reqd": 0,
+   "search_index": 1,
+   "description": "Machine code of the student; blank for Google Meet punches (online students have no machine code)."
   },
   {
    "fieldname": "student",

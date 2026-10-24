@@ -8,6 +8,7 @@
  "field_order": [
   "full_name",
   "email",
+  "meet_email",
   "mobile_no",
   "column_break_ckat",
   "status",
@@ -38,6 +39,13 @@
    "label": "Email",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "meet_email",
+   "fieldtype": "Data",
+   "label": "Google Meet Email",
+   "options": "Email",
+   "description": "The Google account the teacher joins online classes with (added as co-host on the batch's Meet link)."
   },
   {
    "fieldname": "mobile_no",

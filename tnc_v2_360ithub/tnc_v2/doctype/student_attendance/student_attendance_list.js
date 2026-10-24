@@ -1,7 +1,7 @@
 frappe.listview_settings["Student Attendance"] = {
 	add_fields: ["status"],
 	get_indicator(doc) {
-		const c = { Present: "green", Late: "orange", Absent: "red", Leave: "blue" }[doc.status] || "gray";
+		const c = { Present: "green", Late: "orange", Partial: "yellow", Absent: "red", Leave: "blue" }[doc.status] || "gray";
 		return [__(doc.status), c, "status,=," + doc.status];
 	},
 	onload(listview) {

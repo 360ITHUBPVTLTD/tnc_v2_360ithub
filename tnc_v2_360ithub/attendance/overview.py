@@ -15,10 +15,11 @@ def _pct(p, a):
 def get_overview(batch=None, student=None, from_date=None, to_date=None):
 	from_date = getdate(from_date or get_first_day(nowdate()))
 	to_date = getdate(to_date or get_last_day(nowdate()))
+	from tnc_v2_360ithub.branding import institute_logo
 	if student:
-		return student_overview(student, batch, from_date, to_date)
+		return dict(student_overview(student, batch, from_date, to_date), logo=institute_logo())
 	if batch:
-		return batch_overview(batch, from_date, to_date)
+		return dict(batch_overview(batch, from_date, to_date), logo=institute_logo())
 	return {"batches": frappe.get_all("Student Batch", filters={"status": ["!=", "Completed"]}, fields=["name", "batch_name", "mode"], order_by="batch_name")}
 
 
@@ -66,7 +67,7 @@ def student_overview(student, batch, from_date, to_date):
 		d.classes = by_day.get(d.name, [])
 	st = frappe.db.get_value("Student", student, ["student_name", "status", "mobile", "biometric_id"], as_dict=True) or {}
 	enrols = frappe.get_all("Student Batch Enrollment", filters={"student": student, "docstatus": 1}, fields=["name", "batch", "status", "hold_type", "hold_on", "hold_reason", "consecutive_absences"])
-	counts = {k: sum(1 for d in days if d.status == k) for k in ("Present", "Late", "Absent", "Leave")}
+	counts = {k: sum(1 for d in days if d.status == k) for k in ("Present", "Late", "Partial", "Absent", "Leave")}
 	present_days = counts["Present"] + counts["Late"]
 	cls_present = sum(1 for c in classes if c.status in ("Present", "Late"))
 	cls_counted = sum(1 for c in classes if c.status != "Leave")
@@ -74,8 +75,8 @@ def student_overview(student, batch, from_date, to_date):
 	return {
 		"student": dict(st, name=student), "enrolments": enrols, "from_date": from_date, "to_date": to_date, "daily": daily,
 		"days": days, "subjects": _subject_table(classes),
-		"totals": {"class_days": len(days), "present": present_days, "late": counts["Late"], "absent": counts["Absent"], "leave": counts["Leave"],
-			"day_pct": _pct(present_days, counts["Absent"]), "classes_held": len(classes), "classes_present": cls_present, "class_pct": _pct(cls_present, cls_counted - cls_present)},
+		"totals": {"class_days": len(days), "present": present_days, "late": counts["Late"], "partial": counts["Partial"], "absent": counts["Absent"], "leave": counts["Leave"],
+			"day_pct": _pct(present_days, counts["Absent"] + counts["Partial"]), "classes_held": len(classes), "classes_present": cls_present, "class_pct": _pct(cls_present, cls_counted - cls_present)},
 	}
 
 
@@ -84,13 +85,13 @@ def batch_overview(batch, from_date, to_date):
 	classes = _classes([d.name for d in days])
 	by_student = {}
 	for d in days:
-		s = by_student.setdefault(d.student, {"student": d.student, "student_name": d.student_name, "enrollment": d.enrollment, "days": 0, "present": 0, "late": 0, "absent": 0, "leave": 0, "classes": 0, "classes_present": 0})
+		s = by_student.setdefault(d.student, {"student": d.student, "student_name": d.student_name, "enrollment": d.enrollment, "days": 0, "present": 0, "late": 0, "partial": 0, "absent": 0, "leave": 0, "classes": 0, "classes_present": 0})
 		s["days"] += 1
 		s[d.status.lower()] += 1
 		s["classes"] += cint(d.classes_held)
 		s["classes_present"] += cint(d.classes_present)
 	for s in by_student.values():
-		s["day_pct"] = _pct(s["present"] + s["late"], s["absent"])
+		s["day_pct"] = _pct(s["present"] + s["late"], s["absent"] + s["partial"])
 		s["class_pct"] = _pct(s["classes_present"], s["classes"] - s["classes_present"])
 		e = frappe.db.get_value("Student Batch Enrollment", s["enrollment"], ["status", "hold_type", "hold_on", "hold_reason", "consecutive_absences"], as_dict=True) or {}
 		s.update({"enrol_status": e.get("status"), "hold_type": e.get("hold_type"), "hold_on": e.get("hold_on"), "hold_reason": e.get("hold_reason"), "consecutive_absences": cint(e.get("consecutive_absences"))})
@@ -107,7 +108,9 @@ def batch_overview(batch, from_date, to_date):
 		x["total"] += 1
 		x["present"] += 1 if d.status in ("Present", "Late") else 0
 	daily = [{"date": k, "pct": round(v["present"] / v["total"] * 100) if v["total"] else 0, "present": v["present"], "total": v["total"]} for k, v in sorted(per_day.items())]
-	status_counts = {k: sum(1 for d in days if d.status == k) for k in ("Present", "Late", "Absent", "Leave")}
+	status_counts = {k: sum(1 for d in days if d.status == k) for k in ("Present", "Late", "Partial", "Absent", "Leave")}
+	single_punch = [{"name": d.name, "student": d.student, "student_name": d.student_name, "date": str(d.date), "status": d.status, "in_time": d.in_time, "out_time": d.out_time, "note": d.note}
+		for d in days if (d.note or "").startswith(("In only", "Out only"))]
 	# per class day: which classes ran (one entry per subject + time), and how many came
 	day_detail = {}
 	for c in classes:
@@ -122,6 +125,6 @@ def batch_overview(batch, from_date, to_date):
 	return {
 		"batch": dict(b, name=batch), "from_date": from_date, "to_date": to_date, "enrolled": enrolled, "on_hold": on_hold,
 		"class_days": len(class_dates), "classes_held": len({(date_of.get(c.parent), c.subject, str(c.from_time)) for c in classes}),
-		"students": rows, "subjects": _subject_table(classes), "daily": daily, "status_counts": status_counts, "class_days_detail": class_days_detail,
+		"students": rows, "subjects": _subject_table(classes), "daily": daily, "status_counts": status_counts, "class_days_detail": class_days_detail, "single_punch": single_punch,
 		"avg_pct": round(sum(s["day_pct"] for s in rows) / len(rows), 1) if rows else 0,
 	}

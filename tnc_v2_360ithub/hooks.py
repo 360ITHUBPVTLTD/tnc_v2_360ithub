@@ -250,6 +250,10 @@ scheduler_events = {
 		"30 23 * * *": [
 			"tnc_v2_360ithub.attendance.daily.nightly",
 		],
+		# Online attendance: pull Google Meet sessions for classes that have ended (does nothing until the Google account is connected in TNC Settings).
+		"*/15 * * * *": [
+			"tnc_v2_360ithub.meet.sync",
+		],
 		"30 8 * * 6": [
 			"tnc_v2_360ithub.tnc_v2.doctype.teacher_settlement.teacher_settlement.weekly_job",
 		],

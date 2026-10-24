@@ -31,11 +31,22 @@
   "timesheet_class_time_required",
   "attendance_lookback_days",
   "attendance_min_stay",
+  "attendance_single_punch",
   "attendance_class_cover_pct",
   "cb_att",
   "attendance_parent_whatsapp",
   "attendance_parent_daily",
   "attendance_parent_number",
+  "meet_section",
+  "meet_client_id",
+  "meet_client_secret",
+  "meet_presence_pct",
+  "cb_meet",
+  "meet_account",
+  "meet_connected_on",
+  "meet_refresh_token",
+  "meet_last_sync",
+  "meet_last_error",
   "accounts_section",
   "invoice_approvers",
   "demo_fee_section",
@@ -220,11 +231,19 @@
    "description": "A day counts as Present only if the student stayed at least this long (needs the OUT punch). 0 = any punch is Present."
   },
   {
+   "fieldname": "attendance_single_punch",
+   "fieldtype": "Select",
+   "label": "When only one punch is recorded",
+   "options": "Present\nPartial\nAbsent",
+   "default": "Partial",
+   "description": "A day with an IN but no OUT (or an OUT but no IN). Present: the student is taken to be in until the end of the day. Partial: the classes count as Partial, lowering the percentage but not counting towards the hold; the office can add the missing punch after the teacher confirms. Absent: the day counts as absent."
+  },
+  {
    "fieldname": "attendance_class_cover_pct",
    "fieldtype": "Int",
-   "label": "Class Counts as Present From (%)",
-   "default": "50",
-   "description": "Share of a class's time the student must have been in (between IN and OUT punches) to be Present for that class. Below it: Partial, counted as absent."
+   "label": "Offline: Class Counts as Present From (%)",
+   "default": "75",
+   "description": "Machine punches. Share of a class's time the student must have been in (between IN and OUT) to be Present for that class. Below it: Partial, counted as absent. Online batches use the Google Meet 'Present From' instead."
   },
   {
    "fieldname": "cb_att",
@@ -250,6 +269,65 @@
    "options": "Father\nMother\nGuardian",
    "default": "Father",
    "description": "If that number is blank on the student, the other parent numbers are tried, then the student's own mobile."
+  },
+  {
+   "fieldname": "meet_section",
+   "fieldtype": "Section Break",
+   "label": "Google Meet (online attendance)",
+   "description": "Online attendance. Once connected, after each online class (timesheet row with From/To on a batch with a Meet link) the server reads who joined the meeting and writes IN/OUT punches."
+  },
+  {
+   "fieldname": "meet_client_id",
+   "fieldtype": "Data",
+   "label": "Client ID",
+   "description": "From the Google Cloud console, OAuth client 'TNC server'."
+  },
+  {
+   "fieldname": "meet_client_secret",
+   "fieldtype": "Password",
+   "label": "Client Secret"
+  },
+  {
+   "fieldname": "meet_presence_pct",
+   "fieldtype": "Int",
+   "label": "Online: Present From (% of class time in the meeting)",
+   "default": "75",
+   "description": "Total minutes in the meeting \u00f7 class minutes. At or above = Present, below but joined = Partial, never joined = Absent."
+  },
+  {
+   "fieldname": "cb_meet",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "meet_account",
+   "fieldtype": "Data",
+   "label": "Connected Google Account",
+   "read_only": 1
+  },
+  {
+   "fieldname": "meet_connected_on",
+   "fieldtype": "Datetime",
+   "label": "Connected On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "meet_refresh_token",
+   "fieldtype": "Password",
+   "label": "Refresh Token",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "meet_last_sync",
+   "fieldtype": "Datetime",
+   "label": "Last Sync",
+   "read_only": 1
+  },
+  {
+   "fieldname": "meet_last_error",
+   "fieldtype": "Small Text",
+   "label": "Last Error",
+   "read_only": 1
   },
   {
    "fieldname": "accounts_section",

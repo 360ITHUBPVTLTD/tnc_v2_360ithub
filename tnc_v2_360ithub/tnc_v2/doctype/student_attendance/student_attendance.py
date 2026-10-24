@@ -21,28 +21,21 @@ class StudentAttendance(Document):
 			self.source = "Manual"
 			self.marked_by = frappe.session.user
 
-	def validate_classes_for_leave(self):
-		"""Leave covers the whole day: its classes read Leave and count for nothing. Any other
-		status leaves the machine's class rows as they are."""
-		if self.status == "Leave":
-			for c in self.classes:
-				c.status = "Leave"
-			self.classes_present = 0
-			self.classes_absent = 0
+	def apply_status_to_classes(self):
+		"""A status set by staff covers the whole day: every class row takes the matching status
+		(Leave counts for nothing; Present / Late count as attended; Partial and Absent as missed)."""
+		from tnc_v2_360ithub.attendance.daily import apply_manual_status
+		apply_manual_status(self.classes, self.status)
+		self.classes_present = sum(1 for c in self.classes if c.status in ("Present", "Late"))
+		self.classes_absent = sum(1 for c in self.classes if c.status not in ("Present", "Late", "Leave"))
 
 	def on_update(self):
-		# A status change can start or clear a hold; keep the enrolment's count current.
+		# A status change by staff carries down to the class rows and can start or clear a hold.
 		before = self.get_doc_before_save()
-		if before and before.status != self.status:
-			if self.status == "Leave" or before.status == "Leave":
-				self.validate_classes_for_leave() if self.status == "Leave" else None
-				if before.status == "Leave" and self.status != "Leave":
-					# back from Leave: let the machine rule decide the classes again
-					from tnc_v2_360ithub.attendance.daily import build_day
-					build_day(self.date, batch=self.batch, student=self.student, notify=False)
-				elif self.status == "Leave":
-					for c in self.classes:
-						frappe.db.set_value("Student Class Attendance", c.name, "status", "Leave", update_modified=False)
-					self.db_set({"classes_present": 0, "classes_absent": 0}, update_modified=False)
+		if before and before.status != self.status and self.source == "Manual":
+			self.apply_status_to_classes()
+			for c in self.classes:
+				frappe.db.set_value("Student Class Attendance", c.name, "status", c.status, update_modified=False)
+			self.db_set({"classes_present": self.classes_present, "classes_absent": self.classes_absent}, update_modified=False)
 			from tnc_v2_360ithub.attendance.daily import update_hold
 			update_hold(self.enrollment, self.date)
