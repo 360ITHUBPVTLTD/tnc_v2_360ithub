@@ -135,7 +135,11 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 			$body.html(render(d));
 			$body.find("[data-logcall]").on("click", (e) => { e.stopPropagation(); const $b = $(e.currentTarget); logCall($b.attr("data-logcall"), $b.attr("data-name"), null, $b.attr("data-plan"), $b.attr("data-due")); });
 			$body.find("[data-enq]").on("click", (e) => { if ($(e.target).closest("a, button").length) return; frappe.set_route("Form", "Student Enquiry", $(e.currentTarget).attr("data-enq")); });
-			$body.find("[data-batch]").on("click", (e) => { state.batch = $(e.currentTarget).attr("data-batch"); fBatch.set_value(state.batch); load(); });
+			$body.find("[data-batch]").on("click", (e) => {
+				const b = $(e.currentTarget).attr("data-batch");
+				if (!b) { frappe.route_options = { batch_interested: ["is", "not set"], status: ["not in", ["Converted", "Lost"]] }; frappe.set_route("List", "Student Enquiry"); return; }
+				state.batch = b; fBatch.set_value(b); load();
+			});
 			if (fCoun) $body.find("[data-coun]").on("click", (e) => { state.counsellor = $(e.currentTarget).attr("data-coun"); fCoun.set_value(state.counsellor); load(); });
 			const open = (x) => ["New", "Demo Scheduled", "Demo Attended"].includes(x.status);
 			$body.find("[data-pop]").on("click", (e) => {
@@ -213,7 +217,7 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 				</div>
 			</div>
 			<div class="stack">
-				${!d.batch ? `<div class="card"><h6>${__("By batch")} <small class="text-muted">${__("click a row to open that batch")}</small></h6>${bucketTable(d.by_batch, "batch", __("Batch"), "data-batch")}</div>` : ""}
+				${!d.batch ? `<div class="card"><h6>${__("By batch")} <small class="text-muted">${__("click a row to open that batch · (no batch) = batch not chosen yet")}</small></h6>${bucketTable(d.by_batch, "batch", __("Batch"), "data-batch")}</div>` : ""}
 				${d.manager && !d.counsellor ? `<div class="card"><h6>${__("By counsellor")} <small class="text-muted">${__("click a row to open that counsellor")}</small></h6>${bucketTable(d.by_counsellor, "counsellor", __("Counsellor"), "data-coun")}</div>` : ""}
 				${(d.batch || d.counsellor) && d.by_source.length ? `<div class="card"><h6>${__("By source")}</h6>${bucketTable(d.by_source, "source", __("Source"))}</div>` : ""}
 			</div>
