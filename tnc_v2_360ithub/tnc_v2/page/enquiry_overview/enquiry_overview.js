@@ -105,9 +105,22 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 		x: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
 	};
 	const kpi = (n, l, c, ico, pop) => `<div class="card kpi ${c}${pop ? " pop" : ""}"${pop ? ` data-pop="${pop}" title="${__("Click for the list")}"` : ""}><div class="ico">${ICONS[ico] || ico}</div><div><b>${n}</b><span>${l}</span></div></div>`;
-	const popTable = (title, head, rows, wide = false, sub = "") => {
+	const popTable = (title, head, rows, wide = false, sub = "", data = null) => {
 		const d = new frappe.ui.Dialog({ title, size: wide ? "extra-large" : "large", fields: [{ fieldtype: "HTML", fieldname: "body" }] });
 		d.$wrapper.on("click", "[data-logcall]", (e) => { const $b = $(e.currentTarget); logCall($b.attr("data-logcall"), $b.attr("data-name"), () => d.hide(), $b.attr("data-plan"), $b.attr("data-due")); });
+		// status chips: when the list mixes statuses, let the user narrow it to one
+		const ORDER = ["New", "Demo Scheduled", "Demo Attended", "Converted", "Lost"];
+		const counts = data ? ORDER.map(st => [st, data.filter(x => x.status === st).length]).filter(x => x[1]) : [];
+		if (counts.length > 1) {
+			const chip = (k, l, n, on) => `<button class="btn btn-xs ${on ? "btn-primary" : "btn-default"}" data-chip="${k}" style="margin:0 6px 10px 0;border-radius:12px">${l} <b>${n}</b></button>`;
+			sub = `<div data-chips>${chip("", __("All"), data.length, true)}${counts.map(([st, n]) => chip(st, __(st), n, false)).join("")}</div>` + sub;
+			d.$wrapper.on("click", "[data-chip]", (e) => {
+				const k = $(e.currentTarget).attr("data-chip");
+				d.$wrapper.find("[data-chip]").removeClass("btn-primary").addClass("btn-default");
+				$(e.currentTarget).removeClass("btn-default").addClass("btn-primary");
+				d.$wrapper.find("table.enq-pop tbody").html(popRows(k ? data.filter(x => x.status === k) : data).join("") || `<tr><td colspan="${head.length}" class="text-muted">${__("Nothing to show.")}</td></tr>`);
+			});
+		}
 		d.fields_dict.body.$wrapper.html(`<style>.enq-pop td, .enq-pop th { border: 1px solid #94a3b8 !important; padding: 8px 10px !important; vertical-align: top; } .enq-pop th { background: #e2e8f0; font-weight: 700; color: #0f172a; white-space: nowrap; } .enq-pop tbody tr:nth-child(even) td { background: #fafafa; } .enq-pop .nw { white-space: nowrap; } .enq-pop a { color: #2563eb; text-decoration: underline; font-weight: 600; } .enq-pop .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 10px; white-space: nowrap; } .enq-pop .pill.New { background: #e2e8f0; color: #334155; } .enq-pop .pill.DemoScheduled { background: #dbeafe; color: #1e40af; } .enq-pop .pill.DemoAttended { background: #ffedd5; color: #9a3412; } .enq-pop .pill.Converted { background: #dcfce7; color: #166534; } .enq-pop .pill.Lost { background: #fee2e2; color: #991b1b; } .enq-pop .due { font-weight: 700; white-space: nowrap; } .enq-pop .due.overdue { color: #dc2626; } .enq-pop .due.today { color: #d97706; } .enq-pop .due.upcoming { color: #2563eb; } .enq-pop .due.none { color: #94a3b8; font-weight: 400; }</style>${sub}<div style="max-height:75vh;overflow-y:auto;overflow-x:hidden"><table class="table table-bordered enq-pop" style="font-size:13px;width:100%;margin:0"><thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="${head.length}" class="text-muted">${__("Nothing to show.")}</td></tr>`}</tbody></table></div>`);
 		d.show();
 	};
@@ -164,7 +177,7 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 					(d.done_list || []).map(f => `<tr><td><a href="/app/student-enquiry/${esc(f.enquiry)}"><b>${esc(f.student_name || f.mobile || f.enquiry)}</b></a><br><small class="text-muted">${esc(f.mobile || "")}</small></td><td class="nw"><a href="/app/student-follow-up/${esc(f.name)}" title="${__("Open the follow-up")}">${dUser(f.follow_up_date)}</a></td><td class="nw">${esc(f.purpose || "")}</td><td class="nw">${esc(f.followup_type || "")}</td><td class="nw">${esc(f.done_by)}</td><td class="notes" style="max-width:360px">${esc(f.notes || "")}</td></tr>`), true);
 				const [title, rows] = lists[which] || [which, []];
 				const sub = which === "lost" && d.lost_reasons.length ? `<div style="margin:0 0 10px;font-size:13px;color:#475569"><b>${__("Why")}:</b> ${d.lost_reasons.map(x => `${esc(x.reason)} <b style="color:#dc2626">${x.count}</b>`).join(" · ")}</div>` : "";
-				popTable(title, POP_HEAD, popRows(rows), true, sub);
+				popTable(title, POP_HEAD, popRows(rows), true, sub, rows);
 			});
 			if (d.trend && d.trend.length > 1) chart("#c-trend", { type: "line", data: { labels: d.trend.map(x => dshort(x.key, d.trend_by_month)), datasets: [{ name: __("Enquiries"), values: d.trend.map(x => x.total) }, { name: __("Converted"), values: d.trend.map(x => x.converted) }] },
 				colors: ["#6d5bc4", "#16a34a"], lineOptions: { regionFill: 1, hideDots: 0 }, axisOptions: { xAxisMode: "tick", xIsSeries: true }, tooltipOptions: { formatTooltipY: (v) => Math.round(v) } });
