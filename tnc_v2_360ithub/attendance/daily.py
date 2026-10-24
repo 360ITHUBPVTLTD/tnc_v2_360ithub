@@ -45,7 +45,10 @@ def _settings():
 		# an unset number shows as 0 on a settings record that existed before the field: 0 means "default"
 		lookback=cint(s.get("attendance_lookback_days")) or 7,
 		min_stay=cint(s.get("attendance_min_stay")),
-		cover_pct=cint(s.get("attendance_class_cover_pct")) or 50,
+		cover_pct=cint(s.get("attendance_class_cover_pct")) or 75,
+		single_punch=s.get("attendance_single_punch") or "Partial",
+		meet_connected=bool(s.get("meet_account")),
+		meet_presence_pct=cint(s.get("meet_presence_pct")) or 75,
 	)
 
 
@@ -120,31 +123,67 @@ def _in_out(punches, date):
 	return (get_datetime(in_dt) if in_dt else None), (get_datetime(out_dt) if out_dt else None), note
 
 
-def _presence(in_dt, out_dt, date):
-	"""The period the student is taken to be in: IN..OUT; IN only runs to end of day; OUT only from start of day."""
+def _presence(in_dt, out_dt, date, punches=None):
+	"""The periods the student is taken to be in, as a list of (start, end).
+	One IN and one OUT: IN..OUT. IN only runs to end of day; OUT only from start of day.
+	Several IN/OUT pairs (a student who stepped out and came back, or joined a Google Meet more
+	than once): one period per pair, so the class cover counts only the time actually inside."""
 	if not in_dt and not out_dt:
 		return None
 	day0 = get_datetime(f"{date} 00:00:00")
-	return (in_dt or day0, out_dt or (day0 + timedelta(days=1)))
+	day1 = day0 + timedelta(days=1)
+	directed = [p for p in (punches or []) if p.direction in ("IN", "OUT")]
+	if len(directed) >= 3:
+		# union of sessions: a student on a laptop and a phone at once is inside while any session
+		# is open (count INs and OUTs; OUT comes before IN at a tie so a re-join at the same second closes nothing)
+		periods, depth, open_at = [], 0, None
+		for p in sorted(directed, key=lambda p: (get_datetime(p.punch_time), 0 if p.direction == "OUT" else 1)):
+			t = get_datetime(p.punch_time)
+			if p.direction == "IN":
+				if depth == 0:
+					open_at = t
+				depth += 1
+			else:
+				if depth == 0:
+					if not periods:
+						periods.append((day0, t))  # OUT before any IN: inside since the start of the day
+					continue
+				depth -= 1
+				if depth == 0 and open_at is not None and t > open_at:
+					periods.append((open_at, t))
+		if depth > 0 and open_at is not None:
+			periods.append((open_at, day1))
+		if periods:
+			return periods
+	return [(in_dt or day0, out_dt or day1)]
+
+
+def _overlap_minutes(periods, start, end):
+	total = 0
+	for a, b in periods or []:
+		lo, hi = max(start, a), min(end, b)
+		total += max(0, int((hi - lo).total_seconds() // 60))
+	return total
 
 
 def class_rows(windows, presence, date, cover_pct, grace=0):
-	"""Per-class status for the day from the presence period. Late: the student arrived after the
+	"""Per-class status for the day from the presence periods. Late: the student arrived after the
 	class start plus grace but still covered enough of it (counts as attended)."""
 	rows = []
+	first_in = min((a for a, b in presence), default=None) if presence else None
 	for w in windows:
 		if w.from_time is None or w.to_time is None:
 			continue
 		start, end = get_datetime(f"{date} {w.from_time}"), get_datetime(f"{date} {w.to_time}")
 		total = max(1, int((end - start).total_seconds() // 60))
-		covered = 0
-		if presence:
-			lo, hi = max(start, presence[0]), min(end, presence[1])
-			covered = max(0, int((hi - lo).total_seconds() // 60))
+		covered = _overlap_minutes(presence, start, end) if presence else 0
 		pct = round(covered / total * 100, 1)
 		status = "Present" if covered and pct >= cover_pct else "Partial" if covered else "Absent"
-		if status == "Present" and presence and presence[0] > start + timedelta(minutes=grace):
-			status = "Late"
+		if status == "Present" and presence:
+			# first time inside during this class, after the start plus grace = Late
+			arrived = min((a for a, b in presence if b > start), default=first_in)
+			if arrived and arrived > start + timedelta(minutes=grace):
+				status = "Late"
 		rows.append({"subject": w.subject, "chapter": w.chapter, "teacher": w.teacher, "teacher_name": w.teacher_name, "from_time": w.from_time, "to_time": w.to_time,
 			"status": status, "covered_minutes": covered, "class_minutes": total, "cover_pct": pct, "timesheet": w.timesheet, "timesheet_row": w.timesheet_row})
 	return rows
@@ -167,11 +206,44 @@ def day_status(punches, batch, date):
 	first = get_datetime(punches[0].punch_time)
 	starts = [w.from_time for w in windows if w.from_time is not None]
 	start = min(starts) if starts else batch.get("start_time")
-	if status == "Present" and start:
+	if status == "Present" and start and in_dt:  # an OUT-only day says nothing about when the student came
 		grace = cint(batch.get("late_after_minutes")) or s.grace
 		if first > get_datetime(f"{date} {start}") + timedelta(minutes=grace):
 			status = "Late"
-	return status, in_dt, out_dt, duration, note, class_rows(windows, _presence(in_dt, out_dt, date), date, s.cover_pct, grace)
+	# online batches: time in the meeting against the Meet threshold; offline: the class cover setting
+	cover = cint(s.meet_presence_pct) if (batch.get("mode") == "Online" and s.meet_connected) else s.cover_pct
+	classes = class_rows(windows, _presence(in_dt, out_dt, date, punches), date, cover, grace)
+	# the day follows its classes: punches prove the student came, the class cover says whether they
+	# sat the classes. No class attended = Partial (some cover) or Absent (none), even with punches.
+	if classes and status in ("Present", "Late") and not any(c["status"] in ("Present", "Late") for c in classes):
+		status = "Partial" if any(c["status"] == "Partial" for c in classes) else "Absent"
+		if status == "Absent":
+			note = (note + "; " if note else "") + _("punched, but no class covered")
+	# one punch only (IN without OUT, or OUT without IN): the setting decides how much credit it earns
+	if note in ("In only", "Out only") and s.single_punch != "Present" and status in ("Present", "Late"):
+		if status == "Late":
+			note += "; " + _("late")
+		status = s.single_punch
+		for c in classes:
+			if c["status"] in ("Present", "Late", "Partial"):
+				c["status"] = "Partial" if s.single_punch == "Partial" else "Absent"
+	return status, in_dt, out_dt, duration, note, classes
+
+
+MANUAL_CLASS_STATUS = {"Present": "Present", "Late": "Present", "Partial": "Partial", "Absent": "Absent", "Leave": "Leave"}
+
+
+def apply_manual_status(classes, status):
+	"""A day marked by staff overrides what the punches say: every class of the day takes the
+	matching class status (Late day = classes attended). Works on dicts or child docs."""
+	cs = MANUAL_CLASS_STATUS.get(status)
+	if not cs:
+		return
+	for c in classes:
+		if isinstance(c, dict):
+			c["status"] = cs
+		else:
+			c.status = cs
 
 
 def write_row(enrolment, batch, date, punches):
@@ -187,11 +259,9 @@ def write_row(enrolment, batch, date, punches):
 		manual = doc.source == "Manual"
 		if manual:
 			values = {k: v for k, v in values.items() if k not in ("status", "note")}
-			if doc.status == "Leave":
-				for c in classes:
-					c["status"] = "Leave"
-				values["classes_present"] = 0
-				values["classes_absent"] = 0
+			apply_manual_status(classes, doc.status)
+			values["classes_present"] = sum(1 for c in classes if c["status"] in ("Present", "Late"))
+			values["classes_absent"] = sum(1 for c in classes if c["status"] not in ("Present", "Late", "Leave"))
 		old_classes = [(c.timesheet_row, c.status, c.covered_minutes, c.chapter) for c in doc.classes]
 		new_classes = [(c["timesheet_row"], c["status"], c["covered_minutes"], c.get("chapter")) for c in classes]
 		changed = old_classes != new_classes or any(str(doc.get(k) or "") != str(v or "") for k, v in values.items())
@@ -236,7 +306,7 @@ def build_day(date=None, batch=None, student=None, notify=True):
 	"""Build (or refresh) attendance of one date for every enrolment with a class that day.
 	`batch` / `student` narrow it. Returns counts."""
 	date = getdate(date or nowdate())
-	counts = frappe._dict(present=0, late=0, absent=0, skipped=0, removed=0)
+	counts = frappe._dict(present=0, late=0, partial=0, absent=0, skipped=0, removed=0)
 	batches = [b for b in batches_with_class(date) if not batch or b.name == batch]
 	for b in batches:
 		filters = dict(ENROLMENT_FILTERS, batch=b.name)
@@ -326,8 +396,8 @@ def consecutive_absences(enrolment, upto=None):
 	by_classes = _settings().count_by == "Classes"
 	for r in frappe.get_all("Student Attendance", filters={"enrollment": enrolment},
 			fields=["name", "status", "classes_held"], order_by="date desc", limit=200):
-		if r.status == "Leave":
-			break
+		if r.status in ("Leave", "Partial"):
+			break  # a Partial day (one punch only) is not an absence and never feeds the hold
 		if by_classes and cint(r.classes_held):
 			stop = False
 			for c in frappe.get_all("Student Class Attendance", filters={"parent": r.name}, fields=["status"], order_by="from_time desc"):

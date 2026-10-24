@@ -33,6 +33,7 @@
   "mobile",
   "alt_mobile",
   "email",
+  "meet_email",
   "cb_c1",
   "address",
   "permanent_address",
@@ -227,6 +228,13 @@
    "fieldtype": "Data",
    "label": "Email",
    "options": "Email"
+  },
+  {
+   "fieldname": "meet_email",
+   "fieldtype": "Data",
+   "label": "Google Meet Email",
+   "options": "Email",
+   "description": "The Google account used to join online classes. Attendance from Google Meet is matched on this."
   },
   {
    "fieldname": "cb_c1",

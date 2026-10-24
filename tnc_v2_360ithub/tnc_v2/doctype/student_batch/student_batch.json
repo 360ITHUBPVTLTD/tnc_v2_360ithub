@@ -22,6 +22,7 @@
   "cb2",
   "actual_ending_date",
   "sb_timing",
+  "meet_link",
   "day_mon",
   "day_tue",
   "day_wed",
@@ -32,8 +33,7 @@
   "cb_timing",
   "start_time",
   "end_time",
-  "late_after_minutes",
-  "meet_link"
+  "late_after_minutes"
  ],
  "fields": [
   {
@@ -123,8 +123,14 @@
   {
    "fieldname": "sb_timing",
    "fieldtype": "Section Break",
-   "label": "Class Timing",
-   "description": "Which days this batch has classes and when it starts. Student attendance is built from the machine punches on these days; a class day with no punch is an absence."
+   "label": "Online Class"
+  },
+  {
+   "fieldname": "meet_link",
+   "fieldtype": "Data",
+   "label": "Google Meet Link",
+   "depends_on": "eval:doc.mode!='Offline'",
+   "description": "This link is fixed for the whole batch. Teachers must start every class from it and students must join through it; online attendance is marked only from this link."
   },
   {
    "fieldname": "day_mon",
@@ -179,14 +185,7 @@
    "fieldname": "late_after_minutes",
    "fieldtype": "Int",
    "label": "Late After (minutes)",
-   "description": "First punch later than start time plus these minutes counts as Late. Blank uses the default from settings."
-  },
-  {
-   "fieldname": "meet_link",
-   "fieldtype": "Data",
-   "label": "Google Meet Link",
-   "depends_on": "eval:doc.mode!='Offline'",
-   "description": "Online batches: the fixed Meet link of the class, used for online attendance later."
+   "description": "A student whose first punch or Meet join is later than the class start plus these minutes counts as Late. Blank uses the default from TNC Settings."
   }
  ],
  "idx": 0,

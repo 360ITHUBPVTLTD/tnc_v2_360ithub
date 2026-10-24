@@ -1,0 +1,25 @@
+{
+ "content": null,
+ "creation": "2026-10-19 18:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-10-19 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "enquiry-overview",
+ "owner": "Administrator",
+ "page_name": "enquiry-overview",
+ "roles": [
+  {"role": "TNC Employees"},
+  {"role": "TNC Manager"},
+  {"role": "TNC Super Admin"},
+  {"role": "TNC Counsellor"},
+  {"role": "System Manager"}
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Enquiry Overview"
+}

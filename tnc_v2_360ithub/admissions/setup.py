@@ -183,11 +183,12 @@ def ensure_workspace():
 			continue
 		frappe.get_doc({"doctype": "Number Card", "name": label, "label": label, "type": "Document Type", "document_type": dt, "function": "Count",
 			"filters_json": frappe.as_json([[dt, f[0], f[1], f[2], False] for f in filters]), "is_public": 1, "show_percentage_stats": 1, "stats_time_interval": "Monthly", "color": color, "module": "TNC v2"}).insert(ignore_permissions=True)
-	shortcuts = [("Follow-ups", "Page", "follow-ups", "Red"), ("Student Enquiry", "DocType", "Student Enquiry", "Blue"), ("Demo Class", "DocType", "Demo Class", "Orange"), ("Student", "DocType", "Student", "Green"),
+	shortcuts = [("Enquiry Overview", "Page", "enquiry-overview", "Blue"), ("Follow-ups", "Page", "follow-ups", "Red"), ("Student Enquiry", "DocType", "Student Enquiry", "Blue"), ("Demo Class", "DocType", "Demo Class", "Orange"), ("Student", "DocType", "Student", "Green"),
 		("Enrol in Batch", "DocType", "Student Batch Enrollment", "Green"), ("Batches", "DocType", "Student Batch", "Grey"),
 		("Sales Orders", "DocType", "Sales Order", "Grey"), ("Enquiry Funnel", "Report", "Enquiry Funnel", "Blue")]
 	attendance = [("Attendance Overview", "Page", "attendance-overview", "Green"), ("Student Attendance", "DocType", "Student Attendance", "Green"),
-		("Attendance Summary", "Report", "Student Attendance Summary", "Blue"), ("Machine Punches", "DocType", "Student Punch Log", "Grey")]
+		("Attendance Summary", "Report", "Student Attendance Summary", "Blue"), ("Machine Punches", "DocType", "Student Punch Log", "Grey"),
+		("Meet Class Sync", "DocType", "Meet Class Sync", "Grey")]
 	content = [{"id": "hdr", "type": "header", "data": {"text": "<span class=\"h4\"><b>Admissions</b></span>", "col": 12}}]
 	content += [{"id": f"nc{i}", "type": "number_card", "data": {"number_card_name": label, "col": 3 if i else 3}} for i, (label, *_r) in enumerate(NUMBER_CARDS)]
 	content += [{"id": "sh", "type": "header", "data": {"text": "<span class=\"h4\"><b>Quick actions</b></span>", "col": 12}}]

@@ -445,7 +445,7 @@
  },
  {
   "charts": [],
-  "content": "[\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Admissions</b></span>\"\n  },\n  \"id\": \"hdr\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Enquiries this month\"\n  },\n  \"id\": \"nc0\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Demos this week\"\n  },\n  \"id\": \"nc1\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Admissions this month\"\n  },\n  \"id\": \"nc2\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Enrolments active\"\n  },\n  \"id\": \"nc3\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Follow-ups overdue\"\n  },\n  \"id\": \"nc4\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Follow-ups due today\"\n  },\n  \"id\": \"nc5\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Fee follow-ups open\"\n  },\n  \"id\": \"nc6\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Form not submitted by student\"\n  },\n  \"id\": \"nc7\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Quick actions</b></span>\"\n  },\n  \"id\": \"sh\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Follow-ups\"\n  },\n  \"id\": \"sc0\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student Enquiry\"\n  },\n  \"id\": \"sc1\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Demo Class\"\n  },\n  \"id\": \"sc2\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student\"\n  },\n  \"id\": \"sc3\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Enrol in Batch\"\n  },\n  \"id\": \"sc4\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Batches\"\n  },\n  \"id\": \"sc5\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Sales Orders\"\n  },\n  \"id\": \"sc6\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Enquiry Funnel\"\n  },\n  \"id\": \"sc7\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Attendance</b></span>\"\n  },\n  \"id\": \"att\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Attendance Overview\"\n  },\n  \"id\": \"at0\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student Attendance\"\n  },\n  \"id\": \"at1\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Attendance Summary\"\n  },\n  \"id\": \"at3\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Machine Punches\"\n  },\n  \"id\": \"at4\",\n  \"type\": \"shortcut\"\n }\n]",
+  "content": "[\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Admissions</b></span>\"\n  },\n  \"id\": \"hdr\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Enquiries this month\"\n  },\n  \"id\": \"nc0\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Demos this week\"\n  },\n  \"id\": \"nc1\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Admissions this month\"\n  },\n  \"id\": \"nc2\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Enrolments active\"\n  },\n  \"id\": \"nc3\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Follow-ups overdue\"\n  },\n  \"id\": \"nc4\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Follow-ups due today\"\n  },\n  \"id\": \"nc5\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Fee follow-ups open\"\n  },\n  \"id\": \"nc6\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"number_card_name\": \"Form not submitted by student\"\n  },\n  \"id\": \"nc7\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Quick actions</b></span>\"\n  },\n  \"id\": \"sh\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Enquiry Overview\"\n  },\n  \"id\": \"sc0\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Follow-ups\"\n  },\n  \"id\": \"sc1\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student Enquiry\"\n  },\n  \"id\": \"sc2\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Demo Class\"\n  },\n  \"id\": \"sc3\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student\"\n  },\n  \"id\": \"sc4\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Enrol in Batch\"\n  },\n  \"id\": \"sc5\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Batches\"\n  },\n  \"id\": \"sc6\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Sales Orders\"\n  },\n  \"id\": \"sc7\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Enquiry Funnel\"\n  },\n  \"id\": \"sc8\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\"><b>Attendance</b></span>\"\n  },\n  \"id\": \"att\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Attendance Overview\"\n  },\n  \"id\": \"at0\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Student Attendance\"\n  },\n  \"id\": \"at1\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Attendance Summary\"\n  },\n  \"id\": \"at2\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Machine Punches\"\n  },\n  \"id\": \"at3\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Meet Class Sync\"\n  },\n  \"id\": \"at4\",\n  \"type\": \"shortcut\"\n }\n]",
   "creation": "2026-09-11 17:20:55.378564",
   "custom_blocks": [],
   "docstatus": 0,
@@ -457,7 +457,7 @@
   "is_hidden": 0,
   "label": "TNC Admissions",
   "links": [],
-  "modified": "2026-10-10 10:16:36.532882",
+  "modified": "2026-10-22 16:23:50.277422",
   "modified_by": "Administrator",
   "module": "TNC v2",
   "name": "TNC Admissions",
@@ -512,60 +512,60 @@
   "sequence_id": 2.0,
   "shortcuts": [
    {
+    "color": "Blue",
+    "doc_view": "",
+    "label": "Enquiry Overview",
+    "link_to": "enquiry-overview",
+    "type": "Page"
+   },
+   {
     "color": "Red",
     "doc_view": "",
     "label": "Follow-ups",
     "link_to": "follow-ups",
-    "type": "Page",
-    "idx": 1
+    "type": "Page"
    },
    {
     "color": "Blue",
     "doc_view": "",
     "label": "Student Enquiry",
     "link_to": "Student Enquiry",
-    "type": "DocType",
-    "idx": 2
+    "type": "DocType"
    },
    {
     "color": "Orange",
     "doc_view": "",
     "label": "Demo Class",
     "link_to": "Demo Class",
-    "type": "DocType",
-    "idx": 3
+    "type": "DocType"
    },
    {
     "color": "Green",
     "doc_view": "",
     "label": "Student",
     "link_to": "Student",
-    "type": "DocType",
-    "idx": 4
+    "type": "DocType"
    },
    {
     "color": "Green",
     "doc_view": "",
     "label": "Enrol in Batch",
     "link_to": "Student Batch Enrollment",
-    "type": "DocType",
-    "idx": 5
+    "type": "DocType"
    },
    {
     "color": "Grey",
     "doc_view": "",
     "label": "Batches",
     "link_to": "Student Batch",
-    "type": "DocType",
-    "idx": 6
+    "type": "DocType"
    },
    {
     "color": "Grey",
     "doc_view": "",
     "label": "Sales Orders",
     "link_to": "Sales Order",
-    "type": "DocType",
-    "idx": 7
+    "type": "DocType"
    },
    {
     "color": "Blue",
@@ -573,24 +573,21 @@
     "label": "Enquiry Funnel",
     "link_to": "Enquiry Funnel",
     "report_ref_doctype": "Student Enquiry",
-    "type": "Report",
-    "idx": 8
+    "type": "Report"
    },
    {
     "color": "Green",
     "doc_view": "",
     "label": "Attendance Overview",
     "link_to": "attendance-overview",
-    "type": "Page",
-    "idx": 9
+    "type": "Page"
    },
    {
     "color": "Green",
     "doc_view": "",
     "label": "Student Attendance",
     "link_to": "Student Attendance",
-    "type": "DocType",
-    "idx": 10
+    "type": "DocType"
    },
    {
     "color": "Blue",
@@ -598,16 +595,21 @@
     "label": "Attendance Summary",
     "link_to": "Student Attendance Summary",
     "report_ref_doctype": "Student Attendance",
-    "type": "Report",
-    "idx": 11
+    "type": "Report"
    },
    {
     "color": "Grey",
     "doc_view": "",
     "label": "Machine Punches",
     "link_to": "Student Punch Log",
-    "type": "DocType",
-    "idx": 12
+    "type": "DocType"
+   },
+   {
+    "color": "Grey",
+    "doc_view": "",
+    "label": "Meet Class Sync",
+    "link_to": "Meet Class Sync",
+    "type": "DocType"
    }
   ],
   "title": "TNC Admissions"

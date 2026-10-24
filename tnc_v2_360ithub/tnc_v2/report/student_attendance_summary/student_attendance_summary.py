@@ -6,7 +6,7 @@ Absent / Leave, attendance %, the current run of consecutive absences, and the h
 Batch view: one row per batch: class days held, students, totals, average %, students on hold.
 Month view: one row per student, batch and month.
 
-Attendance % = (Present + Late) / (Present + Late + Absent). Leave days are not counted
+Attendance % = (Present + Late) / (Present + Late + Partial + Absent). Leave days are not counted
 against the student. Class days = attendance rows in the period (the daily build writes one
 per enrolment per class day). "Only students on hold" keeps enrolments whose status is On Hold.
 """
@@ -63,16 +63,17 @@ COUNTS = """
 	count(*) as class_days,
 	sum(a.status = 'Present') as present,
 	sum(a.status = 'Late') as late,
+	sum(a.status = 'Partial') as partial,
 	sum(a.status = 'Absent') as absent,
 	sum(a.status = 'Leave') as leave_days,
 	max(case when a.status in ('Present', 'Late') then a.date end) as last_present"""
 
 
 def _pct(r):
-	for k in ("class_days", "students", "present", "late", "absent", "leave_days", "on_hold", "consecutive_absences"):
+	for k in ("class_days", "students", "present", "late", "partial", "absent", "leave_days", "on_hold", "consecutive_absences"):
 		if k in r:
 			r[k] = cint(r[k])
-	counted = cint(r.present) + cint(r.late) + cint(r.absent)
+	counted = cint(r.present) + cint(r.late) + cint(r.partial) + cint(r.absent)
 	r.pct = round(flt(cint(r.present) + cint(r.late)) / counted * 100, 1) if counted else 0
 	return r
 
@@ -82,6 +83,7 @@ def _count_cols():
 		{"fieldname": "class_days", "label": _("Class Days"), "fieldtype": "Int", "width": 95},
 		{"fieldname": "present", "label": _("Present"), "fieldtype": "Int", "width": 80},
 		{"fieldname": "late", "label": _("Late"), "fieldtype": "Int", "width": 70},
+		{"fieldname": "partial", "label": _("Partial"), "fieldtype": "Int", "width": 75},
 		{"fieldname": "absent", "label": _("Absent"), "fieldtype": "Int", "width": 80},
 		{"fieldname": "leave_days", "label": _("Leave"), "fieldtype": "Int", "width": 70},
 		{"fieldname": "pct", "label": _("Attendance %"), "fieldtype": "Percent", "width": 140},
@@ -131,6 +133,7 @@ def batch_columns():
 		{"fieldname": "students", "label": _("Students"), "fieldtype": "Int", "width": 85},
 		{"fieldname": "present", "label": _("Present"), "fieldtype": "Int", "width": 80},
 		{"fieldname": "late", "label": _("Late"), "fieldtype": "Int", "width": 70},
+		{"fieldname": "partial", "label": _("Partial"), "fieldtype": "Int", "width": 75},
 		{"fieldname": "absent", "label": _("Absent"), "fieldtype": "Int", "width": 80},
 		{"fieldname": "leave_days", "label": _("Leave"), "fieldtype": "Int", "width": 70},
 		{"fieldname": "pct", "label": _("Attendance %"), "fieldtype": "Percent", "width": 140},
@@ -143,7 +146,7 @@ def batch_rows(f):
 	where, vals = _where(f)
 	rows = frappe.db.sql(f"""
 		select a.batch, count(distinct a.date) as class_days, count(distinct a.enrollment) as students,
-			sum(a.status = 'Present') as present, sum(a.status = 'Late') as late,
+			sum(a.status = 'Present') as present, sum(a.status = 'Late') as late, sum(a.status = 'Partial') as partial,
 			sum(a.status = 'Absent') as absent, sum(a.status = 'Leave') as leave_days,
 			count(distinct case when e.status = 'On Hold' then a.enrollment end) as on_hold,
 			max(a.date) as last_class

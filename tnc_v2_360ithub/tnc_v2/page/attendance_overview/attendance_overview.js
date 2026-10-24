@@ -11,6 +11,7 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 	const fPeriod = page.add_field({ fieldname: "period", label: __("Period"), fieldtype: "DateRange", default: [state.from, state.to], change() {
 		const v = fPeriod.get_value(); if (v && v.length === 2 && v[0] && v[1]) { state.from = v[0]; state.to = v[1]; load(); }
 	} });
+	page.add_inner_button(`${frappe.utils.icon("refresh", "sm")} ${__("Refresh")}`, () => load());
 	page.set_secondary_action(__("Reports"), () => frappe.set_route("query-report", "Student Attendance Summary"));
 	if (frappe.route_options) {
 		if (frappe.route_options.student) { state.student = frappe.route_options.student; fStudent.set_value(state.student); }
@@ -23,8 +24,7 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 		.att-ov .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; box-shadow: 0 2px 10px rgba(15,23,42,.04); min-width: 0; }
 		.att-ov .card h6 { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 		.att-ov .head { display: flex; align-items: center; gap: 16px; background: linear-gradient(120deg, #2a7f95 0%, #3a9bb4 100%); color: #fff; border: 1px solid #2a7f95; border-radius: 16px; padding: 18px 22px; margin: 6px 0 14px; flex-wrap: wrap; }
-		.att-ov .avatar { width: 54px; height: 54px; border-radius: 50%; background: rgba(255,255,255,.22); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 20px; flex: none; }
-		.att-ov .avatar.sq { border-radius: 14px; }
+		.att-ov .avatar { width: 68px; height: 68px; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; padding: 3px; box-shadow: 0 2px 8px rgba(0,0,0,.18); } .att-ov .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
 		.att-ov .hname { font-size: 22px; font-weight: 700; line-height: 1.15; } .att-ov .hmeta { color: rgba(255,255,255,.92); font-size: 13px; margin-top: 3px; }
 		.att-ov .hbadge { margin-left: auto; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.45); color: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 13px; }
 		.att-ov .hbadge.bad { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
@@ -37,7 +37,10 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 		.att-ov .grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 14px; }
 		.att-ov .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; align-items: start; }
 		@media (max-width: 992px) { .att-ov .grid2, .att-ov .grid3 { grid-template-columns: 1fr; } }
-		.att-ov .chart { min-height: 0; } .att-ov .chart.donut { min-height: 250px; padding-bottom: 36px; } .att-ov .chart .chart-container, .att-ov .chart svg { overflow: visible; }
+		.att-ov .chart { min-height: 0; }
+		.att-ov .donut-wrap { display: flex; align-items: center; gap: 14px; } .att-ov .donut-wrap .chart { flex: 0 0 40%; min-width: 0; display: flex; align-items: center; justify-content: center; align-self: stretch; } .att-ov .donut-wrap .chart svg { width: 100%; height: auto; overflow: visible; transform: translateY(16%) scale(1.8); transform-origin: 50% 50%; } .att-ov .donut-wrap .chart-legend { display: none; }
+		.att-ov .donut-wrap .lg { flex: 0 0 calc(60% - 14px); display: flex; flex-direction: column; gap: 6px; min-width: 0; } .att-ov .lg-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 4px 8px; } .att-ov .lg-row i { width: 10px; height: 10px; border-radius: 3px; flex: none; } .att-ov .lg-row span { flex: 1; color: var(--ink); } .att-ov .lg-row b { font-weight: 800; font-variant-numeric: tabular-nums; }
+		.att-ov .donut-wrap .graph-svg-tip { font-size: 11px !important; padding: 0 !important; } .att-ov .donut-wrap .graph-svg-tip .title { font-size: 11px !important; font-weight: 600; text-transform: none; padding: 5px 8px !important; margin: 0 !important; } .att-ov .donut-wrap .graph-svg-tip ul.data-point-list li { min-width: 0 !important; padding: 0 8px 5px !important; font-size: 11px !important; } .att-ov .donut-wrap .graph-svg-tip ul.data-point-list { margin: 0 !important; } .att-ov .donut-wrap .graph-svg-tip .svg-pointer { display: none; } .att-ov .chart .chart-container, .att-ov .chart svg { overflow: visible; }
 		.att-ov table { font-size: 13px; margin: 0; } .att-ov td, .att-ov th { padding: 9px 10px !important; vertical-align: middle; border-color: var(--line) !important; }
 		.att-ov th { background: #f1f5f9; font-weight: 700; color: #334155; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
 		.att-ov tbody tr:hover td { background: #f1f5f9; } .att-ov tr.row-link { cursor: pointer; }
@@ -57,6 +60,7 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 		.att-ov .cal-cell b { display: block; font-weight: 600; } .att-ov .cal-cell span { font-size: 11px; font-weight: 600; }
 		.att-ov .cal-cell.empty { border: 0; background: transparent; } .att-ov .cal-cell.none { color: #94a3b8; background: #f8fafc; border-color: #f1f5f9; }
 		.att-ov .cal-cell.Present { background: var(--ok-bg); border-color: #86efac; color: #166534; cursor: pointer; } .att-ov .cal-cell.Late { background: var(--warn-bg); border-color: #fcd34d; color: #92400e; cursor: pointer; }
+		.att-ov .cal-cell.Partial { background: #fef9c3; border-color: #fde047; color: #854d0e; cursor: pointer; }
 		.att-ov .cal-cell.Absent { background: var(--bad-bg); border-color: #fca5a5; color: #991b1b; cursor: pointer; } .att-ov .cal-cell.Leave { background: var(--info-bg); border-color: #93c5fd; color: #1e40af; cursor: pointer; }
 		.att-ov .legend { font-size: 12px; color: var(--muted); margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 		.att-ov .legend span { padding: 1px 8px; border-radius: 6px; } .att-ov .legend .Present { background: var(--ok-bg); } .att-ov .legend .Late { background: var(--warn-bg); } .att-ov .legend .Absent { background: var(--bad-bg); } .att-ov .legend .Leave { background: var(--info-bg); } .att-ov .legend .none { background: #f1f5f9; }
@@ -91,6 +95,8 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 	const hhmm = (t) => { if (!t) return ""; const [h, m] = String(t).split(":"); const H = parseInt(h, 10); return `${H % 12 || 12}:${m} ${H < 12 ? "AM" : "PM"}`; };
 	const inout = (x) => x.in_time ? `${hhmm(x.in_time)}${x.out_time ? " – " + hhmm(x.out_time) : ""}` : "—";
 	const dshort = (d) => moment(d).format("D MMM");
+	const DONUT = [["Present", "#16a34a"], ["Late", "#d97706"], ["Partial", "#eab308"], ["Absent", "#dc2626"], ["Leave", "#2563eb"]];
+	const donutCard = (title, vals) => `<div class="card"><h6>${title}</h6><div class="donut-wrap"><div id="c-donut" class="chart"></div><div class="lg">${DONUT.map(([l, c], i) => `<div class="lg-row"><i style="background:${c}"></i><span>${__(l)}</span><b>${vals[i] || 0}</b></div>`).join("")}</div></div></div>`;
 
 	function chart(sel, opts) {
 		const el = $body.find(sel)[0];
@@ -100,7 +106,7 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 	// subjects as a scrollable list with a bar each (28 subjects do not fit a bar chart)
 	const subjectList = (subjects, batchView) => subjects.length
 		? `<div class="subj-list">${subjects.map(x => `<div class="subj-row"><div class="subj-name" title="${esc(x.subject)}">${esc(x.subject)}<small>${batchView
-			? `${x.classes} ${x.classes === 1 ? __("class") : __("classes")}`
+			? `${x.classes} ${x.classes === 1 ? __("class") : __("classes")} · ${__("{0} of {1} attended", [x.present, x.held - x.leave])}`
 			: `${x.classes} ${x.classes === 1 ? __("class") : __("classes")} · ${__("attended")} ${x.present}/${x.held - x.leave}`}${!batchView && x.partial ? ` · ${__("partial")} ${x.partial}` : ""}${!batchView && x.leave ? ` · ${__("leave")} ${x.leave}` : ""}</small></div>${bar(x.pct)}</div>`).join("")}</div>`
 		: `<div class="text-muted">${__("No classes with times yet.")}</div>`;
 	function subjectChart() {}
@@ -109,7 +115,7 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 		const start = frappe.datetime.str_to_obj(from), end = frappe.datetime.str_to_obj(to);
 		const months = [];
 		for (let m = new Date(start.getFullYear(), start.getMonth(), 1); m <= end; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) months.push(m);
-		const label = { Present: "P", Late: "L", Absent: "A", Leave: "Lv" };
+		const label = { Present: "P", Late: "L", Partial: "Pt", Absent: "A", Leave: "Lv" };
 		return months.map(m => {
 			const first = new Date(m.getFullYear(), m.getMonth(), 1), last = new Date(m.getFullYear(), m.getMonth() + 1, 0);
 			let cells = "";
@@ -120,7 +126,7 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 					: `<div class="cal-cell ${out ? "empty" : "none"}"><b>${dd}</b></div>`;
 			}
 			return `<div style="margin-bottom:10px"><div style="font-weight:700;margin-bottom:6px">${moment(m).format("MMMM YYYY")}</div><div class="cal-grid">${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(w => `<div class="cal-head">${w}</div>`).join("")}${cells}</div></div>`;
-		}).join("") + `<div class="legend"><span class="Present">P ${__("Present")}</span><span class="Late">L ${__("Late")}</span><span class="Absent">A ${__("Absent")}</span><span class="Leave">Lv ${__("Leave")}</span><span class="none">${__("no class")}</span><span>· 3/4 = ${__("classes attended")} · ${__("click a day to open it")}</span></div>`;
+		}).join("") + `<div class="legend"><span class="Present">P ${__("Present")}</span><span class="Late">L ${__("Late")}</span><span class="Partial" style="background:#fef9c3">Pt ${__("Partial · one punch")}</span><span class="Absent">A ${__("Absent")}</span><span class="Leave">Lv ${__("Leave")}</span><span class="none">${__("no class")}</span><span>· 3/4 = ${__("classes attended")} · ${__("click a day to open it")}</span></div>`;
 	}
 
 	function load() {
@@ -153,13 +159,24 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 				if (d.daily.length) chart("#c-trend", { type: "line", data: { labels: d.daily.map(x => dshort(x.date)), datasets: [{ name: __("Classes attended %"), values: d.daily.map(x => x.pct) }] },
 					colors: ["#146b7f"], lineOptions: { regionFill: 1, hideDots: 0 }, axisOptions: { xAxisMode: "tick", xIsSeries: true }, tooltipOptions: { formatTooltipY: (v) => v + "%" } });
 				const t = d.totals;
-				chart("#c-donut", { type: "donut", height: 200, maxSlices: 4, data: { labels: [__("Present"), __("Late"), __("Absent"), __("Leave")], datasets: [{ values: [t.present - t.late, t.late, t.absent, t.leave] }] }, colors: ["#16a34a", "#d97706", "#dc2626", "#2563eb"] });
+				chart("#c-donut", { type: "donut", height: 230, maxSlices: 5, data: { labels: [__("Present"), __("Late"), __("Partial"), __("Absent"), __("Leave")], datasets: [{ values: [t.present - t.late, t.late, t.partial || 0, t.absent, t.leave] }] }, colors: ["#16a34a", "#d97706", "#eab308", "#dc2626", "#2563eb"] });
 			} else {
 				subjectChart(d.subjects);
 				if (d.daily.length) chart("#c-trend", { type: "line", data: { labels: d.daily.map(x => dshort(x.date)), datasets: [{ name: __("Students present %"), values: d.daily.map(x => x.pct) }] },
 					colors: ["#146b7f"], lineOptions: { regionFill: 1 }, axisOptions: { xAxisMode: "tick", xIsSeries: true }, tooltipOptions: { formatTooltipY: (v) => v + "%" } });
 				const sc = d.status_counts || {};
-				chart("#c-donut", { type: "donut", height: 200, maxSlices: 4, data: { labels: [__("Present"), __("Late"), __("Absent"), __("Leave")], datasets: [{ values: [sc.Present || 0, sc.Late || 0, sc.Absent || 0, sc.Leave || 0] }] }, colors: ["#16a34a", "#d97706", "#dc2626", "#2563eb"] });
+				chart("#c-donut", { type: "donut", height: 230, maxSlices: 5, data: { labels: [__("Present"), __("Late"), __("Partial"), __("Absent"), __("Leave")], datasets: [{ values: [sc.Present || 0, sc.Late || 0, sc.Partial || 0, sc.Absent || 0, sc.Leave || 0] }] }, colors: ["#16a34a", "#d97706", "#eab308", "#dc2626", "#2563eb"] });
+				// one-punch days: add the missing punch after the teacher confirms; the row rebuilds at once
+				$body.find("[data-addpunch]").on("click", (e) => {
+					e.stopPropagation();
+					const $b = $(e.currentTarget), student = $b.attr("data-student"), date = $b.attr("data-date"), dir = $b.attr("data-dir"), tm = $b.attr("data-time") || "17:00:00";
+					frappe.prompt([
+						{ fieldname: "punch_time", fieldtype: "Datetime", label: __("Punch time"), default: `${date} ${tm}`, reqd: 1 },
+						{ fieldname: "direction", fieldtype: "Select", label: __("Direction"), options: ["IN", "OUT"], default: dir, reqd: 1 },
+						{ fieldtype: "HTML", options: `<div class="text-muted small">${__("Only after the teacher confirms the student was in class. Saved with device MANUAL and your name; the day is rebuilt at once.")}</div>` },
+					], (v) => frappe.call({ method: "tnc_v2_360ithub.attendance.punches.add_manual", args: { student, punch_time: v.punch_time, direction: v.direction }, freeze: true }).then(() => { frappe.show_alert({ message: __("Punch added"), indicator: "green" }); load(); }),
+					__("Add the missing {0} punch for {1}", [dir, $b.attr("data-name")]), __("Add punch"));
+				});
 				$body.find("[data-pop]").on("click", (e) => {
 					const which = $(e.currentTarget).attr("data-pop");
 					if (which === "days") popTable(__("Class days"), [__("Date"), __("Subject"), __("Teacher"), __("Time"), __("Attendance")],
@@ -180,7 +197,7 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 		const inRow = Math.max(0, ...d.enrolments.map(e => e.consecutive_absences || 0));
 		const initials = (s.student_name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 		return `
-			<div class="head"><div class="avatar">${esc(initials)}</div><div><div class="hname">${esc(s.student_name)}</div><div class="hmeta">${esc(s.mobile || "")} · ${d.enrolments.map(e => esc(e.batch)).join(", ") || __("not enrolled")} · ${frappe.datetime.str_to_user(d.from_date)} – ${frappe.datetime.str_to_user(d.to_date)}${s.biometric_id ? "" : ` · ${__("no Biometric ID")}`}</div></div>
+			<div class="head"><div class="avatar"><img src="${esc(d.logo || "")}" alt=""></div><div><div class="hname">${esc(s.student_name)}</div><div class="hmeta">${esc(s.mobile || "")} · ${d.enrolments.map(e => esc(e.batch)).join(", ") || __("not enrolled")} · ${frappe.datetime.str_to_user(d.from_date)} – ${frappe.datetime.str_to_user(d.to_date)}${s.biometric_id ? "" : ` · ${__("no Biometric ID")}`}</div></div>
 				<div class="hbadge ${held.length ? "bad" : ""}">${held.length ? __("ON HOLD since {0}", [frappe.datetime.str_to_user(held[0].hold_on)]) : __("Active")}</div></div>
 			<div class="kpis">
 				${kpi(t.day_pct + "%", __("Attendance · {0} of {1} days", [t.present, t.class_days - t.leave]) + (t.leave ? ` · ${t.leave} ${__("leave")}` : ""), cls(t.day_pct), "check", "sdays")}
@@ -191,7 +208,7 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 			<div class="grid3">
 				<div class="card"><h6>${__("Classes attended, day by day")}</h6><div id="c-trend" class="chart"></div></div>
 				<div class="card"><h6>${__("By subject")} <small class="text-muted" style="text-transform:none;letter-spacing:0">${__("lowest first")}</small></h6>${subjectList(d.subjects)}</div>
-				<div class="card"><h6>${__("Days")}</h6><div id="c-donut" class="chart donut"></div></div>
+				${donutCard(__("Days"), [t.present - t.late, t.late, t.partial || 0, t.absent, t.leave])}
 			</div>
 			<div class="grid2">
 				<div class="card"><h6>${__("Calendar")}</h6>${calendar(d.days, d.from_date, d.to_date)}</div>
@@ -201,14 +218,14 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 			</div>
 			<div class="card"><h6>${__("Every class")}</h6>
 			<table class="table"><thead><tr><th>${__("Date")}</th><th>${__("Subject")}</th><th>${__("Class time")}</th><th>${__("Student in / out")}</th><th>${__("Status")}</th></tr></thead><tbody>
-			${d.days.slice().reverse().flatMap(x => x.classes.length ? x.classes.map((c, i) => `<tr class="row-link${i === 0 ? " day-start" : ""}" data-att="${esc(x.name)}"><td>${i === 0 ? `<b>${frappe.datetime.str_to_user(x.date)}</b>` : ""}</td><td><b>${esc(c.subject || "")}</b>${c.chapter ? `<br><span class="chap">${esc(c.chapter)}</span>` : ""}<br><small class="text-muted">${esc(c.teacher_name || "")}</small></td><td>${hhmm(c.from_time)} – ${hhmm(c.to_time)}</td><td>${inout(x)}</td><td>${pill(c.status)}${c.status === "Late" && x.in_time ? ` <small style="color:#b45309;font-weight:600">${__("by {0} min", [Math.max(0, Math.round((frappe.datetime.str_to_obj(x.date + " " + x.in_time) - frappe.datetime.str_to_obj(x.date + " " + c.from_time)) / 60000))])}</small>` : ""}${c.status !== "Absent" ? ` <small class="text-muted">· ${c.covered_minutes} ${__("min")}</small>` : ""}</td></tr>`) : [`<tr class="row-link day-start" data-att="${esc(x.name)}"><td><b>${frappe.datetime.str_to_user(x.date)}</b></td><td class="text-muted">${__("day only")}</td><td></td><td>${inout(x)}</td><td>${pill(x.status)}</td></tr>`]).join("") || `<tr><td colspan="5" class="text-muted">${__("Nothing yet.")}</td></tr>`}
+			${d.days.slice().reverse().flatMap(x => x.classes.length ? x.classes.map((c, i) => `<tr class="row-link${i === 0 ? " day-start" : ""}" data-att="${esc(x.name)}"><td>${i === 0 ? `<b>${frappe.datetime.str_to_user(x.date)}</b>` : ""}</td><td><b>${esc(c.subject || "")}</b>${c.chapter ? `<br><span class="chap">${esc(c.chapter)}</span>` : ""}<br><small class="text-muted">${esc(c.teacher_name || "")}</small></td><td>${hhmm(c.from_time)} – ${hhmm(c.to_time)}</td><td>${inout(x)}</td><td>${pill(c.status)}${c.status === "Late" && x.in_time ? ` <small style="color:#b45309;font-weight:600">${__("by {0} min", [Math.max(0, Math.round((frappe.datetime.str_to_obj(x.date + " " + x.in_time) - frappe.datetime.str_to_obj(x.date + " " + c.from_time)) / 60000))])}</small>` : ""}${x.source === "Manual" ? ` <small class="text-muted">· ${__("marked by staff")}</small>` : c.status !== "Absent" ? ` <small class="text-muted">· ${c.covered_minutes} ${__("min")}</small>` : ""}</td></tr>`) : [`<tr class="row-link day-start" data-att="${esc(x.name)}"><td><b>${frappe.datetime.str_to_user(x.date)}</b></td><td class="text-muted">${__("day only")}</td><td></td><td>${inout(x)}</td><td>${pill(x.status)}${x.source === "Manual" ? ` <small class="text-muted">· ${__("marked by staff")}</small>` : ""}</td></tr>`]).join("") || `<tr><td colspan="5" class="text-muted">${__("Nothing yet.")}</td></tr>`}
 			</tbody></table></div>`;
 	}
 
 	function renderBatch(d) {
 		const name = d.batch.batch_name || d.batch.name;
 		return `
-			<div class="head"><div class="avatar sq">${esc(name.slice(0, 2).toUpperCase())}</div><div><div class="hname">${esc(name)}</div><div class="hmeta">${esc(d.batch.mode || "")} · ${d.enrolled} ${__("students")} · ${frappe.datetime.str_to_user(d.from_date)} – ${frappe.datetime.str_to_user(d.to_date)}</div></div>
+			<div class="head"><div class="avatar"><img src="${esc(d.logo || "")}" alt=""></div><div><div class="hname">${esc(name)}</div><div class="hmeta">${esc(d.batch.mode || "")} · ${d.enrolled} ${__("students")} · ${frappe.datetime.str_to_user(d.from_date)} – ${frappe.datetime.str_to_user(d.to_date)}</div></div>
 				<div class="hbadge ${d.on_hold ? "bad" : ""}">${d.on_hold ? __("{0} on hold", [d.on_hold]) : __("No holds")}</div></div>
 			<div class="kpis">
 				${kpi(d.avg_pct + "%", __("Average attendance"), cls(d.avg_pct), "check")}
@@ -218,13 +235,17 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 			</div>
 			<div class="grid3">
 				<div class="card"><h6>${__("Students present, by class day")}</h6><div id="c-trend" class="chart"></div></div>
-				<div class="card"><h6>${__("By subject")} <small class="text-muted" style="text-transform:none;letter-spacing:0">${__("students present, lowest first")}</small></h6>${subjectList(d.subjects, true)}</div>
-				<div class="card"><h6>${__("Student-days")}</h6><div id="c-donut" class="chart donut"></div></div>
+				<div class="card"><h6 title="${__("% = students who attended the subject's classes ÷ students expected (less leave). Each student in each class counts once: 2 classes × 257 students = 514.")}">${__("By subject")} <small class="text-muted" style="text-transform:none;letter-spacing:0">${__("% of students who attended, lowest first")}</small></h6>${subjectList(d.subjects, true)}</div>
+				${donutCard(__("Student-days"), [(d.status_counts || {}).Present || 0, (d.status_counts || {}).Late || 0, (d.status_counts || {}).Partial || 0, (d.status_counts || {}).Absent || 0, (d.status_counts || {}).Leave || 0])}
 			</div>
+			${(d.single_punch || []).length ? `<div class="card" style="margin-bottom:14px"><h6>${__("One punch only")} <small class="text-muted" style="text-transform:none;letter-spacing:0">${__("{0} days · IN without OUT or OUT without IN · add the missing punch once the teacher confirms", [d.single_punch.length])}</small></h6>
+				<table class="table"><thead><tr><th>${__("Student")}</th><th>${__("Date")}</th><th>${__("Punch")}</th><th>${__("Status")}</th><th></th></tr></thead><tbody>
+				${d.single_punch.slice().reverse().map(x => { const inOnly = (x.note || "").startsWith("In only"); return `<tr class="row-link" data-att="${esc(x.name)}"><td><b>${esc(x.student_name)}</b></td><td>${frappe.datetime.str_to_user(x.date)}</td><td>${inOnly ? `${__("IN")} ${hhmm(x.in_time)} · <span style="color:#b45309">${__("no OUT")}</span>` : `<span style="color:#b45309">${__("no IN")}</span> · ${__("OUT")} ${hhmm(x.out_time)}`}</td><td>${pill(x.status)}</td><td><button class="btn btn-xs btn-default" data-addpunch data-student="${esc(x.student)}" data-name="${esc(x.student_name)}" data-date="${esc(x.date)}" data-dir="${inOnly ? "OUT" : "IN"}" data-time="${inOnly ? "" : "10:00:00"}">${__("Add {0} punch", [inOnly ? "OUT" : "IN"])}</button></td></tr>`; }).join("")}
+				</tbody></table></div>` : ""}
 			<div class="card">
 				<div class="toolbar"><h6 style="margin:0">${__("Students")} <small class="text-muted" style="text-transform:none;letter-spacing:0">${__("lowest first · click a name")}</small></h6><input id="stu-q" type="search" placeholder="${__("Search student")}"></div>
 				<table class="table"><thead><tr><th>${__("Student")}</th><th title="${__("Classes attended out of classes held; days when the timesheet has no class time")}">${__("Attendance (classes)")}</th><th>${__("Days present")}</th><th>${__("Classes attended")}</th><th>${__("Late")}</th><th title="${__("Classes missed one after another; resets when the student attends")}">${__("Consecutive absences")}</th><th>${__("Status")}</th></tr></thead><tbody>
-				${d.students.map(s => `<tr class="row-link" data-student="${esc(s.student)}"><td><b>${esc(s.student_name)}</b></td><td>${bar(s.classes ? s.class_pct : s.day_pct)}</td><td>${s.present + s.late}/${s.days}${s.leave ? ` <small class="text-muted">${s.leave} ${__("leave")}</small>` : ""}</td><td>${s.classes ? `${s.classes_present}/${s.classes}` : "—"}</td><td>${s.late || 0}</td><td>${s.consecutive_absences ? `<b style="color:var(--bad)">${s.consecutive_absences}</b>` : 0}</td><td>${s.enrol_status === "On Hold" ? `<span class="pill Absent">${__("On Hold")}</span>` : `<span class="pill Present">${__("Active")}</span>`}</td></tr>`).join("") || `<tr><td colspan="7" class="text-muted">${__("No attendance in this period. Students need a Biometric ID, an enrolment in the batch, and a teacher timesheet with class time.")}</td></tr>`}
+				${d.students.map(s => `<tr class="row-link" data-student="${esc(s.student)}"><td><b>${esc(s.student_name)}</b></td><td>${bar(s.classes ? s.class_pct : s.day_pct)}</td><td>${s.present + s.late}/${s.days}${s.partial ? ` <small style="color:#854d0e">${s.partial} ${__("partial")}</small>` : ""}${s.leave ? ` <small class="text-muted">${s.leave} ${__("leave")}</small>` : ""}</td><td>${s.classes ? `${s.classes_present}/${s.classes}` : "—"}</td><td>${s.late || 0}</td><td>${s.consecutive_absences ? `<b style="color:var(--bad)">${s.consecutive_absences}</b>` : 0}</td><td>${s.enrol_status === "On Hold" ? `<span class="pill Absent">${__("On Hold")}</span>` : `<span class="pill Present">${__("Active")}</span>`}</td></tr>`).join("") || `<tr><td colspan="7" class="text-muted">${__("No attendance in this period. Students need a Biometric ID, an enrolment in the batch, and a teacher timesheet with class time.")}</td></tr>`}
 				</tbody></table>
 			</div>`;
 	}
