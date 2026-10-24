@@ -36,7 +36,13 @@ def _settings():
 def redirect_uri():
 	"""Where Google sends the browser back: the address this page was opened with (live:
 	https://tnc.360ithub.com; local test: http://localhost:8000), as registered on the OAuth client."""
-	base = frappe.request.host_url.rstrip("/") if getattr(frappe.local, "request", None) else get_url()
+	if getattr(frappe.local, "request", None):
+		host = frappe.request.host
+		# behind the live reverse proxy the request arrives as http; Google only accepts the https address
+		scheme = "http" if host.split(":")[0] in ("localhost", "127.0.0.1") else "https"
+		base = f"{scheme}://{host}"
+	else:
+		base = get_url().rstrip("/")
 	return base + "/api/method/tnc_v2_360ithub.meet.oauth_callback"
 
 
