@@ -84,7 +84,7 @@ def batches_with_class(date):
 	if _settings().source == "Batch class days":
 		if is_holiday(date):
 			return []
-		for b in frappe.get_all("Student Batch", filters={"status": ["!=", "Completed"]}, fields=["name", "start_time", "late_after_minutes", "mode"] + DAY_FIELDS):
+		for b in frappe.get_all("Student Batch", filters={"status": ["!=", "Completed"]}, fields=["name", "start_time", "late_after_minutes", "mode", "meet_link"] + DAY_FIELDS):
 			if b.get(DAY_FIELDS[date.weekday()]):
 				b.windows = class_windows(b.name, date)
 				out.append(b)
@@ -96,7 +96,7 @@ def batches_with_class(date):
 		where ts.date = %s and ts.docstatus < 2 and ifnull(a.batch, '') != ''
 		and a.from_time is not null and a.to_time is not null""", getdate(date))
 	for n in names:
-		b = frappe.db.get_value("Student Batch", n, ["name", "start_time", "late_after_minutes", "mode"], as_dict=True)
+		b = frappe.db.get_value("Student Batch", n, ["name", "start_time", "late_after_minutes", "mode", "meet_link"], as_dict=True)
 		if b:
 			b.windows = [w for w in class_windows(n, date) if w.from_time is not None]
 			if b.windows:
@@ -106,9 +106,25 @@ def batches_with_class(date):
 
 # ---------- one student-day ----------
 
-def _punches(student, date):
-	return frappe.get_all("Student Punch Log", filters={"student": student, "punch_time": ["between", [f"{date} 00:00:00", f"{date} 23:59:59"]]},
-		fields=["punch_time", "direction"], order_by="punch_time asc")
+def is_online(batch):
+	"""An online batch is marked from Google Meet only: never from the biometric machines."""
+	return batch.get("mode") == "Online" or bool(batch.get("meet_link"))
+
+
+def meet_ready(batch, date):
+	"""True when Google Meet data for this batch-day has been pulled (a Synced Meet Class Sync exists).
+	Until then an online class day is not built at all, so nobody is marked absent for a class the
+	server has not seen: before the account is connected, or before the 15-minute sync has run."""
+	return bool(frappe.db.exists("Meet Class Sync", {"batch": batch.name, "date": getdate(date), "status": "Synced"}))
+
+
+def _punches(student, date, online=False):
+	"""The day's punches that count for this batch: Meet punches (device MEET:…) for an online
+	batch, machine punches for an offline one, never mixed."""
+	return frappe.db.sql(f"""select punch_time, direction from `tabStudent Punch Log`
+		where student = %(student)s and punch_time between %(start)s and %(end)s
+		and ifnull(device_id, '') {"like" if online else "not like"} 'MEET:%%'
+		order by punch_time asc""", {"student": student, "start": f"{date} 00:00:00", "end": f"{date} 23:59:59"}, as_dict=True)
 
 
 def _in_out(punches, date):
@@ -307,13 +323,13 @@ def build_day(date=None, batch=None, student=None, notify=True):
 	`batch` / `student` narrow it. Returns counts."""
 	date = getdate(date or nowdate())
 	counts = frappe._dict(present=0, late=0, partial=0, absent=0, skipped=0, removed=0)
-	batches = [b for b in batches_with_class(date) if not batch or b.name == batch]
+	batches = [b for b in batches_with_class(date) if (not batch or b.name == batch) and (not is_online(b) or meet_ready(b, date))]
 	for b in batches:
 		filters = dict(ENROLMENT_FILTERS, batch=b.name)
 		if student:
 			filters["student"] = student
 		for e in frappe.get_all("Student Batch Enrollment", filters=filters, fields=["name", "student", "student_name", "status"]):
-			status = write_row(e, b, date, _punches(e.student, date))
+			status = write_row(e, b, date, _punches(e.student, date, is_online(b)))
 			if status is None:
 				counts.skipped += 1
 				continue
@@ -351,8 +367,10 @@ def on_punch(doc, method=None):
 	Present / In time while the day is running. Absences are only written by the nightly run."""
 	date = getdate(doc.punch_time)
 	for b in batches_with_class(date):
+		if is_online(b) and not meet_ready(b, date):
+			continue
 		for e in frappe.get_all("Student Batch Enrollment", filters=dict(ENROLMENT_FILTERS, batch=b.name, student=doc.student), fields=["name", "student", "student_name", "status"]):
-			write_row(e, b, date, _punches(e.student, date))
+			write_row(e, b, date, _punches(e.student, date, is_online(b)))
 			update_hold(e.name, date, notify=False)
 
 
