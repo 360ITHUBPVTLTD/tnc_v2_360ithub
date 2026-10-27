@@ -29,13 +29,10 @@ def is_manager(user=None):
 	return bool(MANAGER_ROLES & set(frappe.get_roles(user)))
 
 
-NO_BATCH = "__none__"  # Batch filter value for "no batch chosen yet"
-
-
 @frappe.whitelist()
 def batch_options():
-	"""Batch filter choices: every batch plus the no-batch bucket."""
-	return [{"value": b.name, "label": b.batch_name or b.name} for b in frappe.get_all("Student Batch", fields=["name", "batch_name"], order_by="status, batch_name")] + [{"value": NO_BATCH, "label": _("(No batch chosen yet)")}]
+	"""Batch filter choices: every batch."""
+	return [{"value": b.name, "label": b.batch_name or b.name} for b in frappe.get_all("Student Batch", fields=["name", "batch_name"], order_by="status, batch_name")]
 
 
 @frappe.whitelist()
@@ -44,10 +41,7 @@ def get_overview(batch=None, counsellor=None, from_date=None, to_date=None):
 	if not manager:
 		counsellor = frappe.session.user  # a counsellor sees their own enquiries whatever the request says
 	filters = {}
-	no_batch = batch == NO_BATCH
-	if no_batch:
-		filters["batch_interested"] = ["is", "not set"]  # enquiries where the batch has not been chosen yet
-	elif batch:
+	if batch:
 		filters["batch_interested"] = batch
 	if counsellor:
 		filters["counsellor"] = counsellor
@@ -156,10 +150,8 @@ def get_overview(batch=None, counsellor=None, from_date=None, to_date=None):
 	for r in rows:
 		if r["status"] == "Lost":
 			lost_reasons[r["lost_reason"] or _("(no reason)")] = lost_reasons.get(r["lost_reason"] or _("(no reason)"), 0) + 1
-	b = frappe.db.get_value("Student Batch", batch, ["batch_name", "mode", "status", "seats"], as_dict=True) if batch and not no_batch else None
-	if no_batch:
-		b = frappe._dict(batch_name=_("Enquiries without a batch"), none=1)
-	enrolled = frappe.db.count("Student Batch Enrollment", {"batch": batch, "docstatus": 1, "status": ["in", ["Active", "On Hold"]]}) if b and not no_batch else None
+	b = frappe.db.get_value("Student Batch", batch, ["batch_name", "mode", "status", "seats"], as_dict=True) if batch else None
+	enrolled = frappe.db.count("Student Batch Enrollment", {"batch": batch, "docstatus": 1, "status": ["in", ["Active", "On Hold"]]}) if b else None
 	from tnc_v2_360ithub.branding import institute_logo
 	return {
 		"logo": institute_logo(), "manager": manager, "batch": dict(b, name=batch) if b else None, "counsellor": counsellor, "counsellor_name": user_names.get(counsellor) or (frappe.db.get_value("User", counsellor, "full_name") if counsellor else None),

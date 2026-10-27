@@ -147,7 +147,8 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Batch Interested",
-   "options": "Student Batch"
+   "options": "Student Batch",
+   "reqd": 1
   },
   {
    "depends_on": "eval:doc.batch_interested",
@@ -393,7 +394,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-18 14:48:17.639509",
+ "modified": "2026-10-27 11:30:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Student Enquiry",

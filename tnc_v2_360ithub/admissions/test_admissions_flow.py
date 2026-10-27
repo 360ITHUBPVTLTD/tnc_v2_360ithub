@@ -31,7 +31,7 @@ def run_tests():
 
 		# funnel
 		enq = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Parity Priya", "mobile": "9000000001", "email": "priya.parity@example.com",
-			"course_interested": course.name, "source": "Walk-in", "gender": "Female", "city": "Jaipur"}).insert()
+			"course_interested": course.name, "batch_interested": batch.name, "source": "Walk-in", "gender": "Female", "city": "Jaipur"}).insert()
 		assert enq.status == "New" and enq.name.startswith("ENQ-")
 		demo = frappe.get_doc("Demo Class", schedule_demo(enq.name, batch.name, today(), "10:00:00", "11:00:00"))
 		assert frappe.db.get_value("Student Enquiry", enq.name, "status") == "Demo Scheduled"
@@ -51,7 +51,7 @@ def run_tests():
 		print("  - Enquiry -> 2 demos (no-show, attended) -> follow-up: statuses and overview ok")
 
 		# lost and reopen on a second enquiry
-		enq2 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Parity Lost", "mobile": "9000000002", "course_interested": course.name, "source": "Call"}).insert()
+		enq2 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Parity Lost", "mobile": "9000000002", "course_interested": course.name, "batch_interested": batch.name, "source": "Call"}).insert()
 		schedule_demo(enq2.name, batch.name, add_days(today(), 3), "09:00:00", "10:00:00")
 		frappe.get_doc({"doctype": "Student Follow-Up", "reference_type": "Student Enquiry", "reference_name": enq2.name, "notes": "try again", "next_follow_up_date": add_days(today(), 1)}).insert()
 		r = mark_lost(enq2.name, "Fee too high", "wanted 20% off")
@@ -59,7 +59,7 @@ def run_tests():
 		assert enq2.status == "Lost" and enq2.lost_reason == "Fee too high" and str(enq2.lost_on) == today() and enq2.next_follow_up is None
 		assert r["closed_follow_ups"] == 1 and r["cancelled_demos"] == 1
 		assert frappe.db.get_value("Demo Class", {"enquiry": enq2.name}, "result") == "Cancelled"
-		e3 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "x", "mobile": "1", "status": "Lost"}).insert()
+		e3 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "x", "mobile": "1", "batch_interested": batch.name, "status": "Lost"}).insert()
 		assert e3.status == "New", "a new enquiry always starts New whatever was typed"
 		e3.status = "Demo Attended"; e3.save()
 		assert e3.status == "New", "manual status change is reverted"
@@ -83,7 +83,7 @@ def run_tests():
 		# duplicate detection and linking
 		dup = check_duplicates("+91 9000000001")
 		assert [x.name for x in dup["students"]] == [student.name], "same 10 digits finds the student"
-		enq_dup = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Priya again", "mobile": "9000000001", "course_interested": course.name, "source": "Call"}).insert()
+		enq_dup = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Priya again", "mobile": "9000000001", "course_interested": course.name, "batch_interested": batch.name, "source": "Call"}).insert()
 		assert convert_to_student(enq_dup.name, link_student=student.name) == student.name
 		assert frappe.db.get_value("Student Enquiry", enq_dup.name, ["status", "student"]) == ("Converted", student.name)
 		assert frappe.db.count("Student", {"mobile": "9000000001"}) == 1, "no second student created"
@@ -203,7 +203,7 @@ def run_tests():
 		frappe.set_user("Guest")
 		try:
 			from tnc_v2_360ithub.admissions import invites as _inv
-			r = accept("enquiry", frappe.as_json({"student_name": "Web Parity", "mobile": "9000000009", "preferred_mode": "Online", "source": "Other", "invite_token": _inv.sign("9000000009")}))
+			r = accept("enquiry", frappe.as_json({"student_name": "Web Parity", "mobile": "9000000009", "preferred_mode": "Online", "batch_interested": batch.name, "source": "Other", "invite_token": _inv.sign("9000000009")}))
 		finally:
 			frappe.set_user(saved_user)
 		web_enq = frappe.get_doc("Student Enquiry", r.name if hasattr(r, "name") else r["name"])
@@ -223,7 +223,7 @@ def run_tests():
 		assert st.terms_accepted == 1 and st.terms_version == af.terms_version and st.admission_form == af.name and st.blood_group == "O+" and st.emergency_contact == "9000000099" and st.fathers_name == "Ram"
 		assert frappe.db.get_value("Admission Form", af.name, "status") == "Applied"
 		# enquiry -> demo -> admission form with the enquiry link -> Convert uses the form
-		enq3 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Form Flow", "mobile": "9000000055", "course_interested": course.name, "source": "Walk-in"}).insert()
+		enq3 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Form Flow", "mobile": "9000000055", "course_interested": course.name, "batch_interested": batch.name, "source": "Walk-in"}).insert()
 		af3 = frappe.get_doc({"doctype": "Admission Form", "enquiry": enq3.name, "student_name": "form flow", "date_of_birth": "2002-02-02", "gender": "Female", "mobile": "9000000055",
 			"residential_address": "Gaya", "emergency_contact": "9000000056", "blood_group": "A+", "terms_accepted": 1, "guardian_consent": 1}).insert()
 		assert af3.enquiry == enq3.name and af3.course_interested == course.name, "form attaches to the enquiry named in the link"
@@ -252,7 +252,7 @@ def run_tests():
 		demo_f.result = "Not Attended"; demo_f.save(ignore_permissions=True)
 		assert frappe.db.count("Student Follow-Up", {"reference_name": enq3.name, "purpose": "Demo", "status": "Open"}) == n_after, "no duplicate follow-up"
 		# a second open demo for the same enquiry is refused (double-click safety)
-		enq_d = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Double Click", "mobile": "9000000701", "source": "Walk-in", "counsellor": "Administrator"}).insert()
+		enq_d = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Double Click", "mobile": "9000000701", "source": "Walk-in", "counsellor": "Administrator", "batch_interested": batch.name}).insert()
 		frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_d.name, "batch": batch.name, "demo_date": today(), "from_time": "11:00:00", "to_time": "12:00:00", "result": "Scheduled"}).insert()
 		try:
 			frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_d.name, "batch": batch.name, "demo_date": today(), "from_time": "11:00:00", "to_time": "12:00:00", "result": "Scheduled"}).insert()
@@ -262,7 +262,7 @@ def run_tests():
 		# demo fee: collected at the demo, deducted on enrolment, refundable while Paid
 		from tnc_v2_360ithub.admissions import demo_fee
 		frappe.db.set_single_value("TNC Settings", {"demo_fee_amount": 500, "demo_fee_adjust": 1}); frappe.clear_cache(doctype="TNC Settings")
-		enq_f = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Fee Demo", "mobile": "9000000501", "source": "Walk-in", "counsellor": "Administrator"}).insert()
+		enq_f = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Fee Demo", "mobile": "9000000501", "source": "Walk-in", "counsellor": "Administrator", "batch_interested": batch.name}).insert()
 		d1 = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_f.name, "batch": batch.name, "demo_date": today(), "result": "Attended"}).insert()
 		r1 = demo_fee.collect(d1.name, None, "Cash")
 		d1.reload(); enq_f.reload()
@@ -361,16 +361,16 @@ def run_tests():
 		assert invites.enquiry_invite_state("9000000077", tok).get("mobile") == "9000000077"
 		assert invites.enquiry_invite_state("9000000077", "bad") == {"valid": False}
 		try:
-			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Forwarded", "mobile": "9000000088", "invite_token": tok, "source": "Other"}).insert(ignore_permissions=True)
+			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Forwarded", "mobile": "9000000088", "invite_token": tok, "source": "Other", "batch_interested": batch.name}).insert(ignore_permissions=True)
 			raise AssertionError("enquiry with another mobile on a personal link must be refused")
 		except frappe.PermissionError:
 			pass
-		e_inv = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Invited", "mobile": "9000000077", "invite_token": tok, "source": "Other"}).insert(ignore_permissions=True)
+		e_inv = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Invited", "mobile": "9000000077", "invite_token": tok, "source": "Other", "batch_interested": batch.name}).insert(ignore_permissions=True)
 		assert "closed" in invites.enquiry_invite_state("9000000077", tok), "used enquiry link reports closed"
 		old_tok = invites.sign("9000000077", ts=1)
 		assert invites.valid("9000000077", old_tok) and "expired" in invites.enquiry_invite_state("9000000077", old_tok)["closed"], "a 48h-old link is expired"
 		try:
-			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Invited Again", "mobile": "9000000077", "invite_token": tok, "source": "Other"}).insert(ignore_permissions=True)
+			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Invited Again", "mobile": "9000000077", "invite_token": tok, "source": "Other", "batch_interested": batch.name}).insert(ignore_permissions=True)
 			raise AssertionError("second enquiry on the same link must be refused")
 		except frappe.DuplicateEntryError:
 			pass
@@ -378,7 +378,7 @@ def run_tests():
 		user = frappe.session.user
 		frappe.set_user("Guest")
 		try:
-			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "No Link", "mobile": "9000000099", "source": "Other"}).insert(ignore_permissions=True)
+			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "No Link", "mobile": "9000000099", "source": "Other", "batch_interested": batch.name}).insert(ignore_permissions=True)
 			raise AssertionError("guest without a personal link must be refused")
 		except frappe.PermissionError:
 			pass
@@ -390,7 +390,7 @@ def run_tests():
 		finally:
 			frappe.set_user(user)
 		# fresh enquiry: prefill works with the token, a forwarded link with another mobile is refused
-		enq4 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Link Owner", "mobile": "9000000066", "course_interested": course.name, "source": "Walk-in"}).insert()
+		enq4 = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Link Owner", "mobile": "9000000066", "course_interested": course.name, "source": "Walk-in", "batch_interested": batch.name}).insert()
 		send_admission_link(enq4.name); enq4.reload()
 		assert admission_prefill(enq4.name, enq4.form_token)["mobile"] == "9000000066", "prefill with the right token"
 		frappe.db.set_value("Student Enquiry", enq4.name, "form_token_sent_on", frappe.utils.add_to_date(frappe.utils.now_datetime(), hours=-49), update_modified=False)
