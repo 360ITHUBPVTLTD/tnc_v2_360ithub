@@ -1,6 +1,7 @@
 # Copyright (c) 2026, 360ITHub and contributors
 # For license information, please see license.txt
 import frappe
+from frappe.utils import getdate
 from frappe.model.document import Document
 
 
@@ -17,7 +18,7 @@ class StudentFollowUp(Document):
 			self.purpose = "General"  # an admitted student is not a lead
 		if self.purpose == "Fee" and self.reference_type != "Student":
 			self.purpose = "General"  # fees exist only once admitted
-		if self.next_follow_up_date and self.follow_up_date and self.next_follow_up_date < self.follow_up_date:
+		if self.next_follow_up_date and self.follow_up_date and getdate(self.next_follow_up_date) < getdate(self.follow_up_date):
 			frappe.throw("Next follow-up cannot be before this follow-up")
 
 	def after_insert(self):

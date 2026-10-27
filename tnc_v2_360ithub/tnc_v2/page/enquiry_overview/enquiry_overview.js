@@ -128,15 +128,35 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 	const POP_HEAD = [__("Enquiry"), __("Batch"), __("Status"), __("Counsellor"), __("Follow-ups"), __("Next follow-up"), __("Last call"), ""];
 	const nextCell = (r) => `${dueCell(r)}${r.next_followup_notes && OPEN.includes(r.status) ? `<br><small class="notes">${esc(r.next_followup_notes.slice(0, 80))}${r.next_followup_notes.length > 80 ? "…" : ""}</small>` : ""}`;
 	const OPEN = ["New", "Demo Scheduled", "Demo Attended"];
-	const callBtn = (r) => OPEN.includes(r.status) ? `<button class="btn btn-xs btn-default" data-logcall="${esc(r.name)}" data-name="${esc(r.student_name || r.mobile || r.name)}" data-plan="${esc(r.next_followup_notes || "")}" data-due="${esc(r.next_followup_on || "")}">${r.followups_open ? __("Log call") : __("Log first call")}</button>` : "";
+	const callBtn = (r) => OPEN.includes(r.status) ? `<button class="btn btn-xs btn-default" data-logcall="${esc(r.name)}" data-name="${esc(r.student_name || r.mobile || r.name)}" data-plan="${esc(r.next_followup_notes || "")}" data-due="${esc(r.next_followup_on || "")}">${r.followups_open ? __("Follow-up") : __("First follow-up")}</button>` : "";
 	function logCall(enquiry, who, after, plan, due) {
-		frappe.prompt([
-			{ fieldtype: "HTML", options: plan || due ? `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:8px"><b>${__("Pending call")}${due ? ` · ${__("due")} ${frappe.datetime.str_to_user(due)}` : ""}</b><br>${esc(plan || "")}<br><small class="text-muted">${__("Saving marks it done.")}</small></div>` : `<div class="text-muted small" style="margin-bottom:8px">${__("No call pending; this records the first one.")}</div>` },
-			{ fieldname: "notes", fieldtype: "Small Text", label: __("What was said"), reqd: 1 },
-			{ fieldname: "followup_type", fieldtype: "Select", label: __("How"), options: ["Call", "WhatsApp", "Message", "Email", "Meeting"], default: "Call", reqd: 1 },
-			{ fieldname: "next_date", fieldtype: "Date", label: __("Next follow-up on"), description: __("Leave empty if no further call is planned") },
-		], (v) => frappe.call({ method: "tnc_v2_360ithub.admissions.enquiry_overview.log_call", args: { enquiry, notes: v.notes, followup_type: v.followup_type, next_date: v.next_date || null }, freeze: true }).then(() => { frappe.show_alert({ message: __("Follow-up recorded"), indicator: "green" }); if (after) after(); load(); }),
-			__("Log a call with {0}", [who]), __("Save"));
+		const pendingBox = plan || due ? `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:8px"><b>${__("Pending call")}${due ? ` · ${__("due")} ${frappe.datetime.str_to_user(due)}` : ""}</b><br>${esc(plan || "")}<br><small class="text-muted">${__("Recording a done follow-up closes this; scheduling moves it to the new date.")}</small></div>` : `<div class="text-muted small" style="margin-bottom:8px">${__("No follow-up scheduled yet.")}</div>`;
+		const d = new frappe.ui.Dialog({
+			title: __("Follow-up · {0}", [who]),
+			fields: [
+				{ fieldtype: "HTML", options: pendingBox },
+				{ fieldname: "kind", fieldtype: "Select", label: __("What do you want to do?"), options: [__("Record a follow-up already done"), __("Schedule a follow-up for a later date")].join("\n"), default: __("Record a follow-up already done"), reqd: 1, onchange: () => setKind() },
+				{ fieldname: "followup_type", fieldtype: "Select", label: __("How"), options: ["Call", "WhatsApp", "Message", "Email", "Meeting"], default: "Call", reqd: 1 },
+				{ fieldname: "next_date", fieldtype: "Date", label: __("Next follow-up on"), description: __("Leave empty if no further call is planned") },
+				{ fieldname: "notes", fieldtype: "Small Text", label: __("What was said"), reqd: 1 },
+			],
+			primary_action_label: __("Save"),
+			primary_action: (v) => {
+				const planned = v.kind === __("Schedule a follow-up for a later date") ? 1 : 0;
+				if (planned && !v.next_date) { frappe.msgprint(__("Choose the follow-up date.")); return; }
+				frappe.call({ method: "tnc_v2_360ithub.admissions.enquiry_overview.log_call", args: { enquiry, notes: v.notes, followup_type: v.followup_type, next_date: v.next_date || null, planned }, freeze: true })
+					.then(() => { d.hide(); frappe.show_alert({ message: planned ? __("Follow-up scheduled") : __("Follow-up recorded"), indicator: "green" }); if (after) after(); load(); });
+			},
+		});
+		const setKind = () => {
+			const planned = d.get_value("kind") === __("Schedule a follow-up for a later date");
+			d.set_df_property("notes", "label", planned ? __("What to discuss") : __("What was said"));
+			d.set_df_property("next_date", "label", planned ? __("Follow-up date") : __("Next follow-up on"));
+			d.set_df_property("next_date", "reqd", planned ? 1 : 0);
+			d.set_df_property("next_date", "description", planned ? "" : __("Leave empty if no further call is planned"));
+		};
+		setKind();
+		d.show();
 	}
 	const dshort = (k, byMonth) => byMonth ? moment(k + "-01").format("MMM YY") : moment(k).format("D MMM");
 
@@ -212,12 +232,12 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 			<div class="head"><div class="avatar"><img src="${esc(d.logo || "")}" alt=""></div><div><div class="hname">${esc(title)}</div><div class="hmeta">${meta}</div></div>
 				<div class="hbadge ${attn ? "bad" : ""}">${attn ? __("{0} follow-ups due today or overdue", [attn]) : __("No follow-ups due")}</div></div>
 			<div class="kpis">
-				${kpi(d.total, __("Total enquiries") + `<br><small>${__("= remaining + converted + lost")}</small>`, "info", "inbox", "all")}
-				${kpi(d.converted, __("Converted · admissions"), d.converted ? "good" : "info", "check", "converted")}
-				${kpi(d.open, __("Remaining to work on") + `<br><small>${__("{0} new · {1} demo scheduled · {2} demo attended", [d.open_new, d.open_scheduled, d.demo_attended])}</small>`, d.open ? "warn" : "good", "phone", "open")}
-				${kpi(d.demo_attended, __("Hot leads · demo attended, not yet admitted"), d.demo_attended ? "hot" : "info", "flame", "demo")}
 				${kpi(d.due_today, __("Follow-ups due today"), d.due_today ? "warn" : "good", "clock", "today")}
 				${kpi(d.overdue, __("Overdue follow-ups"), d.overdue ? "bad" : "good", "alert", "overdue")}
+				${kpi(d.demo_attended, __("Hot leads · demo attended, not yet admitted"), d.demo_attended ? "hot" : "info", "flame", "demo")}
+				${kpi(d.open, __("Remaining to work on") + `<br><small>${__("{0} new · {1} demo scheduled · {2} demo attended", [d.open_new, d.open_scheduled, d.demo_attended])}</small>`, d.open ? "warn" : "good", "phone", "open")}
+				${kpi(d.total, __("Total enquiries") + `<br><small>${__("= remaining + converted + lost")}</small>`, "info", "inbox", "all")}
+				${kpi(d.converted, __("Converted · admissions"), d.converted ? "good" : "info", "check", "converted")}
 				${kpi(d.rate + "%", __("Conversion rate"), rateCls(d.rate, d.total), "percent")}
 				${kpi(d.lost, __("Lost"), d.lost ? "bad" : "good", "x", "lost")}
 			</div>

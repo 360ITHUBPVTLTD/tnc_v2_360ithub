@@ -116,11 +116,11 @@ frappe.ui.form.on("Student Enquiry", {
 				} else {
 					tnc_style(frm.add_custom_button(__("Schedule Demo"), () => frm.trigger("schedule_demo")), "todo", __("Schedule a demo class"));
 				}
+				frm.add_custom_button(__("Add Follow-up"), () => frappe.new_doc("Student Follow-Up", { reference_type: "Student Enquiry", reference_name: frm.doc.name })).attr("title", __("Record or schedule a follow-up with this enquiry"));
 				frm.add_custom_button(__("Admit"), () => frm.trigger("admit")).attr("title", __("Batch, fee, instalments, payment: makes the student. Sends the admission form link."));
 				if (!frm.doc.enquiry_form_filled_on) tnc_link_button(frm, { label: __("Resend enquiry form"), group: more, preview: P + "enquiry_link_preview", send: P + "send_enquiry_link", hint: __("The enquiry form link is added automatically at the end of the message.") });
 				if (!(m.pending || m.applied)) tnc_link_button(frm, { label: __("Resend admission form"), group: more, preview: P + "admission_link_preview", send: P + "send_admission_link", hint: __("The admission form link is added automatically at the end of the message.") });
 				frm.add_custom_button(__("Mark Lost"), () => frm.trigger("mark_lost"), more);
-				frm.add_custom_button(__("Add Follow-up"), () => frappe.new_doc("Student Follow-Up", { reference_type: "Student Enquiry", reference_name: frm.doc.name }), more);
 				frm.add_custom_button(__("Follow-ups page"), () => { frappe.route_options = { reference_type: "Student Enquiry", reference_name: frm.doc.name }; frappe.set_route("follow-ups"); }, more);
 			});
 			return;
