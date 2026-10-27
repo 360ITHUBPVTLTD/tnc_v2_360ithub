@@ -176,17 +176,30 @@ def get_overview(batch=None, counsellor=None, from_date=None, to_date=None):
 
 
 @frappe.whitelist()
-def log_call(enquiry, notes, followup_type="Call", next_date=None):
-	"""Record a follow-up done now on an open enquiry, straight from the Enquiry Overview: one
-	Closed follow-up with what was said, and an Open one for the next date when given."""
+def log_call(enquiry, notes, followup_type="Call", next_date=None, planned=0):
+	"""Record a follow-up on an open enquiry, straight from the Enquiry Overview.
+	Default: a call made now: one Closed follow-up with what was said, and an Open one for the
+	next date when given. `planned`: no call yet, only an Open follow-up for `next_date` with
+	what to do; an already pending one is re-dated instead of closed."""
 	enq = frappe.get_doc("Student Enquiry", enquiry)
 	enq.check_permission("write")
 	if not (notes or "").strip():
-		frappe.throw(_("Write what was said."))
+		frappe.throw(_("Write what to discuss.") if cint(planned) else _("Write what was said."))
 	assignee = enq.counsellor or frappe.session.user
 	# an open follow-up on this enquiry is the call being made: close it with the outcome
 	pending = frappe.get_all("Student Follow-Up", filters={"reference_type": "Student Enquiry", "reference_name": enquiry, "status": "Open", "purpose": ["!=", "Fee"]},
 		order_by="next_follow_up_date asc, creation asc", limit=1, pluck="name")
+	if cint(planned):
+		if not next_date:
+			frappe.throw(_("Choose the follow-up date."))
+		if pending:
+			f = frappe.get_doc("Student Follow-Up", pending[0])
+			f.update({"next_follow_up_date": getdate(next_date), "notes": notes.strip(), "followup_type": followup_type})
+			f.save()
+			return {"done": None, "next": f.name, "updated": True}
+		nxt = frappe.get_doc({"doctype": "Student Follow-Up", "reference_type": "Student Enquiry", "reference_name": enquiry, "purpose": "Enquiry",
+			"follow_up_date": nowdate(), "next_follow_up_date": next_date, "followup_type": followup_type, "notes": notes.strip(), "assigned_to": assignee, "status": "Open"}).insert()
+		return {"done": None, "next": nxt.name}
 	if pending:
 		from tnc_v2_360ithub.admissions.followups import log_outcome
 		r = log_outcome(pending[0], notes.strip(), next_follow_up_date=next_date or None, followup_type=followup_type, close=1)
