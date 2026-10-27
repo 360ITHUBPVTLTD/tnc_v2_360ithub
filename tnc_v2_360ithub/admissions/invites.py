@@ -90,7 +90,8 @@ def enquiry_invite_state(m, t):
 		return {"valid": True, "closed": _("This link has expired. Please ask the institute for a new link.")}
 	if already_used(t):
 		return {"valid": True, "closed": _("This enquiry link has already been used. If you want to enquire again, please call the institute.")}
-	return {"valid": True, "mobile": digits10(m)}
+	name = open_enquiry_for(m)
+	return {"valid": True, "mobile": digits10(m), "batch": frappe.db.get_value("Student Enquiry", name, "batch_interested") if name else None}
 
 
 def guard(doc):
@@ -147,6 +148,8 @@ def submit_personal_form(m, t, values=None):
 	values = frappe.parse_json(values or {}) or {}
 	data = {k: values.get(k) for k in FORM_FIELDS if values.get(k) not in (None, "")}
 	name = open_enquiry_for(m)
+	if not data.get("batch_interested") and not (name and frappe.db.get_value("Student Enquiry", name, "batch_interested")):
+		frappe.throw(_("Please choose the batch you are interested in."))
 	if name:
 		enq = frappe.get_doc("Student Enquiry", name)
 		enq.update(data)

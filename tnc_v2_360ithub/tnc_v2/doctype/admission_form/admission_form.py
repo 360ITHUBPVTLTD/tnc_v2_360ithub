@@ -130,9 +130,11 @@ def _apply(form, student=None):
 		if linked or open_enq:
 			convert_to_student(linked or open_enq[0].name, link_student=doc.name)
 		else:
+			batch = frappe.db.get_value("Student Batch Enrollment", {"student": doc.name, "docstatus": 1}, "batch", order_by="creation desc")
 			enq = frappe.get_doc({"doctype": "Student Enquiry", "student_name": doc.student_name, "mobile": doc.mobile, "email": doc.email, "gender": doc.gender,
-				"course_interested": form.course_interested, "source": "Other", "notes": _("Created from admission form {0}").format(form.name)})
+				"course_interested": form.course_interested, "batch_interested": batch, "source": "Other", "notes": _("Created from admission form {0}").format(form.name)})
 			enq.flags.ignore_permissions = True
+			enq.flags.ignore_mandatory = not batch  # record created only to keep the funnel complete; the batch comes with the enrolment
 			enq.insert()
 			convert_to_student(enq.name, link_student=doc.name)
 		doc.reload()
