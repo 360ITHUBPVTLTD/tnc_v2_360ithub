@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-10-27 15:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["batch", "kind", "meet_link", "meeting_code", "current", "cb1", "valid_from", "valid_to", "event_id", "created_on", "sec_guests", "guests", "guests_synced_on", "cb2", "error"],
+ "fields": [
+  {"fieldname": "batch", "fieldtype": "Link", "label": "Batch", "options": "Student Batch", "in_list_view": 1, "in_standard_filter": 1, "read_only": 1},
+  {"fieldname": "kind", "fieldtype": "Select", "label": "Kind", "options": "Whole batch\nOne day", "in_list_view": 1, "read_only": 1},
+  {"fieldname": "meet_link", "fieldtype": "Data", "label": "Google Meet Link", "in_list_view": 1, "read_only": 1},
+  {"fieldname": "meeting_code", "fieldtype": "Data", "label": "Meeting Code", "read_only": 1},
+  {"fieldname": "current", "fieldtype": "Check", "label": "Current link of the batch", "in_list_view": 1, "read_only": 1},
+  {"fieldname": "cb1", "fieldtype": "Column Break"},
+  {"fieldname": "valid_from", "fieldtype": "Date", "label": "Valid From", "in_list_view": 1, "read_only": 1},
+  {"fieldname": "valid_to", "fieldtype": "Date", "label": "Valid To", "read_only": 1},
+  {"fieldname": "event_id", "fieldtype": "Data", "label": "Google Calendar Event", "read_only": 1},
+  {"fieldname": "created_on", "fieldtype": "Datetime", "label": "Created On", "read_only": 1},
+  {"fieldname": "sec_guests", "fieldtype": "Section Break", "label": "Guest list (students who join without asking)"},
+  {"fieldname": "guests", "fieldtype": "Int", "label": "Guests on the meeting", "read_only": 1},
+  {"fieldname": "guests_synced_on", "fieldtype": "Datetime", "label": "Guest list updated on", "read_only": 1},
+  {"fieldname": "cb2", "fieldtype": "Column Break"},
+  {"fieldname": "error", "fieldtype": "Small Text", "label": "Last error", "read_only": 1}
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-27 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "TNC v2",
+ "name": "Batch Meet Link",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "export": 1, "report": 1},
+  {"role": "TNC Super Admin", "read": 1, "write": 1, "create": 1, "delete": 1, "export": 1, "report": 1},
+  {"role": "TNC Manager", "read": 1, "export": 1, "report": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "meet_link",
+ "track_changes": 0
+}

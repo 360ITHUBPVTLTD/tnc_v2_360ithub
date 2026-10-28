@@ -24,7 +24,14 @@ AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 REPORTS_URL = "https://admin.googleapis.com/admin/reports/v1/activity/users/all/applications/meet"
-SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/admin.reports.audit.readonly"]
+CAL_EVENTS_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+# reports: who was in a meeting; calendar.events: create the batch meetings with the student guest list
+MEET_SPACES_URL = "https://meet.googleapis.com/v2/spaces"
+# reports: who was in a meeting; calendar.events: create the batch meetings with the student guest
+# list; meetings.space.settings: lock a meeting to invited guests only (TNC Settings "Online class entry")
+SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/admin.reports.audit.readonly",
+	"https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/meetings.space.settings"]
+STRICT_ENTRY = "Only registered students can join"
 MANAGERS = ("System Manager", "TNC Super Admin", "TNC Manager")
 IST = timezone(timedelta(hours=5, minutes=30))
 
@@ -171,8 +178,7 @@ def online_classes(date):
 	for b in batches_with_class(date):
 		if b.get("mode") != "Online":
 			continue
-		link = frappe.db.get_value("Student Batch", b.name, "meet_link")
-		code = meeting_code(link)
+		code = code_for(b.name, date)
 		if code:
 			b.meeting_code = code
 			out.append(b)
@@ -287,3 +293,195 @@ def test_connection(days=7):
 def sync_now(date=None):
 	frappe.only_for(MANAGERS)
 	return sync(date)
+
+
+# ---------- batch meetings (Google Calendar) ----------
+#
+# The system creates the batch's meeting as a Calendar event on the TNC account with the enrolled
+# students as guests. Google then lets an invited Gmail into the Meet directly and holds everyone
+# else at "ask to join" (Workspace default for invited vs uninvited), so one link can be shared
+# with the whole group and still only admit registered students. Each link is kept as a Batch Meet
+# Link with the dates it covers; attendance looks up the link that was current on the class day,
+# so a batch may keep one link for its whole life or take a fresh one for a day.
+
+DAYS = ("day_mon", "day_tue", "day_wed", "day_thu", "day_fri", "day_sat", "day_sun")
+RRULE_DAYS = ("MO", "TU", "WE", "TH", "FR", "SA", "SU")
+
+
+def code_for(batch, date):
+	"""Meeting code of the link that was current for the batch on the date: the newest system link
+	whose dates cover it, else whatever is typed on the batch."""
+	date = getdate(date)
+	rows = frappe.get_all("Batch Meet Link", filters={"batch": batch, "valid_from": ["<=", date]},
+		fields=["meeting_code", "valid_to"], order_by="valid_from desc, created_on desc")
+	for r in rows:
+		if not r.valid_to or getdate(r.valid_to) >= date:
+			return r.meeting_code
+	return meeting_code(frappe.db.get_value("Student Batch", batch, "meet_link"))
+
+
+def batch_guests(batch):
+	"""Emails Google should let in without asking: students enrolled in the batch (Active / On Hold)
+	with a Meet email, and the teachers with one (they host)."""
+	students = frappe.db.sql("""select distinct lower(trim(s.meet_email)) from `tabStudent Batch Enrollment` e
+		join `tabStudent` s on s.name = e.student
+		where e.batch = %s and e.docstatus = 1 and e.status in ('Active', 'On Hold') and ifnull(s.meet_email, '') != ''""", batch)
+	teachers = frappe.get_all("Teacher", filters={"meet_email": ["!=", ""], "status": ["!=", "Inactive"]}, pluck="meet_email")
+	host = (_settings().meet_account or "").strip().lower()
+	return sorted({e[0] for e in students} | {t.strip().lower() for t in teachers if t} - {host, ""})
+
+
+def _event_body(b, valid_from, valid_to, guests, kind):
+	# Google needs a time on the event; the Meet link works at any hour and attendance follows the
+	# timesheet, so the time only decides where the meeting shows in the TNC calendar
+	start_t, end_t = str(b.start_time or "18:00:00")[:8], str(b.end_time or "20:00:00")[:8]
+	if end_t <= start_t:
+		start_t, end_t = "18:00:00", "20:00:00"
+	body = {
+		"summary": f"{b.batch_name or b.name} · online class",
+		"description": _("Team Nursing Classes · {0}. Join only through this link, signed in to the Gmail you gave the institute: attendance is marked from it.").format(b.batch_name or b.name),
+		"start": {"dateTime": f"{valid_from}T{start_t}", "timeZone": "Asia/Kolkata"},
+		"end": {"dateTime": f"{valid_from}T{end_t}", "timeZone": "Asia/Kolkata"},
+		"attendees": [{"email": e} for e in guests],
+		"guestsCanInviteOthers": False, "guestsCanSeeOtherGuests": False, "guestsCanModify": False,
+		"reminders": {"useDefault": False},
+		"conferenceData": {"createRequest": {"requestId": frappe.generate_hash(length=20), "conferenceSolutionKey": {"type": "hangoutsMeet"}}},
+	}
+	if kind == "Whole batch":
+		days = [RRULE_DAYS[i] for i, f in enumerate(DAYS) if b.get(f)] or list(RRULE_DAYS[:6])  # no ticks: Mon-Sat
+		until = getdate(valid_to).strftime("%Y%m%dT235959Z")
+		body["recurrence"] = [f"RRULE:FREQ=WEEKLY;BYDAY={','.join(days)};UNTIL={until}"]
+	return body
+
+
+def _calendar(method, url, **kw):
+	headers = {"Authorization": f"Bearer {access_token()}", "Content-Type": "application/json"}
+	r = requests.request(method, url, headers=headers, timeout=60, **kw)
+	if r.status_code == 403 and "insufficient" in r.text.lower():
+		frappe.throw(_("Google has not allowed calendar access yet. Open TNC Settings, click Reconnect Google and approve, then try again."))
+	if r.status_code >= 300:
+		try:
+			msg = r.json()["error"]["message"]
+		except Exception:
+			msg = r.text[:300]
+		frappe.throw(_("Google Calendar error {0}: {1}").format(r.status_code, msg))
+	return r.json() if r.text else {}
+
+
+@frappe.whitelist()
+def create_batch_link(batch, for_date=None):
+	"""Manager action on the batch. `for_date` empty: one meeting for the whole batch (recurring on
+	the batch's class days, start to end date). `for_date` given: a meeting for that one day only.
+	The new link becomes the batch's current link; earlier ones stay for the days they covered."""
+	frappe.only_for(MANAGERS)
+	b = frappe.get_doc("Student Batch", batch)
+	if b.mode == "Offline":
+		frappe.throw(_("{0} is an offline batch.").format(b.name))
+	if not b.starting_date or not b.actual_ending_date:
+		frappe.throw(_("Set the batch start and end dates first."))
+	kind = "One day" if for_date else "Whole batch"
+	valid_from = getdate(for_date) if for_date else getdate(max(getdate(b.starting_date), getdate(nowdate())))
+	valid_to = getdate(for_date) if for_date else getdate(b.actual_ending_date)
+	if valid_to < getdate(nowdate()):
+		frappe.throw(_("That date is over.") if for_date else _("The batch end date ({0}) is in the past. Correct the batch dates first.").format(frappe.format_value(valid_to, {"fieldtype": "Date"})))
+	guests = batch_guests(batch)
+	ev = _calendar("POST", CAL_EVENTS_URL, params={"conferenceDataVersion": 1, "sendUpdates": "none"}, json=_event_body(b, valid_from, valid_to, guests, kind))
+	link = ev.get("hangoutLink") or next((p["uri"] for p in ev.get("conferenceData", {}).get("entryPoints", []) if p.get("entryPointType") == "video"), None)
+	if not link:
+		frappe.throw(_("Google created the event but gave no Meet link. Check that Google Meet is enabled for the TNC account."))
+	entry_note = set_entry_rule(link)
+	# a whole-batch link replaces the batch's link; a one-day link is used for that day only and
+	# leaves the batch link in place (code_for prefers the newest link whose dates cover the day)
+	if kind == "Whole batch":
+		frappe.db.sql("update `tabBatch Meet Link` set current = 0 where batch = %s", batch)
+	doc = frappe.get_doc({"doctype": "Batch Meet Link", "batch": batch, "kind": kind, "meet_link": link, "meeting_code": meeting_code(link), "current": 1 if kind == "Whole batch" else 0,
+		"valid_from": valid_from, "valid_to": valid_to, "event_id": ev.get("id"), "created_on": now_datetime(), "guests": len(guests), "guests_synced_on": now_datetime()})
+	doc.flags.ignore_permissions = True
+	doc.insert()
+	if kind == "Whole batch":
+		b.db_set("meet_link", link)
+	b.add_comment("Info", _("Google Meet link created for {0}: {1} ({2} guests)").format(_("the whole batch") if kind == "Whole batch" else frappe.format_value(valid_from, {"fieldtype": "Date"}), link, len(guests)))
+	return {"link": link, "guests": len(guests), "kind": kind, "valid_from": str(valid_from), "valid_to": str(valid_to), "entry": entry_note}
+
+
+def set_entry_rule(link):
+	"""Apply TNC Settings "Online class entry" to a meeting. Google's default for a Workspace meeting
+	is TRUSTED: invited guests join directly, others knock. RESTRICTED: only invited can join at all.
+	Returns a short note for the user; a failure here is reported, not fatal (the link still works)."""
+	strict = (_settings().get("meet_entry") or "") == STRICT_ENTRY
+	code = meeting_code(link)
+	want = "RESTRICTED" if strict else "TRUSTED"
+	try:
+		headers = {"Authorization": f"Bearer {access_token()}", "Content-Type": "application/json"}
+		r = requests.patch(f"{MEET_SPACES_URL}/{code}", headers=headers, params={"updateMask": "config.access_type"}, json={"config": {"accessType": want}}, timeout=60)
+		if r.status_code >= 300:
+			raise Exception(r.text[:300])
+		return _("Only registered students can join; others are refused.") if strict else _("Registered students join directly; others must ask to join.")
+	except Exception as ex:
+		frappe.log_error(title="Meet entry rule not applied", message=f"{link}\n{ex}")
+		return _("Entry rule not applied ({0}); Google's default applies: registered students join directly, others must ask.").format(str(ex)[:120])
+
+
+def apply_entry_rule_all():
+	"""Background, after TNC Settings "Online class entry" is saved: every current system-made batch
+	link gets the rule, and the result is noted on the Batch Meet Link."""
+	done = []
+	for l in frappe.get_all("Batch Meet Link", filters={"current": 1, "event_id": ["!=", ""]}, fields=["name", "meet_link"]):
+		note = set_entry_rule(l.meet_link)
+		frappe.db.set_value("Batch Meet Link", l.name, "error", None if "not applied" not in note else note, update_modified=False)
+		done.append((l.name, note))
+	frappe.db.commit()
+	return done
+
+
+def sync_guests(batch):
+	"""Push the batch's guest list to its current system-made meeting (and to a one-day link that is
+	still ahead). Runs in the background after enrolments or a student's Meet email change."""
+	today = getdate(nowdate())
+	links = [l for l in frappe.get_all("Batch Meet Link", filters={"batch": batch, "event_id": ["!=", ""]}, fields=["name", "event_id", "valid_to", "current"])
+		if l.current or (l.valid_to and getdate(l.valid_to) >= today)]
+	if not links:
+		return {"skipped": "no system link"}
+	guests = batch_guests(batch)
+	out = []
+	for l in links:
+		try:
+			_calendar("PATCH", f"{CAL_EVENTS_URL}/{l.event_id}", params={"sendUpdates": "none"}, json={"attendees": [{"email": e} for e in guests]})
+			frappe.db.set_value("Batch Meet Link", l.name, {"guests": len(guests), "guests_synced_on": now_datetime(), "error": None}, update_modified=False)
+			out.append(l.name)
+		except Exception as ex:
+			frappe.db.set_value("Batch Meet Link", l.name, "error", str(ex)[:1000], update_modified=False)
+			frappe.log_error(title="Meet guest list not updated", message=frappe.get_traceback())
+	frappe.db.commit()
+	return {"updated": out, "guests": len(guests)}
+
+
+def queue_guest_sync(batch):
+	"""Hook helper: refresh the guest list soon, once, however many enrolments were saved together."""
+	if not batch or not frappe.db.exists("Batch Meet Link", {"batch": batch, "current": 1, "event_id": ["!=", ""]}):
+		return
+	frappe.enqueue("tnc_v2_360ithub.meet.sync_guests", queue="short", job_id=f"meet-guests:{batch}", deduplicate=True, enqueue_after_commit=True, batch=batch)
+
+
+def on_enrolment_change(doc, method=None):
+	queue_guest_sync(doc.batch)
+
+
+def on_student_change(doc, method=None):
+	"""Student saved with a different Meet email: every batch they are in gets the new address."""
+	if doc.is_new() or not doc.has_value_changed("meet_email"):
+		return
+	for b in frappe.get_all("Student Batch Enrollment", filters={"student": doc.name, "docstatus": 1, "status": ["in", ["Active", "On Hold"]]}, pluck="batch", distinct=True):
+		queue_guest_sync(b)
+
+
+@frappe.whitelist()
+def update_guests_now(batch):
+	frappe.only_for(MANAGERS)
+	return sync_guests(batch)
+
+
+@frappe.whitelist()
+def batch_links(batch):
+	return frappe.get_all("Batch Meet Link", filters={"batch": batch}, fields=["name", "kind", "meet_link", "current", "valid_from", "valid_to", "guests", "guests_synced_on", "error"],
+		order_by="created_on desc", limit=10)
