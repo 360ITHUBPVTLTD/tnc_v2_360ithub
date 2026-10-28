@@ -41,6 +41,7 @@
   "meet_client_id",
   "meet_client_secret",
   "meet_presence_pct",
+  "meet_entry",
   "cb_meet",
   "meet_account",
   "meet_connected_on",
@@ -295,6 +296,14 @@
    "description": "Total minutes in the meeting \u00f7 class minutes. At or above = Present, below but joined = Partial, never joined = Absent."
   },
   {
+   "fieldname": "meet_entry",
+   "fieldtype": "Select",
+   "label": "Online class entry",
+   "options": "Registered students join directly, others ask to join\nOnly registered students can join",
+   "default": "Registered students join directly, others ask to join",
+   "description": "Applies to meetings made with Create Meet link on the batch. Registered = enrolled in that batch with a Google Meet email on the student. 'Only registered' refuses everyone else outright, so a student on the wrong Gmail cannot even ask the teacher."
+  },
+  {
    "fieldname": "cb_meet",
    "fieldtype": "Column Break"
   },
@@ -366,7 +375,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-09-16 21:30:00.000000",
+ "modified": "2026-10-28 10:30:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "TNC Settings",

@@ -174,6 +174,13 @@ has_permission = {
 
 doc_events = {
 	"File": {"validate": "tnc_v2_360ithub.admissions.guest_files.validate"},
+	# Online batches: the Google Meet guest list follows the enrolments and the students' Meet emails.
+	"Student Batch Enrollment": {
+		"on_submit": "tnc_v2_360ithub.meet.on_enrolment_change",
+		"on_update_after_submit": "tnc_v2_360ithub.meet.on_enrolment_change",
+		"on_cancel": "tnc_v2_360ithub.meet.on_enrolment_change",
+	},
+	"Student": {"on_update": "tnc_v2_360ithub.meet.on_student_change"},
 	# A student punch refreshes that student's attendance row for the day.
 	"Student Punch Log": {"after_insert": "tnc_v2_360ithub.attendance.daily.on_punch"},
 	# A teacher's timesheet decides which batches had a class that day: rebuild that date on save / delete.

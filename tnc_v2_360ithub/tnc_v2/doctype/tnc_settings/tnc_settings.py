@@ -6,7 +6,10 @@ from frappe.model.document import Document
 
 
 class TNCSettings(Document):
-	pass
+	def on_update(self):
+		# "Online class entry" changed: apply it to every batch meeting the system made, so no new link is needed
+		if self.has_value_changed("meet_entry") and not self.flags.in_install:
+			frappe.enqueue("tnc_v2_360ithub.meet.apply_entry_rule_all", queue="short", enqueue_after_commit=True, job_id="meet-entry-rule", deduplicate=True)
 
 	def validate(self):
 		# the penalty recovery account must be a real (non-group) income account

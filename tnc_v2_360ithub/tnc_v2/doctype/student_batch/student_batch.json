@@ -130,7 +130,8 @@
    "fieldtype": "Data",
    "label": "Google Meet Link",
    "depends_on": "eval:doc.mode!='Offline'",
-   "description": "This link is fixed for the whole batch. Teachers must start every class from it and students must join through it; online attendance is marked only from this link."
+   "description": "Filled by Google Meet > Create Meet link: the system makes the meeting on the TNC account with the enrolled students as guests, so registered students join directly and anyone else must ask. Teachers start every class from it and students join through it; online attendance is marked only from it.",
+   "read_only": 1
   },
   {
    "fieldname": "day_mon",
@@ -192,7 +193,7 @@
  "is_submittable": 0,
  "istable": 0,
  "links": [],
- "modified": "2026-09-18 14:48:17.645459",
+ "modified": "2026-10-27 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Student Batch",
