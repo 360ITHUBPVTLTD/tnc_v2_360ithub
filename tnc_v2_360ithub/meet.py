@@ -409,11 +409,15 @@ def set_entry_rule(link):
 	is TRUSTED: invited guests join directly, others knock. RESTRICTED: only invited can join at all.
 	Returns a short note for the user; a failure here is reported, not fatal (the link still works)."""
 	strict = (_settings().get("meet_entry") or "") == STRICT_ENTRY
-	code = meeting_code(link)
+	# the Meet API names a space by the dashed meeting code from the link ("abc-defg-hij"), not the
+	# squashed form the audit log uses
+	m = re.search(r"([a-z]{3}-[a-z]{4}-[a-z]{3})", (link or "").lower())
+	if not m:
+		return _("Entry rule not applied (no meeting code in the link); Google's default applies: registered students join directly, others must ask.")
 	want = "RESTRICTED" if strict else "TRUSTED"
 	try:
 		headers = {"Authorization": f"Bearer {access_token()}", "Content-Type": "application/json"}
-		r = requests.patch(f"{MEET_SPACES_URL}/{code}", headers=headers, params={"updateMask": "config.access_type"}, json={"config": {"accessType": want}}, timeout=60)
+		r = requests.patch(f"{MEET_SPACES_URL}/{m.group(1)}", headers=headers, params={"updateMask": "config.access_type"}, json={"config": {"accessType": want}}, timeout=60)
 		if r.status_code >= 300:
 			raise Exception(r.text[:300])
 		return _("Only registered students can join; others are refused.") if strict else _("Registered students join directly; others must ask to join.")
