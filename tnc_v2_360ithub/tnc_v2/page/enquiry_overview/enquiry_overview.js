@@ -15,11 +15,22 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 	});
 	const fCoun = manager ? page.add_field({ fieldname: "counsellor", label: __("Counsellor"), fieldtype: "Link", options: "User", change() { state.counsellor = fCoun.get_value() || null; load(); },
 		get_query: () => ({ query: "frappe.core.doctype.user.user.user_query", filters: { ignore_user_type: 1 } }) }) : null;
-	const fPeriod = page.add_field({ fieldname: "period", label: __("Enquiry date"), fieldtype: "DateRange", change() {
+	const SPANS = { "": __("Lifetime"), week: __("This week"), month: __("This month"), m3: __("Last 3 months"), m6: __("Last 6 months"), custom: __("Custom dates") };
+	const fSpan = page.add_field({ fieldname: "span", label: __("Enquiry date"), fieldtype: "Select", options: Object.keys(SPANS).map(k => ({ value: k, label: SPANS[k] })), change() {
+		const k = fSpan.get_value() || "", today = frappe.datetime.get_today();
+		fPeriod.$wrapper.toggle(k === "custom");
+		if (k === "custom") { fromRange(); return; }
+		state.from = k === "week" ? frappe.datetime.week_start() : k === "month" ? frappe.datetime.month_start() : k === "m3" ? frappe.datetime.add_months(today, -3) : k === "m6" ? frappe.datetime.add_months(today, -6) : null;
+		state.to = state.from ? today : null;
+		load();
+	} });
+	const fromRange = () => {
 		const v = fPeriod.get_value();
 		if (v && v.length === 2 && v[0] && v[1]) { state.from = v[0]; state.to = v[1]; } else { state.from = state.to = null; }
 		load();
-	} });
+	};
+	const fPeriod = page.add_field({ fieldname: "period", label: __("From · To"), fieldtype: "DateRange", change: fromRange });
+	fPeriod.$wrapper.hide();
 	page.add_inner_button(`${frappe.utils.icon("refresh", "sm")} ${__("Refresh")}`, () => load());
 	page.set_secondary_action(__("Follow-ups"), () => frappe.set_route("follow-ups"));
 	page.set_primary_action(__("New Enquiry"), () => frappe.new_doc("Student Enquiry", state.batch ? { batch_interested: state.batch } : {}), "add");
@@ -74,6 +85,9 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 		.enq-ov .count { min-width: 34px; text-align: center; font-weight: 800; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #f1f5f9; color: #334155; }
 		.enq-ov .count.warn { background: var(--warn-bg); color: #92400e; } .enq-ov .count.bad { background: var(--bad-bg); color: #991b1b; } .enq-ov .count.info { background: var(--info-bg); color: #1e40af; } .enq-ov .count.ok { background: var(--ok-bg); color: #166534; } .enq-ov .count.ink { background: #e2e8f0; color: var(--ink); }
 		.enq-ov tr.row-link td:first-child b { color: var(--brand); } .enq-ov tr.row-link a.due:hover { text-decoration: underline; } .enq-ov tr.row-link:hover td:first-child b { text-decoration: underline; }
+		.enq-ov tr.grp td, .enq-pop tr.grp td { background: #f1f5f9 !important; font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #475569; padding: 6px 10px !important; }
+		.enq-pop th[data-sort] { cursor: pointer; user-select: none; } .enq-pop th[data-sort]:hover { background: #cbd5e1; } .enq-pop th .dir { font-size: 10px; margin-left: 4px; color: #2563eb; }
+		.enq-pop-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; } .enq-pop-tools input { font-size: 13px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 8px; min-width: 260px; }
 		.enq-ov tr.row-link td:first-child { position: relative; padding-left: 14px !important; } .enq-ov tr.row-link:hover td:first-child::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--brand); }
 		.enq-ov .c { white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; color: var(--ink); } .enq-ov th.c { font-size: 12px; }
 		.enq-ov .bt { width: 100%; } .enq-ov .bt th:first-child, .enq-ov .bt td:first-child { width: 24%; } .enq-ov .bt th:last-child, .enq-ov .bt td:last-child { width: 17%; } .enq-ov .bt th { white-space: normal; } .enq-ov .bt td { padding-top: 12px !important; padding-bottom: 12px !important; }
@@ -104,27 +118,70 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 		x: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
 	};
 	const kpi = (n, l, c, ico, pop) => `<div class="card kpi ${c}${pop ? " pop" : ""}"${pop ? ` data-pop="${pop}" title="${__("Click for the list")}"` : ""}><div class="ico">${ICONS[ico] || ico}</div><div><b>${n}</b><span>${l}</span></div></div>`;
+	const POP_SORT = [["student_name", "s"], ["batch_name", "s"], ["status", "s"], ["counsellor_name", "s"], ["followups_done", "n"], ["next_followup_on", "d"], ["last_followup_on", "d"], null];
 	const popTable = (title, head, rows, wide = false, sub = "", data = null) => {
 		const d = new frappe.ui.Dialog({ title, size: wide ? "extra-large" : "large", fields: [{ fieldtype: "HTML", fieldname: "body" }] });
 		d.$wrapper.on("click", "[data-logcall]", (e) => { const $b = $(e.currentTarget); logCall($b.attr("data-logcall"), $b.attr("data-name"), () => d.hide(), $b.attr("data-plan"), $b.attr("data-due")); });
 		// status chips: when the list mixes statuses, let the user narrow it to one
 		const ORDER = ["New", "Demo Scheduled", "Demo Attended", "Converted", "Lost"];
 		const counts = data ? ORDER.map(st => [st, data.filter(x => x.status === st).length]).filter(x => x[1]) : [];
+		const view = { chip: "", q: "", sort: null, dir: 1 };
+		const shown = () => {
+			if (!data) return null;
+			let out = data.filter(x => (!view.chip || x.status === view.chip) && (!view.q || [x.student_name, x.mobile, x.counsellor_name, x.batch_name, x.status, x.last_followup_notes, x.next_followup_notes, x.source].join(" ").toLowerCase().includes(view.q)));
+			if (view.sort) {
+				const [k, t] = view.sort, v = (x) => t === "n" ? cint(x[k]) : t === "d" ? (x[k] || "") : (x[k] || "").toString().toLowerCase();
+				out = out.slice().sort((a, b) => (v(a) > v(b) ? 1 : v(a) < v(b) ? -1 : 0) * view.dir);
+			}
+			return out;
+		};
+		const redraw = () => {
+			const list = shown();
+			const html = (view.sort ? list.map(popRow) : popRows(list)).join("");
+			d.$wrapper.find("table.enq-pop tbody").html(html || `<tr><td colspan="${head.length}" class="text-muted">${__("Nothing to show.")}</td></tr>`);
+			d.$wrapper.find("[data-pop-count]").text(list.length);
+			d.$wrapper.find("th .dir").remove();
+			if (view.sort) d.$wrapper.find(`th[data-sort='${POP_SORT.indexOf(view.sort)}']`).append(`<span class="dir">${view.dir > 0 ? "▲" : "▼"}</span>`);
+		};
 		if (counts.length > 1) {
 			const chip = (k, l, n, on) => `<button class="btn btn-xs ${on ? "btn-primary" : "btn-default"}" data-chip="${k}" style="margin:0 6px 10px 0;border-radius:12px">${l} <b>${n}</b></button>`;
 			sub = `<div data-chips>${chip("", __("All"), data.length, true)}${counts.map(([st, n]) => chip(st, __(st), n, false)).join("")}</div>` + sub;
 			d.$wrapper.on("click", "[data-chip]", (e) => {
-				const k = $(e.currentTarget).attr("data-chip");
+				view.chip = $(e.currentTarget).attr("data-chip");
 				d.$wrapper.find("[data-chip]").removeClass("btn-primary").addClass("btn-default");
 				$(e.currentTarget).removeClass("btn-default").addClass("btn-primary");
-				d.$wrapper.find("table.enq-pop tbody").html(popRows(k ? data.filter(x => x.status === k) : data).join("") || `<tr><td colspan="${head.length}" class="text-muted">${__("Nothing to show.")}</td></tr>`);
+				redraw();
 			});
 		}
-		d.fields_dict.body.$wrapper.html(`<style>.enq-pop td, .enq-pop th { border: 1px solid #94a3b8 !important; padding: 8px 10px !important; vertical-align: top; } .enq-pop th { background: #e2e8f0; font-weight: 700; color: #0f172a; white-space: nowrap; } .enq-pop tbody tr:nth-child(even) td { background: #fafafa; } .enq-pop .nw { white-space: nowrap; } .enq-pop a { color: #2563eb; text-decoration: underline; font-weight: 600; } .enq-pop .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 10px; white-space: nowrap; } .enq-pop .pill.New { background: #e2e8f0; color: #334155; } .enq-pop .pill.DemoScheduled { background: #dbeafe; color: #1e40af; } .enq-pop .pill.DemoAttended { background: #ffedd5; color: #9a3412; } .enq-pop .pill.Converted { background: #dcfce7; color: #166534; } .enq-pop .pill.Lost { background: #fee2e2; color: #991b1b; } .enq-pop .due { font-weight: 700; white-space: nowrap; } .enq-pop .due.overdue { color: #dc2626; } .enq-pop .due.today { color: #d97706; } .enq-pop .due.upcoming { color: #2563eb; } .enq-pop .due.none { color: #94a3b8; font-weight: 400; }</style>${sub}<div style="max-height:75vh;overflow-y:auto;overflow-x:hidden"><table class="table table-bordered enq-pop" style="font-size:13px;width:100%;margin:0"><thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="${head.length}" class="text-muted">${__("Nothing to show.")}</td></tr>`}</tbody></table></div>`);
+		if (data) {
+			sub += `<div class="enq-pop-tools"><input type="search" data-pop-q placeholder="${__("Search by mobile number, name, counsellor, notes")}"><small class="text-muted"><span data-pop-count>${data.length}</span> ${__("shown · click a column heading to sort")}</small></div>`;
+			d.$wrapper.on("input", "[data-pop-q]", (e) => { view.q = ($(e.currentTarget).val() || "").toLowerCase(); redraw(); });
+			d.$wrapper.on("click", "th[data-sort]", (e) => {
+				const k = POP_SORT[cint($(e.currentTarget).attr("data-sort"))];
+				if (!k) return;
+				view.dir = view.sort && view.sort[0] === k[0] ? -view.dir : 1;
+				view.sort = k;
+				redraw();
+			});
+		}
+		const th = (h, i) => data && POP_SORT[i] ? `<th data-sort="${i}" title="${__("Sort")}">${h}</th>` : `<th>${h}</th>`;
+		d.fields_dict.body.$wrapper.html(`<style>.enq-pop td, .enq-pop th { border: 1px solid #94a3b8 !important; padding: 8px 10px !important; vertical-align: top; } .enq-pop th { background: #e2e8f0; font-weight: 700; color: #0f172a; white-space: nowrap; } .enq-pop tbody tr:nth-child(even) td { background: #fafafa; } .enq-pop .nw { white-space: nowrap; } .enq-pop a { color: #2563eb; text-decoration: underline; font-weight: 600; } .enq-pop .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 10px; white-space: nowrap; } .enq-pop .pill.New { background: #e2e8f0; color: #334155; } .enq-pop .pill.DemoScheduled { background: #dbeafe; color: #1e40af; } .enq-pop .pill.DemoAttended { background: #ffedd5; color: #9a3412; } .enq-pop .pill.Converted { background: #dcfce7; color: #166534; } .enq-pop .pill.Lost { background: #fee2e2; color: #991b1b; } .enq-pop .due { font-weight: 700; white-space: nowrap; } .enq-pop .due.overdue { color: #dc2626; } .enq-pop .due.today { color: #d97706; } .enq-pop .due.upcoming { color: #2563eb; } .enq-pop .due.none { color: #94a3b8; font-weight: 400; }</style>${sub}<div style="max-height:75vh;overflow-y:auto;overflow-x:hidden"><table class="table table-bordered enq-pop" style="font-size:13px;width:100%;margin:0"><thead><tr>${head.map(th).join("")}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="${head.length}" class="text-muted">${__("Nothing to show.")}</td></tr>`}</tbody></table></div>`);
 		d.show();
 	};
 	const enqLink = (r) => `<a href="/app/student-enquiry/${esc(r.name)}"><b>${esc(r.student_name || r.mobile || r.name)}</b></a><br><small class="text-muted">${esc(r.mobile || "")}</small>`;
-	const popRows = (rows) => rows.map(r => `<tr><td>${enqLink(r)}</td><td>${esc(r.batch_name || "")}</td><td>${pill(r.status)}</td><td class="nw">${esc(r.counsellor_name)}</td><td class="nw"><a href="/app/student-follow-up?reference_name=${encodeURIComponent(r.name)}&status=Closed">${r.followups_done} ${__("done")}</a>${r.followups_open ? ` · <a href="${r.next_followup ? `/app/student-follow-up/${esc(r.next_followup)}` : `/app/student-follow-up?reference_name=${encodeURIComponent(r.name)}&status=Open`}">${r.followups_open} ${__("open")}</a>` : ""}</td><td>${nextCell(r)}</td><td class="notes">${esc(r.last_followup_notes || "")}</td><td>${callBtn(r)}</td></tr>`);
+	const GROUPS = { followup: __("Follow-up planned · overdue, today, then upcoming"), fresh: __("Not yet followed up"), closed: __("Admitted or lost") };
+	// rows come from the server in work order; a heading opens each group when the list mixes groups
+	const grouped = (rows, cols, rowOf) => {
+		const kinds = [...new Set(rows.map(r => r.group))];
+		let last = null;
+		return rows.map(r => {
+			const h = kinds.length > 1 && r.group !== last ? `<tr class="grp ${r.group}" data-grp="${r.group}"><td colspan="${cols}">${GROUPS[r.group]} (${rows.filter(x => x.group === r.group).length})</td></tr>` : "";
+			last = r.group;
+			return h + rowOf(r);
+		});
+	};
+	const popRow = (r) => `<tr class="${r.group}"><td>${enqLink(r)}</td><td>${esc(r.batch_name || "")}</td><td>${pill(r.status)}</td><td class="nw">${esc(r.counsellor_name)}</td><td class="nw"><a href="/app/student-follow-up?reference_name=${encodeURIComponent(r.name)}&status=Closed">${r.followups_done} ${__("done")}</a>${r.followups_open ? ` · <a href="${r.next_followup ? `/app/student-follow-up/${esc(r.next_followup)}` : `/app/student-follow-up?reference_name=${encodeURIComponent(r.name)}&status=Open`}">${r.followups_open} ${__("open")}</a>` : ""}</td><td>${nextCell(r)}</td><td class="notes">${esc(r.last_followup_notes || "")}</td><td>${callBtn(r)}</td></tr>`;
+	const popRows = (rows) => grouped(rows, POP_HEAD.length, popRow);
 	const POP_HEAD = [__("Enquiry"), __("Batch"), __("Status"), __("Counsellor"), __("Follow-ups"), __("Next follow-up"), __("Last call"), ""];
 	const nextCell = (r) => `${dueCell(r)}${r.next_followup_notes && OPEN.includes(r.status) ? `<br><small class="notes">${esc(r.next_followup_notes.slice(0, 80))}${r.next_followup_notes.length > 80 ? "…" : ""}</small>` : ""}`;
 	const OPEN = ["New", "Demo Scheduled", "Demo Attended"];
@@ -200,13 +257,15 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 				popTable(title, POP_HEAD, popRows(rows), true, sub, rows);
 			});
 			if (d.trend && d.trend.length > 1) chart("#c-trend", { type: "line", data: { labels: d.trend.map(x => dshort(x.key, d.trend_by_month)), datasets: [{ name: __("Enquiries"), values: d.trend.map(x => x.total) }, { name: __("Converted"), values: d.trend.map(x => x.converted) }] },
-				colors: ["#6d5bc4", "#16a34a"], lineOptions: { regionFill: 1, hideDots: 0 }, axisOptions: { xAxisMode: "tick", xIsSeries: true }, tooltipOptions: { formatTooltipY: (v) => Math.round(v) } });
+				colors: ["#16a34a", "#2563eb"], lineOptions: { regionFill: 1, hideDots: 0 }, axisOptions: { xAxisMode: "tick", xIsSeries: true }, tooltipOptions: { formatTooltipY: (v) => Math.round(v) } });
 			else $body.find("#c-trend").html(`<div class="text-muted">${__("Needs enquiries on at least two dates.")}</div>`);
 			const sc = d.status_counts || {};
 			chart("#c-donut", { type: "donut", height: 230, maxSlices: 5, data: { labels: [__("New"), __("Demo Scheduled"), __("Demo Attended"), __("Converted"), __("Lost")], datasets: [{ values: [sc.New || 0, sc["Demo Scheduled"] || 0, sc["Demo Attended"] || 0, sc.Converted || 0, sc.Lost || 0] }] }, colors: ["#94a3b8", "#2563eb", "#f97316", "#16a34a", "#dc2626"] });
 			// list filters: search box + status segment
 			let seg = "open";
-			const apply = () => { const q = ($body.find("#enq-q").val() || "").toLowerCase(); $body.find("tr[data-enq]").each((i, tr) => { const $tr = $(tr), st = $tr.attr("data-status"), due = $tr.attr("data-due"); const ok = seg === "all" || (seg === "open" ? ["New", "Demo Scheduled", "Demo Attended"].includes(st) : seg === "due" ? ["today", "overdue"].includes(due) : st === seg); tr.hidden = !ok || (q && !$tr.text().toLowerCase().includes(q)); }); $body.find("#enq-count").text($body.find("tr[data-enq]:not([hidden])").length); };
+			const apply = () => { const q = ($body.find("#enq-q").val() || "").toLowerCase(); $body.find("tr[data-enq]").each((i, tr) => { const $tr = $(tr), st = $tr.attr("data-status"), due = $tr.attr("data-due"); const ok = seg === "all" || (seg === "open" ? ["New", "Demo Scheduled", "Demo Attended"].includes(st) : seg === "due" ? ["today", "overdue"].includes(due) : st === seg); tr.hidden = !ok || (q && !$tr.text().toLowerCase().includes(q)); });
+				$body.find("tr.grp").each((i, tr) => { const g = $(tr).attr("data-grp"), n = $body.find(`tr[data-enq][data-grp='${g}']:not([hidden])`).length; tr.hidden = !n; $(tr).find("td").text(`${GROUPS[g]} (${n})`); });
+				$body.find("#enq-count").text($body.find("tr[data-enq]:not([hidden])").length); };
 			$body.find("#enq-q").on("input", apply);
 			$body.find(".seg button").on("click", (e) => { seg = $(e.currentTarget).attr("data-seg"); $body.find(".seg button").removeClass("on"); $(e.currentTarget).addClass("on"); apply(); });
 			apply();
@@ -264,7 +323,7 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 					<div class="seg">${seg("open", __("Remaining"), d.open)}${seg("due", __("Due / overdue"), d.due_today + d.overdue)}${seg("Demo Attended", __("Hot leads"), d.demo_attended)}${seg("Converted", __("Converted"), d.converted)}${seg("Lost", __("Lost"), d.lost)}${seg("all", __("All"), d.total)}</div>
 					<input id="enq-q" type="search" placeholder="${__("Search name, mobile, counsellor")}"></div>
 				<div class="scroll"><table class="table"><thead><tr><th>${__("Enquiry")}</th><th>${__("Date")}</th>${d.batch ? "" : `<th>${__("Batch")}</th>`}<th title="${__("Remaining = New, Demo Scheduled or Demo Attended")}">${__("Status")}</th><th>${__("Counsellor")}</th><th class="c" title="${__("Follow-ups done so far · open ones")}">${__("Follow-ups")}</th><th>${__("Last call")}</th><th>${__("Next follow-up")}</th><th>${__("Source")}</th><th></th></tr></thead><tbody>
-				${d.enquiries.map(r => `<tr class="row-link" data-enq="${esc(r.name)}" data-status="${esc(r.status)}" data-due="${esc(r.due || "")}"><td>${enqLink(r)}</td><td class="nw">${dUser(r.enquiry_date)}${r.days_open != null && r.days_open > 0 ? `<br><small class="mini">${__("{0} days open", [r.days_open])}</small>` : ""}</td>${d.batch ? "" : `<td>${esc(r.batch_name)}</td>`}<td>${pill(r.status)}${r.status === "Lost" && r.lost_reason ? `<br><small class="mini">${esc(r.lost_reason)}</small>` : ""}</td><td>${esc(r.counsellor_name)}</td><td class="c"><a href="/app/student-follow-up?reference_name=${encodeURIComponent(r.name)}&status=Closed" title="${__("Completed follow-ups of this enquiry")}">${n(r.followups_done, "info")}</a>${r.followups_open ? ` <small class="mini">· <a href="${r.next_followup ? `/app/student-follow-up/${esc(r.next_followup)}` : `/app/student-follow-up?reference_name=${encodeURIComponent(r.name)}&status=Open`}" title="${__("Open the pending follow-up")}">${r.followups_open} ${__("open")}</a></small>` : ""}</td><td>${r.last_followup_on ? `<span class="nw">${dUser(r.last_followup_on)}</span>${r.last_followup_notes ? `<br><small class="notes">${esc(r.last_followup_notes.slice(0, 90))}${r.last_followup_notes.length > 90 ? "…" : ""}</small>` : ""}` : `<span class="due none">—</span>`}</td><td>${nextCell(r)}</td><td class="mini">${esc(r.source || "")}</td><td>${callBtn(r)}</td></tr>`).join("") || `<tr><td colspan="10" class="text-muted">${__("No enquiries match. Create one with New Enquiry, or widen the filters.")}</td></tr>`}
+				${grouped(d.enquiries, d.batch ? 9 : 10, r => `<tr class="row-link ${r.group}" data-enq="${esc(r.name)}" data-status="${esc(r.status)}" data-due="${esc(r.due || "")}" data-grp="${r.group}"><td>${enqLink(r)}</td><td class="nw">${dUser(r.enquiry_date)}${r.days_open != null && r.days_open > 0 ? `<br><small class="mini">${__("{0} days open", [r.days_open])}</small>` : ""}</td>${d.batch ? "" : `<td>${esc(r.batch_name)}</td>`}<td>${pill(r.status)}${r.status === "Lost" && r.lost_reason ? `<br><small class="mini">${esc(r.lost_reason)}</small>` : ""}</td><td>${esc(r.counsellor_name)}</td><td class="c"><a href="/app/student-follow-up?reference_name=${encodeURIComponent(r.name)}&status=Closed" title="${__("Completed follow-ups of this enquiry")}">${n(r.followups_done, "info")}</a>${r.followups_open ? ` <small class="mini">· <a href="${r.next_followup ? `/app/student-follow-up/${esc(r.next_followup)}` : `/app/student-follow-up?reference_name=${encodeURIComponent(r.name)}&status=Open`}" title="${__("Open the pending follow-up")}">${r.followups_open} ${__("open")}</a></small>` : ""}</td><td>${r.last_followup_on ? `<span class="nw">${dUser(r.last_followup_on)}</span>${r.last_followup_notes ? `<br><small class="notes">${esc(r.last_followup_notes.slice(0, 90))}${r.last_followup_notes.length > 90 ? "…" : ""}</small>` : ""}` : `<span class="due none">—</span>`}</td><td>${nextCell(r)}</td><td class="mini">${esc(r.source || "")}</td><td>${callBtn(r)}</td></tr>`).join("") || `<tr><td colspan="10" class="text-muted">${__("No enquiries match. Create one with New Enquiry, or widen the filters.")}</td></tr>`}
 				</tbody></table></div>
 			</div>`;
 	}
