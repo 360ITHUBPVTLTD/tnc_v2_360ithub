@@ -101,6 +101,12 @@ def get_overview(batch=None, counsellor=None, from_date=None, to_date=None):
 			"hot": e.status in OPEN and (dm["attended"] > 0 or e.status == "Demo Attended"),  # attended a demo, not yet admitted or lost
 			"days_open": date_diff(today, e.enquiry_date) if e.status in OPEN and e.enquiry_date else None,
 		})
+		# work order of the Remaining list (client video, 30 Oct): enquiries with a follow-up on top, soonest date first
+		# (overdue, today, upcoming), then the ones nobody has called yet, newest first; admitted and lost at the end
+		r = rows[-1]
+		r["work"] = (0 if due == "overdue" else 1 if due == "today" else 2 if due == "upcoming" else 3) if e.status in OPEN else 4 if e.status == "Converted" else 5
+		r["group"] = "followup" if r["work"] <= 2 else "fresh" if r["work"] == 3 else "closed"
+	rows.sort(key=lambda r: (r["work"], str(r["next_followup_on"] or "") if r["work"] <= 2 else ""))  # stable: newest enquiry first where dates tie
 
 	def bucket(key, label_of):
 		out = {}
