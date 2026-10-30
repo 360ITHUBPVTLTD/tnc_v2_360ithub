@@ -91,6 +91,8 @@ def enquiry_invite_state(m, t):
 	if already_used(t):
 		return {"valid": True, "closed": _("This enquiry link has already been used. If you want to enquire again, please call the institute.")}
 	name = open_enquiry_for(m)
+	if name and frappe.db.get_value("Student Enquiry", name, "enquiry_form_filled_on"):
+		return {"valid": True, "closed": _("Your enquiry form has already been received. Thank you! The institute will contact you.")}
 	return {"valid": True, "mobile": digits10(m), "batch": frappe.db.get_value("Student Enquiry", name, "batch_interested") if name else None}
 
 
@@ -109,11 +111,23 @@ def guard(doc):
 		frappe.throw(_("This link has expired. Please ask the institute for a new link."), frappe.PermissionError)
 	if already_used(doc.invite_token):
 		frappe.throw(_("This enquiry link has already been used."), frappe.DuplicateEntryError)
-	# the counsellor who sent this link owns the enquiry
+	# the counsellor who sent this link owns the enquiry: the link went out from an enquiry they saved
+	# for this mobile (WhatsApp Message Log). That enquiry may since be Lost or deleted, which is why
+	# this form made a new one; the counsellor must still be carried over, not left for a manager to guess.
 	if not doc.counsellor or doc.counsellor == "Guest":
-		sender = frappe.db.get_value("WhatsApp Message Log", {"reference_doctype": "Web Form", "reference_name": "enquiry", "mobile": digits10(doc.mobile)}, "owner", order_by="creation desc")
-		if sender and sender != "Guest" and frappe.db.exists("User", sender):
-			doc.counsellor = sender
+		doc.counsellor = link_sender(doc.mobile)
+
+
+def link_sender(mobile):
+	"""Counsellor behind the latest enquiry-form link sent to this mobile, else None."""
+	m = digits10(mobile)
+	for log in frappe.get_all("WhatsApp Message Log", filters={"mobile": ["like", f"%{m}"], "reference_doctype": ["in", ["Student Enquiry", "Web Form"]]},
+			fields=["owner", "reference_doctype", "reference_name"], order_by="creation desc", limit=5):
+		c = frappe.db.get_value("Student Enquiry", log.reference_name, "counsellor") if log.reference_doctype == "Student Enquiry" else None
+		for user in (c, log.owner):
+			if user and user != "Guest" and frappe.db.exists("User", user):
+				return user
+	return None
 
 
 @frappe.whitelist(allow_guest=True)
@@ -128,10 +142,13 @@ FORM_FIELDS = ("student_name", "email", "gender", "batch_interested", "city", "c
 def open_enquiry_for(mobile):
 	"""The newest open enquiry a counsellor saved for this mobile that no personal link has filled yet."""
 	m = digits10(mobile)
-	for row in frappe.get_all("Student Enquiry", filters={"status": ["not in", ["Converted", "Lost"]], "mobile": ["like", f"%{m}"]},
-			fields=["name", "mobile", "invite_token"], order_by="creation desc"):
-		if digits10(row.mobile) == m and not row.invite_token:
-			return row.name
+	rows = frappe.get_all("Student Enquiry", filters={"status": ["!=", "Converted"], "mobile": ["like", f"%{m}"]},
+		fields=["name", "mobile", "invite_token", "status"], order_by="creation desc")
+	# a filled enquiry (invite_token set) still counts: a second link to the same number must land on it, never make a twin
+	rows = [r for r in rows if digits10(r.mobile) == m]
+	# an open one first; else the enquiry the counsellor marked Lost before the student answered: it is reopened, not duplicated
+	for row in [r for r in rows if r.status != "Lost"] + [r for r in rows if r.status == "Lost"]:
+		return row.name
 	return None
 
 
@@ -152,11 +169,16 @@ def submit_personal_form(m, t, values=None):
 		frappe.throw(_("Please choose the batch you are interested in."))
 	if name:
 		enq = frappe.get_doc("Student Enquiry", name)
+		reopened = enq.status == "Lost"
+		if reopened:  # same bookkeeping as the Reopen action on the form
+			enq.update({"last_lost_on": enq.lost_on, "last_lost_reason": enq.lost_reason, "last_lost_note": enq.lost_note, "reopened_on": now_datetime().date(),
+				"status": "New", "lost_reason": None, "lost_note": None, "lost_on": None})
+			enq.flags.status_by_action = True
 		enq.update(data)
 		enq.invite_token = t
 		enq.enquiry_form_filled_on = now_datetime()
 		enq.save(ignore_permissions=True)
-		enq.add_comment("Info", _("Enquiry form filled by the student through the personal link"))
+		enq.add_comment("Info", _("Enquiry form filled by the student through the personal link") + (_(" · was Lost, reopened as New") if reopened else ""))
 		return {"ok": True, "name": enq.name, "updated": True}
 	doc = frappe.get_doc({"doctype": "Student Enquiry", "mobile": digits10(m), "invite_token": t, "enquiry_form_filled_on": now_datetime(), **data})
 	doc.insert(ignore_permissions=True)
