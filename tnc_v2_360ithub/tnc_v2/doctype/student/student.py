@@ -33,6 +33,10 @@ class Student(Document):
 		self.guard_hold_mirror()
 		if self.mobile:
 			self.mobile = self.mobile.strip()
+		# one Google account per student: the Meet email falls back to the plain email, both kept tidy
+		# (Google compares addresses case-insensitively; our matching and guest list rely on lower-case)
+		self.email = (self.email or "").strip().lower() or None
+		self.meet_email = (self.meet_email or "").strip().lower() or self.email
 		if self.status == "Discontinued" and self.merged_into == self.name:
 			frappe.throw("A student cannot be merged into itself")
 		if self.status not in ("Attendance Hold", "Discontinued"):

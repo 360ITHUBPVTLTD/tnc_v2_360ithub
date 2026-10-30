@@ -257,6 +257,10 @@ scheduler_events = {
 		"30 23 * * *": [
 			"tnc_v2_360ithub.attendance.daily.nightly",
 		],
+		# Online classes: guest list of every current batch meeting refreshed nightly (students' Meet or plain email).
+		"0 1 * * *": [
+			"tnc_v2_360ithub.meet.sync_guests_all",
+		],
 		# Online attendance: pull Google Meet sessions for classes that have ended (does nothing until the Google account is connected in TNC Settings).
 		"*/15 * * * *": [
 			"tnc_v2_360ithub.meet.sync",
