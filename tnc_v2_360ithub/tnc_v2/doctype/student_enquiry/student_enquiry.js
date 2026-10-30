@@ -353,7 +353,7 @@ frappe.ui.form.on("Student Enquiry", {
 				{ fieldtype: "Column Break" },
 				{ fieldname: "regenerate", fieldtype: "Button", label: __("Generate Instalments"), click: regenerate },
 				{ fieldtype: "Section Break" },
-				{ fieldname: "grid_note", fieldtype: "HTML", options: `<div class="text-muted small" style="margin-bottom:4px">${__("Edit any amount or date; the total must equal Net Payable.")}</div>` },
+				{ fieldname: "grid_note", fieldtype: "HTML", options: `<div class="text-muted small" style="margin-bottom:4px">${__("Edit any amount or date. Change one amount and the other instalments re-split so the total stays equal to Net Payable.")}</div>` },
 				{ fieldname: "installments", fieldtype: "Table", label: "", cannot_add_rows: false, in_place_edit: true, data: [], get_data: () => d.fields_dict.installments.df.data,
 				  fields: [
 					{ fieldname: "installment_no", fieldtype: "Int", label: __("No"), read_only: 1 },
@@ -389,6 +389,24 @@ frappe.ui.form.on("Student Enquiry", {
 		});
 		d.$wrapper.addClass("adm-dlg"); d.$wrapper.find(".modal-dialog").css({ "max-width": "min(1400px, 96vw)", width: "96vw" });
 		$(document.head).find("#adm-dlg-css").remove(); $(CSS).attr("id", "adm-dlg-css").appendTo(document.head);
+		// an amount typed into one instalment stays as typed and the others re-split so the total
+		// always equals Net Payable without the counsellor doing the arithmetic (27 Oct meeting):
+		// the rows after the edited one when there are any, else the rows before it
+		const rebalance = (idx) => {
+			const grid = d.fields_dict.installments.grid, rows = grid.df.data || [];
+			if (!st.plan || idx < 1 || idx > rows.length || rows.length < 2) return;
+			const after = rows.slice(idx), before = rows.slice(0, idx - 1);
+			const others = after.length ? after : before, kept = after.length ? before : [];
+			const fixed = flt(rows[idx - 1].amount) + kept.reduce((t, r) => t + flt(r.amount), 0);
+			const remain = Math.round(flt(st.plan.net) - fixed);
+			if (remain < 0) return;
+			const each = Math.floor(remain / others.length);
+			others.forEach((r, i) => { r.amount = i === others.length - 1 ? remain - each * (others.length - 1) : each; });
+			grid.refresh();
+		};
+		d.fields_dict.installments.grid.wrapper.on("change", "input[data-fieldname='amount']", (e) => {
+			if (st.generated) rebalance(cint($(e.target).closest(".grid-row").attr("data-idx")));
+		});
 		// the table's rows drive the summary and the batch check
 		d.fields_dict.installments.grid.wrapper.on("change", () => { if (st.generated) recalc(); });
 		frappe.call({ method: A + "preview", args: { enquiry: frm.doc.name } }).then((r) => {

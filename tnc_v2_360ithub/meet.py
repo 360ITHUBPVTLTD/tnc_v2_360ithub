@@ -139,33 +139,50 @@ def _local(ts):
 	return datetime.fromtimestamp(int(ts), tz=timezone.utc).astimezone(IST).replace(tzinfo=None)
 
 
+def _reports_get(headers, params, tries=3):
+	"""GET the audit log; Google's 5xx replies are retried with a short pause before giving up."""
+	import time
+	for i in range(tries):
+		r = requests.get(REPORTS_URL, headers=headers, params=params, timeout=60)
+		if r.status_code < 500 or i == tries - 1:
+			return r
+		time.sleep(2 * (i + 1))
+	return r
+
+
 def meet_sessions(code, start_dt, end_dt):
 	"""Participant sessions of one meeting code that ended between start and end (site time):
 	[{email, name, start, end, minutes, device}] in site time. Anonymous (guest) participants
-	have no email, only the name they typed."""
-	out, token = [], None
+	have no email, only the name they typed.
+	The meeting-code filter is asked of Google first; when Google keeps failing on it (500 backendError),
+	the window is pulled unfiltered and the code is matched here instead."""
+	code = code.upper()
 	headers = {"Authorization": f"Bearer {access_token()}"}
-	while True:
-		params = {"eventName": "call_ended", "startTime": _rfc3339(start_dt), "endTime": _rfc3339(end_dt), "maxResults": 1000,
-			"filters": f"meeting_code=={code.upper()}"}
-		if token:
-			params["pageToken"] = token
-		r = requests.get(REPORTS_URL, headers=headers, params=params, timeout=60)
-		if r.status_code != 200:
-			frappe.throw(_("Google audit log error {0}: {1}").format(r.status_code, r.text[:300]))
-		data = r.json()
-		for item in data.get("items", []):
-			for ev in item.get("events", []):
-				p = {x["name"]: (x.get("value") or x.get("intValue") or x.get("boolValue")) for x in ev.get("parameters", [])}
-				if not p.get("start_timestamp_seconds"):
-					continue
-				start = _local(p["start_timestamp_seconds"])
-				secs = cint(p.get("duration_seconds"))
-				out.append({"email": (p.get("identifier") or "").strip().lower(), "name": p.get("display_name") or "", "device": p.get("device_type") or "",
-					"start": start, "end": start + timedelta(seconds=secs), "minutes": secs // 60})
-		token = data.get("nextPageToken")
-		if not token:
-			break
+	base = {"eventName": "call_ended", "startTime": _rfc3339(start_dt), "endTime": _rfc3339(end_dt), "maxResults": 1000}
+	for filtered in (True, False):
+		out, token = [], None
+		while True:
+			params = dict(base, filters=f"meeting_code=={code}") if filtered else dict(base)
+			if token:
+				params["pageToken"] = token
+			r = _reports_get(headers, params)
+			if r.status_code >= 500 and filtered:
+				break  # try once more without the filter
+			if r.status_code != 200:
+				frappe.throw(_("Google audit log error {0}: {1}").format(r.status_code, r.text[:300]))
+			data = r.json()
+			for item in data.get("items", []):
+				for ev in item.get("events", []):
+					p = {x["name"]: (x.get("value") or x.get("intValue") or x.get("boolValue")) for x in ev.get("parameters", [])}
+					if not p.get("start_timestamp_seconds") or (p.get("meeting_code") or "").upper() != code:
+						continue
+					start = _local(p["start_timestamp_seconds"])
+					secs = cint(p.get("duration_seconds"))
+					out.append({"email": (p.get("identifier") or "").strip().lower(), "name": p.get("display_name") or "", "device": p.get("device_type") or "",
+						"start": start, "end": start + timedelta(seconds=secs), "minutes": secs // 60})
+			token = data.get("nextPageToken")
+			if not token:
+				return out
 	return out
 
 
