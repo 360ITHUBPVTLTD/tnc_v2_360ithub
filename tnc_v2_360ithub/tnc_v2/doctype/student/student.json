@@ -234,7 +234,7 @@
    "fieldtype": "Data",
    "label": "Google Meet Email",
    "options": "Email",
-   "description": "The Google account used to join online classes. Attendance from Google Meet is matched on this."
+   "description": "The Google account used to join online classes. Attendance from Google Meet is matched on this. Left blank, the Email above is used."
   },
   {
    "fieldname": "cb_c1",

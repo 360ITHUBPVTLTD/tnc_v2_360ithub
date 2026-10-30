@@ -241,7 +241,7 @@ def sync_class(batch, date, window, code, now=None):
 	for e in by_email:
 		if e.startswith("guest:"):
 			continue
-		st = frappe.db.get_value("Student", {"meet_email": e}, "name")
+		st = frappe.db.get_value("Student", {"meet_email": e}, "name") or frappe.db.get_value("Student", {"meet_email": ["is", "not set"], "email": e}, "name")
 		if st:
 			students[e] = st
 	matched, unmatched, punches = 0, [], 0
@@ -339,10 +339,10 @@ def code_for(batch, date):
 
 def batch_guests(batch):
 	"""Emails Google should let in without asking: students enrolled in the batch (Active / On Hold)
-	with a Meet email, and the teachers with one (they host)."""
-	students = frappe.db.sql("""select distinct lower(trim(s.meet_email)) from `tabStudent Batch Enrollment` e
+	by their Meet email, else their plain email, and the teachers with a Meet email (they host)."""
+	students = frappe.db.sql("""select distinct lower(trim(coalesce(nullif(trim(s.meet_email), ''), s.email))) from `tabStudent Batch Enrollment` e
 		join `tabStudent` s on s.name = e.student
-		where e.batch = %s and e.docstatus = 1 and e.status in ('Active', 'On Hold') and ifnull(s.meet_email, '') != ''""", batch)
+		where e.batch = %s and e.docstatus = 1 and e.status in ('Active', 'On Hold') and coalesce(nullif(trim(s.meet_email), ''), s.email) is not null""", batch)
 	teachers = frappe.get_all("Teacher", filters={"meet_email": ["!=", ""], "status": ["!=", "Inactive"]}, pluck="meet_email")
 	host = (_settings().meet_account or "").strip().lower()
 	return sorted({e[0] for e in students} | {t.strip().lower() for t in teachers if t} - {host, ""})
@@ -488,9 +488,19 @@ def on_enrolment_change(doc, method=None):
 	queue_guest_sync(doc.batch)
 
 
+def sync_guests_all():
+	"""Nightly: refresh the guest list of every current system-made link, so nothing stays behind
+	after a release or a change that no hook caught."""
+	for l in frappe.get_all("Batch Meet Link", filters={"current": 1, "event_id": ["!=", ""]}, pluck="batch", distinct=True):
+		try:
+			sync_guests(l)
+		except Exception:
+			frappe.log_error(title=f"Meet guest sync failed: {l}", message=frappe.get_traceback())
+
+
 def on_student_change(doc, method=None):
-	"""Student saved with a different Meet email: every batch they are in gets the new address."""
-	if doc.is_new() or not doc.has_value_changed("meet_email"):
+	"""Student saved with a different Meet email (or plain email, which stands in for it): every batch they are in gets the new address."""
+	if doc.is_new() or not (doc.has_value_changed("meet_email") or doc.has_value_changed("email")):
 		return
 	for b in frappe.get_all("Student Batch Enrollment", filters={"student": doc.name, "docstatus": 1, "status": ["in", ["Active", "On Hold"]]}, pluck="batch", distinct=True):
 		queue_guest_sync(b)
