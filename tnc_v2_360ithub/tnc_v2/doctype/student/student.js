@@ -4,6 +4,12 @@ frappe.ui.form.on("Student", {
 			frm.dashboard.clear_headline();
 			frm.dashboard.set_headline(`<span class="indicator-pill orange no-indicator-dot">${__("Form not submitted by student")}</span> ${__("Student has not filled the admission form yet, details are missing.")} ${frm.doc.enquiry ? `<a href="/app/student-enquiry/${frm.doc.enquiry}">${__("Send the form again from the enquiry")}</a>` : ""}`);
 		}
+		// the admission form was sent at Admit; while the student has not filled it, the counsellor can send the link again from here
+		if (!frm.is_new() && !frm.doc.terms_accepted && frm.doc.status === "Active" && frm.doc.enquiry) {
+			const P = "tnc_v2_360ithub.tnc_v2.doctype.student_enquiry.student_enquiry.";
+			tnc_link_button(frm, { label: __("Resend admission form"), enquiry: frm.doc.enquiry, preview: P + "admission_link_preview", send: P + "send_admission_link",
+				hint: __("The admission form link is added automatically at the end of the message."), state: "partial", title: __("Student has not filled the admission form. Send the link again on WhatsApp.") });
+		}
 		frm.trigger("render_overview");
 		frm.trigger("render_payments");
 		frm.trigger("render_followups");
