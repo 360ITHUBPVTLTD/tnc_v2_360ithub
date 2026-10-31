@@ -16,9 +16,10 @@ class StudentEnquiry(Document):
 			frappe.msgprint(_("A student with this mobile already exists: {0} ({1}, {2}). If this is the same person, use Convert to Student and link them instead of creating a new student.").format(
 				frappe.utils.get_link_to_form("Student", st.name), st.student_name, st.status), title=_("Existing student"), indicator="orange")
 		if m["enquiries"]:
+			# one open enquiry per mobile: the second is not saved, the counsellor continues on the existing one
 			en = m["enquiries"][0]
-			frappe.msgprint(_("An open enquiry with this mobile already exists: {0} ({1}, {2}, counsellor {3}).").format(
-				frappe.utils.get_link_to_form("Student Enquiry", en.name), en.student_name, en.status, en.counsellor or ""), title=_("Duplicate enquiry"), indicator="orange")
+			frappe.throw(_("An open enquiry with this mobile already exists: {0} ({1}, {2}, counsellor {3}). Open that enquiry and continue there; a second enquiry for the same number is not saved.").format(
+				frappe.utils.get_link_to_form("Student Enquiry", en.name), en.student_name, en.status, en.counsellor or ""), frappe.DuplicateEntryError, title=_("Duplicate enquiry"))
 
 	def after_insert(self):
 		# a counsellor saved a new enquiry: the student gets their personal enquiry-form link at once.
@@ -234,9 +235,13 @@ def admission_form_status(enquiry):
 	# only logs of this enquiry: a deleted enquiry's number can be reused, so ignore logs older than the record
 	sent_on = frappe.db.get_value("WhatsApp Message Log", {"reference_doctype": "Student Enquiry", "reference_name": enq.name, "status": "Sent",
 		"message": ["like", "%/admission/%"], "creation": [">=", enq.creation]}, "creation", order_by="creation desc")
-	demo = frappe.db.get_value("Demo Class", {"enquiry": enq.name, "result": "Scheduled"}, ["name", "demo_date", "from_time"], as_dict=True, order_by="demo_date desc, from_time desc")
+	# the nearest scheduled day first; a multi-day demo has one Demo Class per day
+	scheduled = frappe.get_all("Demo Class", filters={"enquiry": enq.name, "result": "Scheduled"}, fields=["name", "demo_date", "from_time"], order_by="demo_date asc, from_time asc")
+	demo = scheduled[0] if scheduled else None
 	attended = frappe.db.get_value("Demo Class", {"enquiry": enq.name, "result": "Attended"}, ["name", "demo_date", "from_time", "batch", "rated_on"], as_dict=True, order_by="demo_date desc, from_time desc")
-	return {"pending": form, "applied": applied[0] if applied else None, "link": link, "admission_sent_on": sent_on, "scheduled_demo": demo, "attended_demo": attended}
+	from tnc_v2_360ithub.admissions.admit import can_admit
+	from tnc_v2_360ithub.admissions.demo_fee import paid_for_enquiry
+	return {"demo_fee_paid": paid_for_enquiry(enq.name), "pending": form, "applied": applied[0] if applied else None, "link": link, "admission_sent_on": sent_on, "scheduled_demo": demo, "scheduled_demos": scheduled, "attended_demo": attended, "can_admit": can_admit()}
 
 
 LINK_HOURS = 48  # a personal admission link works for this long after it is sent

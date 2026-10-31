@@ -45,6 +45,10 @@ def collect(demo, amount=None, mode_of_payment="Cash", reference_no=None, postin
 	doc.check_permission("write")
 	if doc.demo_fee_status and doc.demo_fee_status != "Not Collected":
 		frappe.throw(_("Demo fee for {0} is already {1}.").format(demo, doc.demo_fee_status))
+	paid = paid_for_enquiry(doc.enquiry)
+	if paid:
+		frappe.throw(_("The demo fee of {0} was already received on {1} ({2}). It is taken once per enquiry, not for every demo day; refund it first if a second fee is really due.").format(
+			frappe.format_value(paid.demo_fee_amount, {"fieldtype": "Currency"}), frappe.format_value(paid.demo_fee_paid_on, {"fieldtype": "Date"}), paid.name))
 	default_amount, _adj = settings()
 	amount = flt(amount if amount not in (None, "") else default_amount, 2)
 	if amount <= 0:
@@ -136,6 +140,15 @@ def refund(demo, mode_of_payment="Cash", reference_no=None, mark_lost=0, lost_re
 		_mark_lost(doc.enquiry, lost_reason or _("Not interested now"), lost_note or _("Demo fee refunded"))
 		lost = doc.enquiry
 	return {"credit_note": cn.name, "payment_entry": pe.name, "enquiry_lost": lost}
+
+
+def paid_for_enquiry(enquiry, exclude=None):
+	"""The demo fee still Paid on any demo of this enquiry, else None. One fee covers all demo days."""
+	if not enquiry:
+		return None
+	rows = frappe.get_all("Demo Class", filters={"enquiry": enquiry, "demo_fee_status": "Paid", "name": ["!=", exclude or ""]},
+		fields=["name", "demo_fee_amount", "demo_fee_paid_on"], order_by="demo_fee_paid_on desc", limit=1)
+	return rows[0] if rows else None
 
 
 @frappe.whitelist()

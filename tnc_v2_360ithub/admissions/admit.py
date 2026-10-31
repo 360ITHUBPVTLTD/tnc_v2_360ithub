@@ -12,6 +12,23 @@ from frappe.utils import cint, flt, getdate, nowdate
 from tnc_v2_360ithub.admissions.fees import BANK_MODES
 
 
+ALWAYS_ADMIT_ROLES = ("TNC Manager", "TNC Super Admin", "System Manager")
+
+
+def can_admit(user=None):
+	"""Who may admit: only the users listed under TNC Settings > Admissions > "Counsellors who can admit",
+	plus managers always. Nobody else, even with write access to the enquiry."""
+	user = user or frappe.session.user
+	if user == "Administrator" or set(frappe.get_roles(user)) & set(ALWAYS_ADMIT_ROLES):
+		return True
+	return user in [r.user for r in (frappe.get_cached_doc("TNC Settings").get("admit_users") or []) if r.user]
+
+
+def check_can_admit():
+	if not can_admit():
+		frappe.throw(_("You are not allowed to admit students. Ask a manager to add you under TNC Settings > Admissions > Counsellors who can admit."), frappe.PermissionError)
+
+
 @frappe.whitelist()
 def preview(enquiry, batch=None):
 	"""Numbers the dialog shows before anything is created."""
@@ -105,6 +122,7 @@ def admit(enquiry, batch, number_of_installments=1, installment_gap_days=30, fir
 	from tnc_v2_360ithub.admissions.fees import receive_payment
 	enq = frappe.get_doc("Student Enquiry", enquiry)
 	enq.check_permission("write")
+	check_can_admit()
 	if enq.status == "Lost":
 		frappe.throw(_("This enquiry is marked Lost. Reopen it first."))
 	if not batch:

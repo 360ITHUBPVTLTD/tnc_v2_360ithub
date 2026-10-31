@@ -41,7 +41,19 @@ frappe.ui.form.on("Demo Class", {
 	demo_fee_buttons(frm) {
 		const P = "tnc_v2_360ithub.admissions.demo_fee.";
 		const st = frm.doc.demo_fee_status || "Not Collected";
-		if (st === "Not Collected" && frm.doc.result !== "Cancelled") {
+		if (st === "Not Collected" && frm.doc.result !== "Cancelled" && frm.__fee_elsewhere_for !== frm.doc.name) {
+			// one demo fee per enquiry: when another demo day already holds it, say so instead of asking again
+			frappe.call({ method: P + "summary_for_enquiry", args: { enquiry: frm.doc.enquiry } }).then((r) => {
+				const row = ((r.message || {}).rows || []).find((x) => x.demo_fee_status === "Paid" && x.name !== frm.doc.name);
+				frm.__fee_elsewhere = row || null; frm.__fee_elsewhere_for = frm.doc.name;
+				frm.trigger("demo_fee_buttons");
+			});
+			return;
+		}
+		if (st === "Not Collected" && frm.__fee_elsewhere) {
+			frm.dashboard.clear_headline();
+			frm.dashboard.set_headline(`<span class="indicator-pill green no-indicator-dot">✓ ${__("Demo fee {0} received on {1} ({2})", [format_currency(frm.__fee_elsewhere.demo_fee_amount, "INR"), frappe.datetime.str_to_user(frm.__fee_elsewhere.demo_fee_paid_on), `<a href="/app/demo-class/${frm.__fee_elsewhere.name}">${frm.__fee_elsewhere.name}</a>`])}</span>`);
+		} else if (st === "Not Collected" && frm.doc.result !== "Cancelled") {
 			frm.add_custom_button(__("Collect Demo Fee"), () => {
 				frappe.db.get_single_value("TNC Settings", "demo_fee_amount").then((v) => {
 					frappe.prompt([

@@ -50,6 +50,8 @@
   "meet_last_error",
   "accounts_section",
   "invoice_approvers",
+  "admissions_section",
+  "admit_users",
   "demo_fee_section",
   "demo_fee_amount",
   "cb_df",
@@ -293,7 +295,7 @@
    "fieldtype": "Int",
    "label": "Online: Present From (% of class time in the meeting)",
    "default": "75",
-   "description": "Total minutes in the meeting \u00f7 class minutes. At or above = Present, below but joined = Partial, never joined = Absent."
+   "description": "Total minutes in the meeting ÷ class minutes. At or above = Present, below but joined = Partial, never joined = Absent."
   },
   {
    "fieldname": "meet_entry",
@@ -351,6 +353,18 @@
    "description": "Bills entered by hand (supplier bills, salary, rent...) must be approved by one of these users before they can be submitted. Administrator always can. Teacher payout invoices made from approved timesheets skip this. Leave empty to switch approval off."
   },
   {
+   "fieldname": "admissions_section",
+   "fieldtype": "Section Break",
+   "label": "Admissions"
+  },
+  {
+   "fieldname": "admit_users",
+   "fieldtype": "Table MultiSelect",
+   "label": "Counsellors who can admit",
+   "options": "Timesheet Approver",
+   "description": "Only these users see the Admit button on a Student Enquiry and can admit a student end to end (student, enrolment, fee order, payment, admission form link). TNC Manager, TNC Super Admin and Administrator always can. Nobody else can admit while the list is empty."
+  },
+  {
    "fieldname": "demo_fee_section",
    "fieldtype": "Section Break",
    "label": "Demo Fee"
@@ -375,7 +389,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-10-28 10:30:00.000000",
+ "modified": "2026-10-30 12:30:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "TNC Settings",
