@@ -383,7 +383,7 @@ override_whitelisted_methods = {
 fixtures = [
 	{"dt": "Role", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
 	{"dt": "Role Profile", "filters": [["name", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teacher"]]]},
-	{"dt": "Custom DocPerm", "filters": [["parent", "in", ["Task", "Comment", "Employee", "User", "Payment Entry", "Purchase Invoice", "Supplier", "Buying Settings", "Accounts Settings", "Contact", "Address", "Cost Center", "Currency", "UOM", "Mode of Payment", "Payment Terms Template", "Purchase Taxes and Charges Template", "Terms and Conditions", "Item Group", "Supplier Group", "Tax Category", "Price List", "Bank Account"]], ["role", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
+	{"dt": "Custom DocPerm", "filters": [["parent", "in", ["Task", "Comment", "Employee", "User", "Payment Entry", "Purchase Invoice", "Supplier", "Buying Settings", "Accounts Settings", "Contact", "Address", "Cost Center", "Currency", "UOM", "Mode of Payment", "Payment Terms Template", "Purchase Taxes and Charges Template", "Terms and Conditions", "Item Group", "Supplier Group", "Tax Category", "Price List", "Bank Account", "Item", "Account", "Customer"]], ["role", "in", ["TNC Employees", "TNC Manager", "TNC Super Admin", "TNC Teachers"]]]},
 	{"dt": "Number Card", "filters": [["module", "=", "TNC v2"]]},
 	{"dt": "Report", "filters": [["module", "=", "TNC v2"], ["is_standard", "=", "No"]]},
 	{"dt": "Workspace", "filters": [["module", "=", "TNC v2"]]},

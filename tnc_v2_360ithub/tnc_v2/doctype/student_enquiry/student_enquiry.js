@@ -86,6 +86,10 @@ frappe.ui.form.on("Student Enquiry", {
 		} else {
 			frappe.call({ method: P + "admission_form_status", args: { enquiry: frm.doc.name } }).then((r) => {
 				const m = r.message || {};
+				// next free day for "Schedule another day": the day after the last scheduled one
+				frm.__demo_fee_paid = m.demo_fee_paid || null;
+				const last = (m.scheduled_demos || []).map((d) => d.demo_date).sort().pop();
+				frm.__next_demo_date = last ? frappe.datetime.add_days(last, 1) : null;
 				// headline: where the two personal forms stand. Links are sent automatically (enquiry form on
 				// save, admission form from Admit); the buttons under More only resend them.
 				const pill = (c, t) => `<span class="indicator-pill ${c} no-indicator-dot">${t}</span>`;
@@ -102,9 +106,12 @@ frappe.ui.form.on("Student Enquiry", {
 				// toolbar: the two actions a counsellor takes. While a demo is scheduled the button is that demo
 				// (opens it to mark Attended / Not Attended); afterwards Schedule Demo comes back for another one.
 				if (m.scheduled_demo) {
-					const d = m.scheduled_demo;
-					tnc_style(frm.add_custom_button(__("Demo {0}{1} · mark result", [frappe.datetime.str_to_user(d.demo_date), tnc_hhmm(d.demo_date, d.from_time)]), () => frappe.set_route("Form", "Demo Class", d.name)), "partial",
-						__("Demo is scheduled. Open it to mark Attended or Not Attended."));
+					// one button per scheduled day (an offline demo runs over two days), nearest first, then Schedule Demo for the next day
+					(m.scheduled_demos || [m.scheduled_demo]).forEach((d) => {
+						tnc_style(frm.add_custom_button(__("Demo {0}{1} · mark result", [frappe.datetime.str_to_user(d.demo_date), tnc_hhmm(d.demo_date, d.from_time)]), () => frappe.set_route("Form", "Demo Class", d.name)), "partial",
+							__("Demo is scheduled. Open it to mark Attended or Not Attended."));
+					});
+					frm.add_custom_button(__("Schedule another day"), () => frm.trigger("schedule_demo")).attr("title", __("A two-day demo: add the next day. The student gets a message for each day and a reminder on each morning."));
 				} else if (m.attended_demo) {
 					const d = m.attended_demo, when = frappe.datetime.str_to_user(d.demo_date) + tnc_hhmm(d.demo_date, d.from_time);
 					tnc_style(frm.add_custom_button(__("✓ Demo attended {0}", [frappe.datetime.str_to_user(d.demo_date)]), () => {
@@ -117,7 +124,8 @@ frappe.ui.form.on("Student Enquiry", {
 					tnc_style(frm.add_custom_button(__("Schedule Demo"), () => frm.trigger("schedule_demo")), "todo", __("Schedule a demo class"));
 				}
 				frm.add_custom_button(__("Add Follow-up"), () => frappe.new_doc("Student Follow-Up", { reference_type: "Student Enquiry", reference_name: frm.doc.name })).attr("title", __("Record or schedule a follow-up with this enquiry"));
-				frm.add_custom_button(__("Admit"), () => frm.trigger("admit")).attr("title", __("Batch, fee, instalments, payment: makes the student. Sends the admission form link."));
+				// Admit only for the counsellors listed in TNC Settings > Admissions (managers always); others keep every other action
+				if (m.can_admit) frm.add_custom_button(__("Admit"), () => frm.trigger("admit")).attr("title", __("Batch, fee, instalments, payment: makes the student. Sends the admission form link."));
 				if (!frm.doc.enquiry_form_filled_on) tnc_link_button(frm, { label: __("Resend enquiry form"), group: more, preview: P + "enquiry_link_preview", send: P + "send_enquiry_link", hint: __("The enquiry form link is added automatically at the end of the message.") });
 				if (!(m.pending || m.applied)) tnc_link_button(frm, { label: __("Resend admission form"), group: more, preview: P + "admission_link_preview", send: P + "send_admission_link", hint: __("The admission form link is added automatically at the end of the message.") });
 				frm.add_custom_button(__("Mark Lost"), () => frm.trigger("mark_lost"), more);
@@ -173,22 +181,25 @@ frappe.ui.form.on("Student Enquiry", {
 			const m = Math.round((b - a) / 60), h = Math.floor(m / 60), mm = m % 60;
 			$w.html(`<div class="small" style="padding:6px 10px;border-radius:6px;background:#dbeafe;color:#1e40af;display:inline-block"><b>${__("Duration")}:</b> ${h ? h + " h " : ""}${mm} min</div>`);
 		};
+		const paid = frm.__demo_fee_paid;
 		const d = new frappe.ui.Dialog({
 			title: __("Schedule Demo Class"),
 			fields: [
 				{ fieldname: "batch", fieldtype: "Link", label: __("Batch"), options: "Student Batch", reqd: 1, default: frm.doc.batch_interested || undefined,
 				  description: frm.doc.course_interested ? __("Batches of {0}", [frm.doc.course_interested]) : __("Open batches"),
 				  get_query: () => ({ filters: Object.assign({ status: ["in", ["Upcoming", "Ongoing"]] }, frm.doc.course_interested ? { course: frm.doc.course_interested } : {}) }) },
-				{ fieldname: "demo_date", fieldtype: "Date", label: __("Date"), reqd: 1, default: frappe.datetime.get_today() },
+				{ fieldname: "demo_date", fieldtype: "Date", label: __("Date"), reqd: 1, default: frm.__next_demo_date || frappe.datetime.get_today() },
 				{ fieldname: "from_time", fieldtype: "Time", label: __("From Time"), reqd: 1, onchange: () => show_duration() },
 				{ fieldname: "to_time", fieldtype: "Time", label: __("To Time"), reqd: 1, onchange: () => show_duration() },
 				{ fieldname: "duration_html", fieldtype: "HTML" },
 				{ fieldname: "sb_fee", fieldtype: "Section Break", label: __("Demo fee") },
+				// the demo fee is taken once per enquiry: a second demo day never asks for it again
+				...(paid ? [{ fieldname: "fee_paid_html", fieldtype: "HTML", options: `<div class="small" style="padding:8px 12px;border-radius:6px;background:#dcfce7;color:#166534;display:inline-block">✓ ${__("Demo fee {0} already received on {1} ({2}). Not asked again.", [`<b>${format_currency(paid.demo_fee_amount, "INR")}</b>`, frappe.datetime.str_to_user(paid.demo_fee_paid_on), paid.name])}</div>` }] : [
 				{ fieldname: "collect_fee", fieldtype: "Check", label: __("Collect demo fee now"), default: (frm.__demo_fee_amount || 500) > 0 ? 1 : 0 },
 				{ fieldname: "fee_amount", fieldtype: "Currency", label: __("Amount"), depends_on: "collect_fee", default: frm.__demo_fee_amount || 500 },
 				{ fieldname: "cb_fee", fieldtype: "Column Break" },
 				{ fieldname: "mode_of_payment", fieldtype: "Link", label: __("Mode"), options: "Mode of Payment", default: "Cash", depends_on: "collect_fee", get_query: () => ({ filters: { enabled: 1 } }) },
-				{ fieldname: "reference_no", fieldtype: "Data", label: __("Reference No"), depends_on: "eval:doc.collect_fee && doc.mode_of_payment && doc.mode_of_payment !== 'Cash'" },
+				{ fieldname: "reference_no", fieldtype: "Data", label: __("Reference No"), depends_on: "eval:doc.collect_fee && doc.mode_of_payment && doc.mode_of_payment !== 'Cash'" }]),
 			],
 			primary_action_label: __("Schedule"),
 			primary_action(values) {

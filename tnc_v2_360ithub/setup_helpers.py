@@ -273,6 +273,15 @@ V2_ROLE_PERMISSIONS = [
 	("Tax Category", "TNC Manager", 0, {"read": 1, "select": 1}),
 	("Price List", "TNC Manager", 0, {"read": 1, "select": 1}),
 	("Bank Account", "TNC Manager", 0, {"read": 1, "select": 1}),
+	# Admit (Student Enquiry -> Student Batch Enrollment -> Sales Order + Payment Entry): ERPNext reads the
+	# fee Item, the Customer and the receiving Account with the counsellor's own permission while it fills the
+	# order and the receipt, even though the documents themselves are made with ignore_permissions. Without
+	# these a counsellor (TNC Employees only) gets "does not have doctype access ... Item" and cannot admit.
+	("Item", "TNC Employees", 0, {"read": 1, "select": 1}),
+	("Account", "TNC Employees", 0, {"read": 1, "select": 1}),
+	("Customer", "TNC Employees", 0, {"read": 1, "select": 1}),
+	("Account", "TNC Manager", 0, {"read": 1, "select": 1}),
+	("Customer", "TNC Manager", 0, {"read": 1, "select": 1}),
 ]
 
 

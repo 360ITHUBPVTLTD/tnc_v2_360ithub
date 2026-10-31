@@ -27,17 +27,16 @@ class DemoClass(Document):
 		self.duration = _seconds(self.to_time) - _seconds(self.from_time) if self.from_time and self.to_time else 0
 
 	def block_duplicate(self):
-		"""One open demo per enquiry, and never the same slot twice (a double-click must not book twice)."""
+		"""One demo per enquiry per day. Several days may be scheduled ahead (an offline demo runs
+		over two days, one Demo Class per day, each with its own message and morning reminder), but
+		the same day twice is refused: a double-click must not book twice. A day whose demo was
+		Cancelled or Not Attended may be booked again."""
 		if not self.enquiry or self.result == "Cancelled":
 			return
-		if self.result == "Scheduled":
-			other = frappe.db.get_value("Demo Class", {"enquiry": self.enquiry, "result": "Scheduled", "name": ["!=", self.name or ""]}, ["name", "demo_date"], as_dict=True)
-			if other:
-				frappe.throw(_("A demo is already scheduled for this enquiry on {0} ({1}). Mark it Attended, Not Attended or Cancelled before scheduling another.").format(
-					frappe.format_value(other.demo_date, {"fieldtype": "Date"}), other.name), frappe.DuplicateEntryError)
-		same = frappe.db.get_value("Demo Class", {"enquiry": self.enquiry, "demo_date": self.demo_date, "from_time": self.from_time or None, "result": ["!=", "Cancelled"], "name": ["!=", self.name or ""]}, "name")
+		same = frappe.db.get_value("Demo Class", {"enquiry": self.enquiry, "demo_date": self.demo_date, "result": ["in", ["Scheduled", "Attended"]], "name": ["!=", self.name or ""]}, ["name", "from_time"], as_dict=True)
 		if same:
-			frappe.throw(_("This demo slot is already booked for this enquiry ({0}).").format(same), frappe.DuplicateEntryError)
+			frappe.throw(_("A demo is already booked for this enquiry on {0}{1} ({2}). Pick another day, or change that demo instead.").format(
+				frappe.format_value(self.demo_date, {"fieldtype": "Date"}), " " + str(same.from_time).rsplit(":", 1)[0] if same.from_time else "", same.name), frappe.DuplicateEntryError)
 
 	def on_update(self):
 		self.sync_enquiry_status()
@@ -72,6 +71,9 @@ class DemoClass(Document):
 			return
 		enq = frappe.db.get_value("Student Enquiry", self.enquiry, ["status", "counsellor", "student_name", "mobile"], as_dict=True)
 		if not enq or enq.status in ("Converted", "Lost"):
+			return
+		# a multi-day demo: the call comes after the last day, not after each day
+		if frappe.db.exists("Demo Class", {"enquiry": self.enquiry, "result": "Scheduled", "name": ["!=", self.name]}):
 			return
 		if frappe.db.exists("Student Follow-Up", {"reference_type": "Student Enquiry", "reference_name": self.enquiry, "purpose": "Demo", "status": "Open", "notes": ["like", f"%{self.name}%"]}):
 			return

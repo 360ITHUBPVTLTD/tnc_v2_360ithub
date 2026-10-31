@@ -87,7 +87,15 @@ def run_tests():
 		assert convert_to_student(enq_dup.name, link_student=student.name) == student.name
 		assert frappe.db.get_value("Student Enquiry", enq_dup.name, ["status", "student"]) == ("Converted", student.name)
 		assert frappe.db.count("Student", {"mobile": "9000000001"}) == 1, "no second student created"
-		print("  - Duplicate mobile: found across formats; converting links the existing student instead of creating one")
+		# a second OPEN enquiry for the same number is refused outright (the first stays the only one)
+		enq_o = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Open One", "mobile": "9000000777", "batch_interested": batch.name, "source": "Call", "counsellor": "Administrator"}).insert()
+		try:
+			frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Open Twice", "mobile": "+91 90000 00777", "batch_interested": batch.name, "source": "Call"}).insert()
+			raise AssertionError("a second open enquiry for the same mobile must be refused")
+		except frappe.DuplicateEntryError:
+			pass
+		assert frappe.db.count("Student Enquiry", {"mobile": ["like", "%9000000777"]}) == 1 and frappe.db.exists("Student Enquiry", enq_o.name)
+		print("  - Duplicate mobile: found across formats; converting links the existing student instead of creating one; a second open enquiry for one number is refused")
 
 
 		# enrol: 28000 fee, 10% discount, 3 instalments, GST
@@ -251,7 +259,7 @@ def run_tests():
 		assert n_after == n_before + 1, "one open Demo follow-up after the demo result"
 		demo_f.result = "Not Attended"; demo_f.save(ignore_permissions=True)
 		assert frappe.db.count("Student Follow-Up", {"reference_name": enq3.name, "purpose": "Demo", "status": "Open"}) == n_after, "no duplicate follow-up"
-		# a second open demo for the same enquiry is refused (double-click safety)
+		# the same day twice is refused (double-click safety); another day is allowed (two-day offline demo)
 		enq_d = frappe.get_doc({"doctype": "Student Enquiry", "student_name": "Double Click", "mobile": "9000000701", "source": "Walk-in", "counsellor": "Administrator", "batch_interested": batch.name}).insert()
 		frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_d.name, "batch": batch.name, "demo_date": today(), "from_time": "11:00:00", "to_time": "12:00:00", "result": "Scheduled"}).insert()
 		try:
@@ -259,6 +267,8 @@ def run_tests():
 			raise AssertionError("second scheduled demo must be refused")
 		except frappe.DuplicateEntryError:
 			pass
+		frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_d.name, "batch": batch.name, "demo_date": add_days(today(), 1), "from_time": "11:00:00", "to_time": "12:00:00", "result": "Scheduled"}).insert()
+		assert frappe.db.count("Demo Class", {"enquiry": enq_d.name, "result": "Scheduled"}) == 2, "a demo on the next day is allowed"
 		# demo fee: collected at the demo, deducted on enrolment, refundable while Paid
 		from tnc_v2_360ithub.admissions import demo_fee
 		frappe.db.set_single_value("TNC Settings", {"demo_fee_amount": 500, "demo_fee_adjust": 1}); frappe.clear_cache(doctype="TNC Settings")
@@ -268,16 +278,22 @@ def run_tests():
 		d1.reload(); enq_f.reload()
 		assert d1.demo_fee_status == "Paid" and flt(d1.demo_fee_amount) == 500 and enq_f.customer, "demo fee receipt + payment, customer created on the enquiry"
 		assert frappe.db.get_value("Sales Invoice", r1["invoice"], "outstanding_amount") == 0, "demo fee invoice settled"
-		d2 = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_f.name, "batch": batch.name, "demo_date": today(), "result": "Attended"}).insert()
-		demo_fee.collect(d2.name, 500, "Cash")
+		# a second demo day never takes the fee again: one demo fee per enquiry
+		d2 = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq_f.name, "batch": batch.name, "demo_date": add_days(today(), 1), "result": "Attended"}).insert()
+		try:
+			demo_fee.collect(d2.name, 500, "Cash")
+			raise AssertionError("second demo fee for the same enquiry must be refused")
+		except frappe.ValidationError:
+			pass
 		st_f = frappe.get_doc("Student", convert_to_student(enq_f.name))
 		assert st_f.customer == enq_f.customer, "student reuses the enquiry customer"
 		en_f = frappe.get_doc({"doctype": "Student Batch Enrollment", "student": st_f.name, "batch": batch.name, "enrollment_date": today(), "number_of_installments": 2, "first_due_date": today()}).insert()
-		assert flt(en_f.demo_fee_adjusted) == 1000 and flt(en_f.net_payable) == flt(en_f.standard_fee) - 1000, ("both demo fees deducted", en_f.demo_fee_adjusted, en_f.net_payable)
+		assert flt(en_f.demo_fee_adjusted) == 500 and flt(en_f.net_payable) == flt(en_f.standard_fee) - 500, ("the demo fee deducted once", en_f.demo_fee_adjusted, en_f.net_payable)
 		en_f.submit()
 		so_f = frappe.get_doc("Sales Order", en_f.sales_order)
 		assert flt(so_f.grand_total) == flt(en_f.net_payable) and "Demo fee" in (so_f.terms or ""), "order total after the demo fee"
-		assert frappe.db.get_value("Demo Class", d1.name, "demo_fee_status") == "Adjusted" and frappe.db.get_value("Demo Class", d2.name, "demo_fee_adjusted_in") == en_f.name
+		assert frappe.db.get_value("Demo Class", d1.name, "demo_fee_status") == "Adjusted" and frappe.db.get_value("Demo Class", d1.name, "demo_fee_adjusted_in") == en_f.name
+		assert frappe.db.get_value("Demo Class", d2.name, "demo_fee_status") == "Not Collected", "day 2 carries no fee of its own"
 		en_f.cancel()
 		assert frappe.db.get_value("Demo Class", d1.name, "demo_fee_status") == "Paid", "cancelling the enrolment frees the demo fee again"
 		rf = demo_fee.refund(d1.name, "Cash")
@@ -325,7 +341,7 @@ def run_tests():
 		assert not frappe.db.exists("Student Follow-Up", {"reference_name": st_a.name, "purpose": "General", "status": "Open", "notes": ["like", "Admission form not submitted%"]}), "closed once the form is in"
 		# demo rating: the student rates the demo and the counsellor through a personal link
 		from tnc_v2_360ithub.admissions import demo_rating
-		demo_r = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq3.name, "batch": batch.name, "demo_date": today(), "result": "Attended"}).insert(ignore_permissions=True)
+		demo_r = frappe.get_doc({"doctype": "Demo Class", "enquiry": enq3.name, "batch": batch.name, "demo_date": add_days(today(), 2), "result": "Attended"}).insert(ignore_permissions=True)
 		sent_r = demo_rating.send_rating_link(demo_r.name)
 		demo_r.reload()
 		assert demo_r.rating_token and demo_r.rating_token in sent_r["link"], "rating link carries a token"
