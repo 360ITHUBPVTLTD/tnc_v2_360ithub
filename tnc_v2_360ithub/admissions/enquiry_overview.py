@@ -26,7 +26,18 @@ def _rate(converted, total):
 
 
 def is_manager(user=None):
-	return bool(MANAGER_ROLES & set(frappe.get_roles(user)))
+	"""Who sees every counsellor's enquiries: the manager roles, plus the users listed under
+	TNC Settings > Admissions > "Users who see all enquiries"."""
+	user = user or frappe.session.user
+	if user == "Administrator" or MANAGER_ROLES & set(frappe.get_roles(user)):
+		return True
+	return user in [r.user for r in (frappe.get_cached_doc("TNC Settings").get("overview_users") or []) if r.user]
+
+
+@frappe.whitelist()
+def sees_all():
+	"""For the pages: whether the current user gets the Counsellor / Everyone filters."""
+	return is_manager()
 
 
 @frappe.whitelist()

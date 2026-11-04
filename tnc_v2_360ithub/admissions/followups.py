@@ -96,8 +96,8 @@ def get_pending(scope="mine", user=None, purpose=None, reference_type=None, refe
 	if reference_type and reference_name:
 		filters.update({"reference_type": reference_type, "reference_name": reference_name})
 		scope = "all"  # one person's follow-ups: whoever they are assigned to
-	manager = bool({"TNC Manager", "TNC Super Admin", "System Manager"} & set(frappe.get_roles()))
-	if not manager:
+	from tnc_v2_360ithub.admissions.enquiry_overview import is_manager
+	if not is_manager():  # manager roles, or listed under TNC Settings > "Users who see all enquiries"
 		scope, user = "mine", None  # counsellors see their own queue whatever the request says
 	if scope == "mine" or (user and scope == "user"):
 		filters["assigned_to"] = user or frappe.session.user

@@ -5,7 +5,8 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 	const M = "tnc_v2_360ithub.admissions.enquiry_overview.get_overview";
 	const esc = frappe.utils.escape_html;
 	const state = { batch: null, counsellor: null, from: null, to: null };
-	const manager = frappe.user.has_role(["TNC Manager", "TNC Super Admin", "System Manager"]);
+	// Managers and the users listed under TNC Settings > Admissions > "Users who see all enquiries"; the server decides.
+	let manager = frappe.user.has_role(["TNC Manager", "TNC Super Admin", "System Manager"]);
 
 	const fBatch = page.add_field({ fieldname: "batch", label: __("Batch"), fieldtype: "Select", options: [{ value: "", label: __("All batches") }], change() { state.batch = fBatch.get_value() || null; load(); } });
 	frappe.call("tnc_v2_360ithub.admissions.enquiry_overview.batch_options").then(r => {
@@ -13,8 +14,10 @@ frappe.pages["enquiry-overview"].on_page_load = function (wrapper) {
 		fBatch.refresh();
 		if (state.batch) fBatch.set_value(state.batch);
 	});
-	const fCoun = manager ? page.add_field({ fieldname: "counsellor", label: __("Counsellor"), fieldtype: "Link", options: "User", change() { state.counsellor = fCoun.get_value() || null; load(); },
-		get_query: () => ({ query: "frappe.core.doctype.user.user.user_query", filters: { ignore_user_type: 1 } }) }) : null;
+	const fCoun = page.add_field({ fieldname: "counsellor", label: __("Counsellor"), fieldtype: "Link", options: "User", change() { state.counsellor = fCoun.get_value() || null; load(); },
+		get_query: () => ({ query: "frappe.core.doctype.user.user.user_query", filters: { ignore_user_type: 1 } }) });
+	fCoun.$wrapper.toggle(manager);
+	if (!manager) frappe.xcall("tnc_v2_360ithub.admissions.enquiry_overview.sees_all").then(v => { if (v) { manager = true; fCoun.$wrapper.show(); } });
 	const SPANS = { "": __("Lifetime"), week: __("This week"), month: __("This month"), m3: __("Last 3 months"), m6: __("Last 6 months"), custom: __("Custom dates") };
 	const fSpan = page.add_field({ fieldname: "span", label: __("Enquiry date"), fieldtype: "Select", options: Object.keys(SPANS).map(k => ({ value: k, label: SPANS[k] })), change() {
 		const k = fSpan.get_value() || "", today = frappe.datetime.get_today();

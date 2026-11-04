@@ -3,7 +3,9 @@
 frappe.pages["follow-ups"].on_page_load = function (wrapper) {
 	const page = frappe.ui.make_app_page({ parent: wrapper, title: __("Follow-ups"), single_column: true });
 	const state = { scope: "mine", user: frappe.session.user, purpose: "", reference_type: null, reference_name: null, q: "" };
+	// Managers and the users listed under TNC Settings > Admissions > "Users who see all enquiries"; the server decides.
 	const is_manager = frappe.user.has_role(["TNC Manager", "TNC Super Admin", "System Manager"]);
+	if (!is_manager) frappe.xcall("tnc_v2_360ithub.admissions.enquiry_overview.sees_all").then(v => { if (v) { scope.df.options = "Mine\nEveryone\nOne counsellor"; scope.refresh(); } });
 
 	const scope = page.add_field({ fieldname: "scope", fieldtype: "Select", label: __("Show"), options: is_manager ? "Mine\nEveryone\nOne counsellor" : "Mine", default: "Mine",
 		change() { state.scope = { Mine: "mine", Everyone: "all", "One counsellor": "user" }[scope.get_value()]; user_field.$wrapper.toggle(state.scope === "user"); load(); } });
