@@ -52,6 +52,7 @@
   "invoice_approvers",
   "admissions_section",
   "admit_users",
+  "overview_users",
   "demo_fee_section",
   "demo_fee_amount",
   "cb_df",
@@ -365,6 +366,13 @@
    "description": "Only these users see the Admit button on a Student Enquiry and can admit a student end to end (student, enrolment, fee order, payment, admission form link). TNC Manager, TNC Super Admin and Administrator always can. Nobody else can admit while the list is empty."
   },
   {
+   "fieldname": "overview_users",
+   "fieldtype": "Table MultiSelect",
+   "label": "Users who see all enquiries",
+   "options": "Timesheet Approver",
+   "description": "These users get the full Enquiry Overview and Follow-ups desk: every counsellor's enquiries, the By-counsellor table and the Counsellor filter, without a manager role. TNC Manager, TNC Super Admin and System Manager always do. Everyone else sees only their own enquiries."
+  },
+  {
    "fieldname": "demo_fee_section",
    "fieldtype": "Section Break",
    "label": "Demo Fee"
@@ -389,7 +397,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-10-30 12:30:00.000000",
+ "modified": "2026-11-04 11:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "TNC Settings",
