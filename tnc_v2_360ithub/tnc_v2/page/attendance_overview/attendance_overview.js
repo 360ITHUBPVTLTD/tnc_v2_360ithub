@@ -89,7 +89,7 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 	// wide only for tables with many columns; the rest open at the normal dialog width
 	const popTable = (title, head, rows, wide = false) => {
 		const d = new frappe.ui.Dialog({ title, size: wide ? "extra-large" : "large", fields: [{ fieldtype: "HTML", fieldname: "body" }] });
-		d.fields_dict.body.$wrapper.html(`<style>.att-pop td, .att-pop th { border: 1px solid #94a3b8 !important; padding: 8px 10px !important; vertical-align: top; } .att-pop th { background: #e2e8f0; font-weight: 700; color: #0f172a; white-space: nowrap; } .att-pop td[rowspan] { background: #f8fafc; white-space: nowrap; } .att-pop tbody tr:nth-child(even) td { background: #fafafa; } .att-pop .nw { white-space: nowrap; } .att-pop a, .att-pop a.plink { color: #2563eb; text-decoration: underline; font-weight: 600; }</style><div style="max-height:75vh;overflow-y:auto;overflow-x:hidden"><table class="table table-bordered att-pop" style="font-size:13px;width:100%;margin:0"><thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="${head.length}" class="text-muted">${__("Nothing to show.")}</td></tr>`}</tbody></table></div>`);
+		d.fields_dict.body.$wrapper.html(`<style>.att-pop td, .att-pop th { border: 1px solid #94a3b8 !important; padding: 8px 10px !important; vertical-align: top; } .att-pop th { background: #e2e8f0; font-weight: 700; color: #0f172a; white-space: nowrap; } .att-pop thead th { position: sticky; top: 0; z-index: 3; box-shadow: 0 1px 0 #94a3b8, 0 -1px 0 #94a3b8; } .att-pop { margin: 0 !important; } .att-pop thead th::before { content: ''; position: absolute; left: -1px; right: -1px; top: -24px; height: 24px; background: #fff; } .att-pop td[rowspan] { background: #f8fafc; white-space: nowrap; } .att-pop tbody tr:nth-child(even) td { background: #fafafa; } .att-pop .nw { white-space: nowrap; } .att-pop a, .att-pop a.plink { color: #2563eb; text-decoration: underline; font-weight: 600; }</style><div style="max-height:75vh;overflow-y:auto;overflow-x:hidden"><table class="table table-bordered att-pop" style="font-size:13px;width:100%;margin:0"><thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="${head.length}" class="text-muted">${__("Nothing to show.")}</td></tr>`}</tbody></table></div>`);
 		d.show();
 	};
 	const hhmm = (t) => { if (!t) return ""; const [h, m] = String(t).split(":"); const H = parseInt(h, 10); return `${H % 12 || 12}:${m} ${H < 12 ? "AM" : "PM"}`; };
@@ -184,8 +184,8 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 							: [`<tr><td><b>${frappe.datetime.str_to_user(x.date)}</b></td><td colspan="3" class="text-muted">${__("day only, no class times")}</td><td>${x.present}/${x.total} ${__("came")}</td></tr>`]), true);
 					if (which === "low") popTable(__("Students below 75%"), [__("Student"), __("Attendance"), __("Days"), __("Classes"), __("Consecutive absences")],
 						d.students.filter(s => (s.classes ? s.class_pct : s.day_pct) < 75).map(s => `<tr><td><a href="/app/student/${esc(s.student)}">${esc(s.student_name)}</a></td><td>${bar(s.classes ? s.class_pct : s.day_pct)}</td><td>${s.present + s.late}/${s.days}</td><td>${s.classes ? `${s.classes_present}/${s.classes}` : "—"}</td><td>${s.consecutive_absences}</td></tr>`));
-					if (which === "hold") popTable(__("Students on hold"), [__("Student"), __("Since"), __("Reason"), __("Consecutive absences")],
-						d.students.filter(s => s.enrol_status === "On Hold").map(s => `<tr><td><a href="/app/student/${esc(s.student)}">${esc(s.student_name)}</a><br><a href="/app/student/${esc(s.student)}" style="font-size:12px;font-weight:400">${__("Release Hold")}</a></td><td>${s.hold_on ? frappe.datetime.str_to_user(s.hold_on) : ""}</td><td>${esc(s.hold_reason || "")}</td><td>${s.consecutive_absences}</td></tr>`));
+					if (which === "hold") popTable(__("Students on Attendance Hold"), [__("Student"), __("Since"), __("Reason"), __("Consecutive absences")],
+						d.students.filter(s => s.enrol_status === "On Hold" && s.hold_type !== "Fee").map(s => `<tr><td><a href="/app/student/${esc(s.student)}">${esc(s.student_name)}</a><br><a href="/app/student/${esc(s.student)}" style="font-size:12px;font-weight:400">${__("Release Hold")}</a></td><td>${s.hold_on ? frappe.datetime.str_to_user(s.hold_on) : ""}</td><td>${esc(s.hold_reason || "")}</td><td>${s.consecutive_absences}</td></tr>`));
 				});
 				$body.find("#stu-q").on("input", (e) => { const q = e.target.value.toLowerCase(); $body.find("tr[data-student]").each((i, tr) => { tr.hidden = q && !$(tr).text().toLowerCase().includes(q); }); });
 			}
@@ -226,12 +226,12 @@ frappe.pages["attendance-overview"].on_page_load = function (wrapper) {
 		const name = d.batch.batch_name || d.batch.name;
 		return `
 			<div class="head"><div class="avatar"><img src="${esc(d.logo || "")}" alt=""></div><div><div class="hname">${esc(name)}</div><div class="hmeta">${esc(d.batch.mode || "")} · ${d.enrolled} ${__("students")} · ${frappe.datetime.str_to_user(d.from_date)} – ${frappe.datetime.str_to_user(d.to_date)}</div></div>
-				<div class="hbadge ${d.on_hold ? "bad" : ""}">${d.on_hold ? __("{0} on hold", [d.on_hold]) : __("No holds")}</div></div>
+				<div class="hbadge ${d.on_hold ? "bad" : ""}">${d.on_hold ? __("{0} on Attendance Hold", [d.on_hold]) : __("No attendance holds")}</div></div>
 			<div class="kpis">
 				${kpi(d.avg_pct + "%", __("Average attendance"), cls(d.avg_pct), "check")}
 				${kpi(`${d.class_days} <small style="font-size:.9rem;font-weight:600;color:#64748b">${d.class_days === 1 ? __("day") : __("days")}</small>`, __("{0} classes · {1} subjects", [d.classes_held, d.subjects.length]), "info", "calendar", "days")}
 				${kpi(d.students.filter(s => (s.classes ? s.class_pct : s.day_pct) < 75).length, __("Students below 75%"), "warn", "users", "low")}
-				${kpi(d.on_hold, __("Students on hold"), d.on_hold ? "bad" : "good", "pause", "hold")}
+				${kpi(d.on_hold, __("Students on Attendance Hold"), d.on_hold ? "bad" : "good", "pause", "hold")}
 			</div>
 			<div class="grid3">
 				<div class="card"><h6>${__("Students present, by class day")}</h6><div id="c-trend" class="chart"></div></div>

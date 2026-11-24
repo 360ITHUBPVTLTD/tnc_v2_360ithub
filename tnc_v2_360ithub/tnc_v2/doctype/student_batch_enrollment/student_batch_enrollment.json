@@ -53,6 +53,11 @@
   "cb_s",
   "sales_order",
   "remarks",
+  "sb_fee_hold",
+  "fee_hold",
+  "fee_hold_on",
+  "cb_fee_hold",
+  "fee_hold_reason",
   "amended_from"
  ],
  "fields": [
@@ -316,9 +321,10 @@
    "fieldname": "hold_type",
    "fieldtype": "Select",
    "label": "Hold Type",
-   "options": "\nAttendance\nFee\nOther",
+   "options": "\nAttendance\nOther",
    "depends_on": "eval:doc.status=='On Hold'",
-   "allow_on_submit": 1
+   "allow_on_submit": 1,
+   "description": "Fee holds are not set here: they have their own tick below and follow the payments."
   },
   {
    "fieldname": "hold_on",
@@ -354,6 +360,43 @@
    "allow_on_submit": 1
   },
   {
+   "fieldname": "sb_fee_hold",
+   "fieldtype": "Section Break",
+   "label": "Fee Hold",
+   "depends_on": "eval:doc.fee_hold"
+  },
+  {
+   "fieldname": "fee_hold",
+   "fieldtype": "Check",
+   "label": "On Fee Hold",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1,
+   "in_standard_filter": 1,
+   "default": "0",
+   "description": "Set and cleared by the fee job (TNC Settings > Fees) or from Fee Overview. Independent of the Enrolment Status: a student can be on Fee Hold and Attendance Hold at the same time. Clears by itself when the overdue fee is received."
+  },
+  {
+   "fieldname": "fee_hold_on",
+   "fieldtype": "Date",
+   "label": "Fee Hold Since",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "cb_fee_hold",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fee_hold_reason",
+   "fieldtype": "Small Text",
+   "label": "Fee Hold Reason",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
@@ -367,7 +410,7 @@
  "is_submittable": 1,
  "istable": 0,
  "links": [],
- "modified": "2026-09-16 17:00:00.000000",
+ "modified": "2026-11-23 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "Student Batch Enrollment",

@@ -207,9 +207,14 @@ doc_events = {
 		"on_submit": [
 			"tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_payment_entry_update",
 			"tnc_v2_360ithub.teachers.teacher_documents.on_payment_entry_submit",
+			# a student's fee landed: lift the Fee Hold when nothing is overdue any more
+			"tnc_v2_360ithub.admissions.fee_overview.on_payment_entry",
 		],
 		"before_cancel": "tnc_v2_360ithub.tnc_v2.doctype.teacher_penalty.teacher_penalty.before_payment_entry_cancel",
-		"on_cancel": "tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_payment_entry_update",
+		"on_cancel": [
+			"tnc_v2_360ithub.tnc_v2.doctype.teacher.teacher.on_payment_entry_update",
+			"tnc_v2_360ithub.admissions.fee_overview.on_payment_entry",
+		],
 	},
 	"Activity": {
 		"on_update": "tnc_v2_360ithub.tnc_v2.doctype.teachers_timesheet.teachers_timesheet.update_uom_in_related_docs",
@@ -249,6 +254,8 @@ scheduler_events = {
 		# Fee follow-ups: upcoming (3 days before due) and overdue instalments, 07:00 daily.
 		"0 7 * * *": [
 			"tnc_v2_360ithub.admissions.followups.create_fee_followups",
+			# fee WhatsApp reminders to students + automatic Fee Hold / release (TNC Settings > Fees)
+			"tnc_v2_360ithub.admissions.fee_overview.daily",
 			"tnc_v2_360ithub.admissions.followups.create_form_followups",
 		],
 		# Monthly Teacher Task Summary emails, 07:00 on the 1st (as in v1).

@@ -99,6 +99,7 @@ def batch_overview(batch, from_date, to_date):
 	date_of = {d.name: str(d.date) for d in days}
 	b = frappe.db.get_value("Student Batch", batch, ["batch_name", "mode"], as_dict=True) or {}
 	enrolled = frappe.db.count("Student Batch Enrollment", {"batch": batch, "docstatus": 1, "status": ["in", ["Active", "On Hold"]]})
+	# status On Hold is the attendance (or manual) hold; a Fee Hold is a separate tick on the enrolment and is counted on Fee Overview
 	on_hold = frappe.db.count("Student Batch Enrollment", {"batch": batch, "docstatus": 1, "status": "On Hold"})
 	rows = sorted(by_student.values(), key=lambda s: (s["class_pct"] if s["classes"] else s["day_pct"], s["student_name"]))
 	# per class day: share of students present (day level)

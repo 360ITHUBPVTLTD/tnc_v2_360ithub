@@ -56,7 +56,22 @@
   "demo_fee_section",
   "demo_fee_amount",
   "cb_df",
-  "demo_fee_adjust"
+  "demo_fee_adjust",
+  "fees_section",
+  "fee_hold_grace_days",
+  "fee_hold_blocks_punch",
+  "fee_desk_mobile",
+  "cb_fees",
+  "fee_remind_before_days",
+  "fee_remind_every_days",
+  "fee_remind_guardian",
+  "fee_messages_section",
+  "fee_msg_upcoming",
+  "fee_msg_due_today",
+  "cb_fees2",
+  "fee_msg_overdue",
+  "fee_msg_hold",
+  "fee_msg_desk"
  ],
  "fields": [
   {
@@ -392,12 +407,104 @@
    "fieldname": "demo_fee_adjust",
    "fieldtype": "Check",
    "label": "Deduct the paid demo fee from the course fee on admission"
+  },
+  {
+   "fieldname": "fees_section",
+   "fieldtype": "Section Break",
+   "label": "Fees · reminders and Fee Hold"
+  },
+  {
+   "fieldname": "fee_hold_grace_days",
+   "fieldtype": "Int",
+   "label": "Fee Hold after (days overdue)",
+   "default": "3",
+   "description": "An instalment still unpaid this many days after its due date puts the enrolment On Hold (type Fee) in the morning job. The hold lifts by itself when the fee is received. 0 = never hold automatically; the office holds and releases by hand."
+  },
+  {
+   "fieldname": "fee_hold_blocks_punch",
+   "fieldtype": "Check",
+   "label": "Punches do not count while on Fee Hold",
+   "default": "1",
+   "description": "The machine still records the punch, but the day stays Absent with the note 'Fee hold' and the front desk is alerted on WhatsApp the moment the student punches in."
+  },
+  {
+   "fieldname": "fee_desk_mobile",
+   "fieldtype": "Data",
+   "label": "Front desk WhatsApp number",
+   "options": "Phone",
+   "description": "Gets the alert when a student on Fee Hold punches in. Leave blank to send no alert."
+  },
+  {
+   "fieldname": "cb_fees",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fee_remind_before_days",
+   "fieldtype": "Int",
+   "label": "Remind before due date (days)",
+   "default": "3",
+   "description": "WhatsApp to the student this many days before an instalment is due. 0 = no advance reminder."
+  },
+  {
+   "fieldname": "fee_remind_every_days",
+   "fieldtype": "Int",
+   "label": "Repeat overdue reminder every (days)",
+   "default": "3",
+   "description": "Overdue instalments are reminded on the due date and then every this many days until paid. 0 = once only, on the due date."
+  },
+  {
+   "fieldname": "fee_remind_guardian",
+   "fieldtype": "Check",
+   "label": "Also WhatsApp the parent / guardian",
+   "default": "0",
+   "description": "Uses the parent number chosen under Student Attendance; falls back to the other parent numbers."
+  },
+  {
+   "fieldname": "fee_messages_section",
+   "fieldtype": "Section Break",
+   "label": "Fee message texts",
+   "collapsible": 1,
+   "description": "Placeholders: {student}, {batch}, {amount}, {due_date}, {days}, {term}, {institute}, {total_pending}."
+  },
+  {
+   "fieldname": "fee_msg_upcoming",
+   "fieldtype": "Small Text",
+   "label": "Due soon",
+   "default": "Dear {student},\n\nYour fee instalment of Rs {amount} for {batch} is due on {due_date}. Please pay on or before the due date to avoid any interruption.\n\nRegards,\n{institute}"
+  },
+  {
+   "fieldname": "fee_msg_due_today",
+   "fieldtype": "Small Text",
+   "label": "Due today",
+   "default": "Dear {student},\n\nYour fee instalment of Rs {amount} for {batch} is due today ({due_date}). Please pay at the office or online today.\n\nRegards,\n{institute}"
+  },
+  {
+   "fieldname": "cb_fees2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fee_msg_overdue",
+   "fieldtype": "Small Text",
+   "label": "Overdue",
+   "default": "Dear {student},\n\nYour fee instalment of Rs {amount} for {batch} was due on {due_date} and is pending for {days} days. Please clear it at the earliest.\n\nRegards,\n{institute}"
+  },
+  {
+   "fieldname": "fee_msg_hold",
+   "fieldtype": "Small Text",
+   "label": "Put on Fee Hold",
+   "default": "Dear {student},\n\nYour fee of Rs {total_pending} for {batch} is pending (due {due_date}). Your attendance is on hold until the fee is cleared. Please contact the office.\n\nRegards,\n{institute}"
+  },
+  {
+   "fieldname": "fee_msg_desk",
+   "fieldtype": "Small Text",
+   "label": "Front desk alert on punch",
+   "default": "FEE HOLD: {student} ({batch}) just punched in. Rs {total_pending} pending, due {due_date}, {days} days overdue. Please stop the student at the desk."
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-11-04 11:00:00.000000",
+ "modified": "2026-11-23 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "TNC v2",
  "name": "TNC Settings",
