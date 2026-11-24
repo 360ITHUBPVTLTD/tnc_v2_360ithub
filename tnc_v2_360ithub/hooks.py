@@ -251,6 +251,11 @@ scheduler_events = {
 			# demo-day reminder to the student
 			"tnc_v2_360ithub.tnc_v2.doctype.demo_class.demo_class.send_demo_reminders",
 		],
+		# Fee Hold check before the first class (06:00): hold / release only, no WhatsApp at this hour.
+		# The student's Fee Hold message goes out with the 07:00 job below.
+		"0 4 * * *": [
+			"tnc_v2_360ithub.admissions.fee_overview.hold_check",
+		],
 		# Fee follow-ups: upcoming (3 days before due) and overdue instalments, 07:00 daily.
 		"0 7 * * *": [
 			"tnc_v2_360ithub.admissions.followups.create_fee_followups",
