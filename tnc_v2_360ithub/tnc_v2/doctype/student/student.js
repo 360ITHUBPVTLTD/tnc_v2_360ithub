@@ -13,6 +13,13 @@ frappe.ui.form.on("Student", {
 		frm.trigger("render_overview");
 		frm.trigger("render_payments");
 		frm.trigger("render_followups");
+		if (!frm.is_new()) {
+			// Fee Hold is its own flag on the enrolment (separate from Attendance Hold): it lifts by itself when the overdue fee is received
+			frappe.call({ method: "tnc_v2_360ithub.admissions.fee_overview.fee_holds", args: { student: frm.doc.name } }).then((r) => {
+				(r.message || []).forEach((h) => frm.dashboard.add_comment(
+					`<b>${__("Fee Hold")}</b> · ${frappe.utils.escape_html(h.batch)} · ${__("since {0}", [frappe.datetime.str_to_user(h.since)])} · ${__("overdue {0}", [format_currency(h.overdue, "INR", 0)])} · ${__("pending {0}", [format_currency(h.pending, "INR", 0)])}. ${__("Punches are not counted. It lifts by itself when the overdue fee is received (Receive Payment below).")} <a href="/app/fee-overview">${__("Fee Overview")}</a>`, "red", true));
+			});
+		}
 		if (!frm.is_new() && frm.doc.status === "Attendance Hold") {
 			// the hold sits on the enrolment; release it from here with a reason
 			const $b = frm.add_custom_button(__("Release Hold"), () => {

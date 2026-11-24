@@ -115,6 +115,7 @@ def ensure_defaults():
 	if frappe.db.get_single_value("TNC Settings", "demo_fee_amount") is None:
 		frappe.db.set_single_value("TNC Settings", {"demo_fee_amount": 500, "demo_fee_adjust": 1})
 	ensure_demo_fee_item()
+	ensure_fee_defaults()
 	ensure_enquiry_sources()
 	ensure_expense_claim_types()
 	ensure_expense_claim_account()
@@ -124,6 +125,21 @@ def ensure_defaults():
 	ensure_modes_of_payment()
 	ensure_payment_terms()
 	frappe.db.commit()
+
+
+def ensure_fee_defaults():
+	"""TNC Settings > Fees: a Single that existed before the fields were added holds NULL, not the
+	JSON default, so the reminder / Fee Hold job would do nothing. Fill each untouched field once
+	from its default; values the office has set are left alone."""
+	meta = frappe.get_meta("TNC Settings")
+	cur = frappe.db.get_singles_dict("TNC Settings")
+	fill = {}
+	for f in meta.fields:
+		if f.fieldname.startswith("fee_") and f.default is not None and cur.get(f.fieldname) is None and f.fieldtype != "Section Break":
+			fill[f.fieldname] = f.default
+	if fill:
+		frappe.db.set_single_value("TNC Settings", fill)
+		print("fee defaults filled:", ", ".join(sorted(fill)))
 
 
 def ensure_customer_group():

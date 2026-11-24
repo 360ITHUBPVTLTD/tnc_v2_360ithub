@@ -265,7 +265,12 @@ def apply_manual_status(classes, status):
 def write_row(enrolment, batch, date, punches):
 	"""Create or refresh the Student Attendance row for one enrolment-day. Manual rows keep their
 	status but still get the day's class rows. Returns the status written, or None when unchanged."""
-	status, in_dt, out_dt, duration, note, classes = day_status(punches, batch, date)
+	from tnc_v2_360ithub.admissions.fee_overview import FEE_NOTE, is_fee_held
+	held = bool(punches) and is_fee_held(enrolment, date)
+	status, in_dt, out_dt, duration, note, classes = day_status([] if held else punches, batch, date)
+	if held:
+		# Fee Hold (TNC Settings > Fees): the machine logged the punches, the day stays Absent
+		note = _("{0}: {1} punch(es) not counted").format(_(FEE_NOTE), len(punches))
 	name = frappe.db.get_value("Student Attendance", {"enrollment": enrolment.name, "date": getdate(date)}, "name")
 	values = {"status": status, "in_time": in_dt.time() if in_dt else None, "out_time": out_dt.time() if out_dt else None,
 		"duration": duration, "punches": len(punches), "note": note,
@@ -328,7 +333,7 @@ def build_day(date=None, batch=None, student=None, notify=True):
 		filters = dict(ENROLMENT_FILTERS, batch=b.name)
 		if student:
 			filters["student"] = student
-		for e in frappe.get_all("Student Batch Enrollment", filters=filters, fields=["name", "student", "student_name", "status"]):
+		for e in frappe.get_all("Student Batch Enrollment", filters=filters, fields=["name", "student", "student_name", "status", "fee_hold", "fee_hold_on"]):
 			status = write_row(e, b, date, _punches(e.student, date, is_online(b)))
 			if status is None:
 				counts.skipped += 1
@@ -366,10 +371,12 @@ def on_punch(doc, method=None):
 	"""Student Punch Log after_insert: refresh today's row for that student, so the list shows
 	Present / In time while the day is running. Absences are only written by the nightly run."""
 	date = getdate(doc.punch_time)
+	from tnc_v2_360ithub.admissions.fee_overview import on_held_punch
+	on_held_punch(doc.student, date)  # Fee Hold: front desk alert, whether or not a class is on today
 	for b in batches_with_class(date):
 		if is_online(b) and not meet_ready(b, date):
 			continue
-		for e in frappe.get_all("Student Batch Enrollment", filters=dict(ENROLMENT_FILTERS, batch=b.name, student=doc.student), fields=["name", "student", "student_name", "status"]):
+		for e in frappe.get_all("Student Batch Enrollment", filters=dict(ENROLMENT_FILTERS, batch=b.name, student=doc.student), fields=["name", "student", "student_name", "status", "fee_hold", "fee_hold_on"]):
 			write_row(e, b, date, _punches(e.student, date, is_online(b)))
 			update_hold(e.name, date, notify=False)
 
@@ -410,12 +417,13 @@ def consecutive_absences(enrolment, upto=None):
 	with class windows counts. Stops at the first Present / Late / Leave day (or Present class).
 	`upto` is accepted for callers but the count always starts at the newest row, so a late
 	timesheet or a deleted one re-counts correctly."""
+	from tnc_v2_360ithub.admissions.fee_overview import FEE_NOTE
 	n = 0
 	by_classes = _settings().count_by == "Classes"
 	for r in frappe.get_all("Student Attendance", filters={"enrollment": enrolment},
-			fields=["name", "status", "classes_held"], order_by="date desc", limit=200):
-		if r.status in ("Leave", "Partial"):
-			break  # a Partial day (one punch only) is not an absence and never feeds the hold
+			fields=["name", "status", "classes_held", "note"], order_by="date desc", limit=200):
+		if r.status in ("Leave", "Partial") or (r.note or "").startswith(FEE_NOTE):
+			break  # a Partial day (one punch only) or a Fee Hold day is not an absence and never feeds the hold
 		if by_classes and cint(r.classes_held):
 			stop = False
 			for c in frappe.get_all("Student Class Attendance", filters={"parent": r.name}, fields=["status"], order_by="from_time desc"):
