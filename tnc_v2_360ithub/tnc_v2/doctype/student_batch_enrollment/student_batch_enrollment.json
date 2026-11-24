@@ -58,6 +58,7 @@
   "fee_hold_on",
   "cb_fee_hold",
   "fee_hold_reason",
+  "fee_hold_msg_pending",
   "amended_from"
  ],
  "fields": [
@@ -395,6 +396,17 @@
    "read_only": 1,
    "allow_on_submit": 1,
    "no_copy": 1
+  },
+  {
+   "fieldname": "fee_hold_msg_pending",
+   "fieldtype": "Check",
+   "label": "Fee Hold Message Pending",
+   "read_only": 1,
+   "hidden": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1,
+   "default": "0",
+   "description": "Set when the early-morning check puts the student on Fee Hold without messaging at night; the morning job sends the Fee Hold WhatsApp and clears it."
   },
   {
    "fieldname": "amended_from",

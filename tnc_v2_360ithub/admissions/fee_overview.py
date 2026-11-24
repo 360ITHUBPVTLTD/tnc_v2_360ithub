@@ -129,7 +129,7 @@ def _rows(batch=None, counsellor=None, student=None, enrollment=None, today=None
 		cond.append("e.name = %(enrollment)s"); args["enrollment"] = enrollment
 	enrols = frappe.db.sql(f"""
 		select e.name, e.student, e.student_name, e.batch, b.batch_name, e.sales_order, e.status, e.hold_type, e.hold_on, e.hold_reason,
-			e.fee_hold, e.fee_hold_on, e.fee_hold_reason,
+			e.fee_hold, e.fee_hold_on, e.fee_hold_reason, e.fee_hold_msg_pending,
 			e.enrollment_date, e.net_payable, so.grand_total, so.advance_paid, so.status as so_status,
 			st.mobile, st.father_mobile_no, st.mother_mobile_no, st.guardian_mobile, st.counsellor, u.full_name as counsellor_name
 		from `tabStudent Batch Enrollment` e
@@ -313,7 +313,8 @@ def _hold(r, today, notify=True):
 	if cint(e.fee_hold) or e.status not in ENROL_STATUSES:
 		return False
 	reason = _("Fee of {0} overdue since {1} ({2} days).").format(_money(r.overdue_amount), _date(r.oldest_due), r.overdue_days)
-	e.db_set({"fee_hold": 1, "fee_hold_on": getdate(today), "fee_hold_reason": reason}, update_modified=False)
+	# notify=False (the 04:00 check): hold now, leave the WhatsApp for the 07:00 job to send
+	e.db_set({"fee_hold": 1, "fee_hold_on": getdate(today), "fee_hold_reason": reason, "fee_hold_msg_pending": 0 if notify else 1}, update_modified=False)
 	frappe.get_doc({"doctype": "Comment", "comment_type": "Info", "reference_doctype": "Student Batch Enrollment", "reference_name": e.name,
 		"content": _("Put on Fee Hold automatically: {0}").format(reason)}).insert(ignore_permissions=True)
 	if notify and _s().msg.get("hold"):
@@ -326,7 +327,7 @@ def _release(r, why, by=None):
 	if not cint(e.fee_hold):
 		return False
 	# only the fee flag: the enrolment's status (and any Attendance Hold on it) is left exactly as it is
-	e.db_set({"fee_hold": 0, "fee_hold_on": None, "fee_hold_reason": None}, update_modified=False)
+	e.db_set({"fee_hold": 0, "fee_hold_on": None, "fee_hold_reason": None, "fee_hold_msg_pending": 0}, update_modified=False)
 	frappe.get_doc({"doctype": "Comment", "comment_type": "Info", "reference_doctype": "Student Batch Enrollment", "reference_name": e.name,
 		"content": _("Fee Hold released{0}: {1}").format(f" by {by}" if by else _(" automatically"), why)}).insert(ignore_permissions=True)
 	return True
@@ -360,12 +361,42 @@ def refresh_hold(sales_order=None, enrollment=None, today=None, notify=True):
 # ---------------------------------------------------------------------------
 
 
+def hold_check(today=None):
+	"""04:00, before the first class of the day. The Fee Hold check only, for every enrolment, with
+	no WhatsApp at that hour: a student held here is flagged and gets the Fee Hold message from the
+	07:00 job. So a punch at the 06:00 class already does not count and alerts the front desk."""
+	today = getdate(today or nowdate())
+	out = frappe._dict(held=0, released=0)
+	for r in _rows(today=today):
+		what, _n = refresh_hold(enrollment=r.name, today=today, notify=False)
+		if what:
+			out[what] += 1
+	if not frappe.flags.in_test:
+		frappe.db.commit()
+	return out
+
+
+def _send_pending_hold_messages(today):
+	"""The Fee Hold WhatsApp for students the 04:00 check put on hold. The flag is cleared only
+	when the message really went out, so a failed send is tried again the next morning."""
+	text = _s().msg.get("hold")
+	n = 0
+	for r in _rows(today=today):
+		if not (r.fee_hold and cint(r.fee_hold_msg_pending)):
+			continue
+		if not text or _send(r, _fill(text, r)):
+			frappe.db.set_value("Student Batch Enrollment", r.name, "fee_hold_msg_pending", 0, update_modified=False)
+			n += 1 if text else 0
+	return n
+
+
 def daily(today=None):
 	"""07:00. Reminders for every unpaid instalment that is due soon / today / overdue on its cycle,
-	then the Fee Hold check for every enrolment."""
+	then the Fee Hold check for every enrolment, then the Fee Hold message to students the 04:00
+	check held."""
 	today = getdate(today or nowdate())
 	s = _s()
-	out = frappe._dict(reminded=0, held=0, released=0)
+	out = frappe._dict(reminded=0, held=0, released=0, hold_messages=0)
 	for r in _rows(today=today):
 		for inst in r.instalments:
 			if inst["outstanding"] <= 0.5 or not inst["due_date"] or (inst["reminded_on"] and getdate(inst["reminded_on"]) == today):
@@ -383,6 +414,7 @@ def daily(today=None):
 		what, _n = refresh_hold(enrollment=r.name, today=today)
 		if what:
 			out[what] += 1
+	out.hold_messages = _send_pending_hold_messages(today)
 	if not frappe.flags.in_test:
 		frappe.db.commit()
 	return out
