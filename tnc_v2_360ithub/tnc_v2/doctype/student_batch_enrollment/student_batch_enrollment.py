@@ -41,7 +41,8 @@ class StudentBatchEnrollment(Document):
 			self.block_duplicate_ongoing()
 
 	def validate_hold(self):
-		"""A hold needs a type; releasing one needs remarks (who and why), by Counsellor, Manager or Super Admin."""
+		"""A hold needs a type; releasing one needs remarks (why); any staff member who can open the
+		enrolment may release it (TNC, 26 Nov 2026: no role restriction). Who released it is on the timeline."""
 		before = self.get_doc_before_save()
 		if self.status == "On Hold":
 			if not self.hold_type:
@@ -51,8 +52,6 @@ class StudentBatchEnrollment(Document):
 		elif before and before.status == "On Hold":
 			if not (self.remarks or "").strip() or (self.remarks or "").strip() == (before.remarks or "").strip():
 				frappe.throw(_("Please write in Remarks why the hold is released."))
-			if not ({"System Manager", "TNC Super Admin", "TNC Manager", "TNC Counsellor"} & set(frappe.get_roles())):
-				frappe.throw(_("Only a Counsellor, Manager or Super Admin can release a hold."), frappe.PermissionError)
 			self.consecutive_absences = 0
 
 	def before_update_after_submit(self):
@@ -167,6 +166,10 @@ class StudentBatchEnrollment(Document):
 		if flt(self.demo_fee_adjusted):
 			from tnc_v2_360ithub.admissions.demo_fee import mark_adjusted
 			mark_adjusted(self)
+		if self.amended_from:
+			# corrected enrolment (wrong fee or discount fixed by Cancel + Amend): the attendance already
+			# recorded stays with the student's enrolment, it does not stay behind on the cancelled one
+			frappe.db.sql("update `tabStudent Attendance` set enrollment = %s where enrollment = %s", (self.name, self.amended_from))
 		# first paid-for enrolment ends the trial
 		if frappe.db.get_value("Student", self.student, "status") == "Enrolment Pending":
 			frappe.db.set_value("Student", self.student, "status", "Active", update_modified=False)

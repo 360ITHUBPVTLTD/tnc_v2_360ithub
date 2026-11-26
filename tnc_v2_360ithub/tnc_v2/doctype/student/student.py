@@ -83,10 +83,9 @@ def holds(student):
 
 @frappe.whitelist()
 def release_hold(student, enrollment, remarks):
-	"""Release one enrolment's hold from the Student form. Same rule as on the enrolment: a
-	reason is required and only Counsellor, Manager, Super Admin or System Manager may do it."""
-	if not ({"TNC Counsellor", "TNC Manager", "TNC Super Admin", "System Manager"} & set(frappe.get_roles())):
-		frappe.throw(_("Only a Counsellor, Manager or Super Admin can release a hold."), frappe.PermissionError)
+	"""Release one enrolment's hold from the Student form. A reason is required; any staff member
+	who can open the student may do it (TNC, 26 Nov 2026: no role restriction)."""
+	frappe.has_permission("Student", "read", student, throw=True)
 	if not (remarks or "").strip():
 		frappe.throw(_("Please write why the hold is released."))
 	e = frappe.get_doc("Student Batch Enrollment", enrollment)

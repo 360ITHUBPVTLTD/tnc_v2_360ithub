@@ -203,7 +203,7 @@
    "fieldtype": "Int",
    "label": "Attendance Hold after consecutive absences",
    "default": "4",
-   "description": "A student absent this many times in a row (days or classes, see below) is put on Attendance Hold for that batch. Only Counsellor, Manager or Super Admin can release it, with remarks."
+   "description": "A student absent this many times in a row (days or classes, see below) is put on Attendance Hold for that batch. Any staff member can release it, with remarks on why."
   },
   {
    "fieldname": "attendance_hold_count_by",

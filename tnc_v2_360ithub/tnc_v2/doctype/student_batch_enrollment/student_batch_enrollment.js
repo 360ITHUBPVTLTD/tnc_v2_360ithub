@@ -1,5 +1,17 @@
 frappe.ui.form.on("Student Batch Enrollment", {
+	setup(frm) {
+		// Cancel: the enrolment cancels its own Sales Order (server side, after itself). Without this the
+		// form tries to cancel the order first, which the order refuses because the enrolment still points at it.
+		frm.ignore_doctypes_on_cancel_all = ["Sales Order"];
+	},
 	refresh(frm) {
+		// Amend of a cancelled enrolment (to correct the fee or discount): Frappe copies every field,
+		// including the cancelled Sales Order, which then cannot be saved. Drop it; submit makes a new order.
+		if (frm.is_new() && frm.doc.amended_from && frm.doc.sales_order) {
+			frm.doc.sales_order = null;
+			frm.refresh_field("sales_order");
+			frm.set_intro(__("Correct the fee or discount, press Generate Instalments, check the due dates, then Submit. A new Sales Order is made for the corrected amount."), "blue");
+		}
 		frm.trigger("check_batch_window");
 		if (frm.doc.docstatus === 1 && frm.doc.sales_order) {
 			frm.add_custom_button(__("Receive Payment"), () => {

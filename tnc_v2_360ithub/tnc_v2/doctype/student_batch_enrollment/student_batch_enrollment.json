@@ -349,6 +349,7 @@
   },
   {
    "fieldname": "sales_order",
+   "no_copy": 1,
    "fieldtype": "Link",
    "label": "Sales Order",
    "options": "Sales Order",
