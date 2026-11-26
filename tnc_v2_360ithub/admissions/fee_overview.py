@@ -130,7 +130,9 @@ def _rows(batch=None, counsellor=None, student=None, enrollment=None, today=None
 	enrols = frappe.db.sql(f"""
 		select e.name, e.student, e.student_name, e.batch, b.batch_name, e.sales_order, e.status, e.hold_type, e.hold_on, e.hold_reason,
 			e.fee_hold, e.fee_hold_on, e.fee_hold_reason, e.fee_hold_msg_pending,
-			e.enrollment_date, e.net_payable, so.grand_total, so.advance_paid, so.status as so_status,
+			e.enrollment_date, e.net_payable, so.advance_paid, so.status as so_status,
+			-- payable = ERPNext's rounded total when rounding is on (GST orders carry paise in grand_total)
+			(case when ifnull(so.disable_rounded_total, 0) = 0 and ifnull(so.rounded_total, 0) > 0 then so.rounded_total else so.grand_total end) as grand_total,
 			st.mobile, st.father_mobile_no, st.mother_mobile_no, st.guardian_mobile, st.counsellor, u.full_name as counsellor_name
 		from `tabStudent Batch Enrollment` e
 		join `tabSales Order` so on so.name = e.sales_order and so.docstatus = 1
@@ -560,16 +562,16 @@ def audit(verbose=False):
 	Also lists what the page cannot show: active enrolments with no fee order, orders of a student
 	with no enrolment pointing at them, and two enrolments sharing one order.
 	Run: bench --site <site> execute tnc_v2_360ithub.admissions.fee_overview.audit"""
-	from tnc_v2_360ithub.admissions.fees import pending_on_order
+	from tnc_v2_360ithub.admissions.fees import order_payable, pending_on_order
 	rows = _rows()
 	problems, ok = [], 0
 	for r in rows:
 		so = frappe.get_doc("Sales Order", r.sales_order)
 		dlg_pending, dlg_paid = pending_on_order(so)
-		receipts = flt(frappe.db.sql("""select sum(case when si.is_return = 1 then -abs(si.grand_total) else si.grand_total end) from `tabSales Invoice` si
+		receipts = flt(frappe.db.sql("""select sum(case when si.is_return = 1 then -abs((case when ifnull(si.disable_rounded_total, 0) = 0 and ifnull(si.rounded_total, 0) <> 0 then si.rounded_total else si.grand_total end)) else (case when ifnull(si.disable_rounded_total, 0) = 0 and ifnull(si.rounded_total, 0) <> 0 then si.rounded_total else si.grand_total end) end) from `tabSales Invoice` si
 			where si.docstatus = 1 and si.name in (select parent from `tabSales Invoice Item` where sales_order = %s)""", r.sales_order)[0][0], 2)
 		checks = {
-			"total = order total": r.total == flt(so.grand_total, 2),
+			"total = order total": r.total == order_payable(so),
 			"pending = payment dialog": r.pending == flt(dlg_pending, 2),
 			"paid = payment dialog": r.paid == flt(dlg_paid, 2),
 			"paid = order advance_paid": r.paid == flt(so.advance_paid, 2),
@@ -584,7 +586,7 @@ def audit(verbose=False):
 		failed = [k for k, v in checks.items() if not v]
 		if failed:
 			problems.append({"enrollment": r.name, "student": r.student, "student_name": r.student_name, "batch": r.batch, "sales_order": r.sales_order,
-				"page": {"total": r.total, "paid": r.paid, "pending": r.pending}, "order_total": flt(so.grand_total, 2), "advance_paid": flt(so.advance_paid, 2),
+				"page": {"total": r.total, "paid": r.paid, "pending": r.pending}, "order_total": order_payable(so), "advance_paid": flt(so.advance_paid, 2),
 				"dialog_pending": flt(dlg_pending, 2), "receipts": receipts, "failed": failed})
 		else:
 			ok += 1
