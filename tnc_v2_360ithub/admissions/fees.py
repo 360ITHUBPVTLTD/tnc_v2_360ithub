@@ -13,14 +13,23 @@ Order into the two standard documents ERPNext needs, and nothing else.
 """
 import frappe
 from frappe import _
-from frappe.utils import flt, getdate, nowdate
+from frappe.utils import flt, getdate, nowdate, cint
 
 BANK_MODES = ("UPI", "Bank Transfer", "Card", "Cheque")
 
 
+def order_payable(so):
+	"""What the student owes on the order in total. With GST the grand total can carry paise
+	(17,687.02) and ERPNext rounds what is payable (17,687): the payment schedule and the advance
+	limit both follow the rounded figure, so the fee screens must too."""
+	if not cint(so.get("disable_rounded_total")) and flt(so.get("rounded_total")):
+		return flt(so.rounded_total, 2)
+	return flt(so.grand_total, 2)
+
+
 def pending_on_order(so):
 	paid = flt(sum(flt(r.paid_amount) for r in so.payment_schedule)) if so.payment_schedule else flt(so.advance_paid)
-	return flt(flt(so.grand_total) - paid, 2), paid
+	return flt(order_payable(so) - paid, 2), paid
 
 
 @frappe.whitelist()
@@ -28,7 +37,7 @@ def get_pending(sales_order):
 	so = frappe.get_doc("Sales Order", sales_order)
 	so.check_permission("read")
 	pending, paid = pending_on_order(so)
-	return {"pending": pending, "paid": paid, "grand_total": flt(so.grand_total)}
+	return {"pending": pending, "paid": paid, "grand_total": order_payable(so)}
 
 
 @frappe.whitelist()
